@@ -31,7 +31,7 @@ const packed = new Set(pack.files.map((file) => file.path));
 const runtimeFiles = files(path.join(root, "package")).map((file) => `package/${file}`);
 const templateFiles = files(src).map((file) => `src/${file}`);
 const allowedFiles = new Set(["package.json", "README.md", "LICENSE", ...runtimeFiles, ...templateFiles]);
-assert.strictEqual(packageJson.version, "0.5.1");
+assert.strictEqual(packageJson.version, "0.6.0");
 assert.strictEqual(packageJson.license, "MIT", "package metadata declares the license");
 assert(packed.has("README.md"), "tarball manifest includes root README package metadata");
 assert(packed.has("LICENSE"), "tarball manifest includes LICENSE package metadata");

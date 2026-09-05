@@ -1,6 +1,6 @@
 {
   "name": "@backshopdev/roundhouse",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Operational harness for human-agent collaboration workflow",
   "bin": {
     "roundhouse": "package/roundhouse.js"
