@@ -7,11 +7,28 @@ const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const { init } = require("../package/deploy-roundhouse");
+const { parseArgs } = require("node:util");
 
 const root = path.resolve(__dirname, "..");
 const src = path.join(root, "src");
 const cli = path.join(root, "package", "roundhouse.js");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+
+// Optional --version X.Y.Z flag for release-prep verification. When provided,
+// the test asserts package.json's version matches. When absent, the assertion
+// is skipped (backward-compatible with existing invocations that don't pass it).
+const { values: cliOptions } = parseArgs({
+  options: {
+    version: { type: "string" },
+  },
+  strict: true,
+  allowPositionals: false,
+});
+const expectedVersion = cliOptions.version ?? null;
+
+if (expectedVersion !== null) {
+  assert.strictEqual(packageJson.version, expectedVersion, `package.json version (${packageJson.version}) matches --version argument (${expectedVersion})`);
+}
 
 function files(dir, base = dir) {
   const result = [];
@@ -31,7 +48,6 @@ const packed = new Set(pack.files.map((file) => file.path));
 const runtimeFiles = files(path.join(root, "package")).map((file) => `package/${file}`);
 const templateFiles = files(src).map((file) => `src/${file}`);
 const allowedFiles = new Set(["package.json", "README.md", "LICENSE", ...runtimeFiles, ...templateFiles]);
-assert.strictEqual(packageJson.version, "0.6.0");
 assert.strictEqual(packageJson.license, "MIT", "package metadata declares the license");
 assert(packed.has("README.md"), "tarball manifest includes root README package metadata");
 assert(packed.has("LICENSE"), "tarball manifest includes LICENSE package metadata");
