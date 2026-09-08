@@ -17,8 +17,11 @@ The reusable template lives in `src/`. The root of this repository deploys that 
 
 ## Installing the private package
 
-This workflow is distributed as the private npm package v0.5.1,
-`@backshopdev/roundhouse`, through GitHub Packages. The package
+This workflow is distributed as the private npm package
+`@backshopdev/roundhouse` through GitHub Packages. Confirm the published
+version with
+`npm view @backshopdev/roundhouse version --registry=https://npm.pkg.github.com`.
+The package
 contains only the runtime files, root `README.md` and `LICENSE` package
 metadata, npm metadata, and the complete
 reusable `src/` template: top-level workflow guidance, consumer-intended
@@ -48,7 +51,8 @@ before any mutation; replace it with a directory before retrying. `opencode.json
 seed files but preserves existing files outside `.opencode/`, such as README,
 AGENTS, BUILDING, TESTING, CONTRIBUTING, AGENTIC_WORKFLOW, `docs/`, and
 `ktlo/`. Future breaking changes may require
-explicit migration logic; v0.5.1 does not add version-specific migrations.
+explicit migration logic; the latest released version of
+`@backshopdev/roundhouse` does not add version-specific migrations.
 Preview either command without changing files with `--dry-run`.
 
 Configure npm for private consumption (repository push access and package read
@@ -168,7 +172,7 @@ copies only packaged `src/` contents, so `init` and `update` never deploy it.
 ## Releasing
 
 Maintainers update `package.json`, create the matching `vX.Y.Z` release tag
-(for example `v0.5.1`), and push that tag. The release workflow validates the
+(for example `v0.6.0`), and push that tag. The release workflow validates the
 tag against `package.json` and publishes to `https://npm.pkg.github.com` with
 only package write permission. Consumers need package read access and an npm
 token with `read:packages`; repository push access is separate. Fork this
@@ -191,7 +195,7 @@ not configured by this repository workflow.
 ## Requirements
 
 - **[OpenCode](https://opencode.ai)**
-- **Node.js 16.7+** — to run the deployment CLI
+- **Node.js 24+** (matches `engines.node` in `package.json`) — to run the deployment CLI
 - **Node.js** — for `markdownlint-cli2` (run via `npx`)
 
 ## Contributing
