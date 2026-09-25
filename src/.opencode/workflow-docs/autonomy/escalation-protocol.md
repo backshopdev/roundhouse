@@ -135,6 +135,56 @@ If an authority request is denied, the denial is explicit. Do not proceed with
 a workaround that effectively grants the denied authority through a different
 path. If the denial reveals objective ambiguity, escalate the ambiguity (I5).
 
+## Approval patterns
+
+When an agent receives human chat approval for a persistent side effect (commit,
+push, tag, etc.), the approval must unambiguously reference the specific action.
+Exact verbatim wording is not required; natural-language approval is acceptable
+as long as the action is clearly identified.
+
+### Principle
+
+Approval is valid when:
+
+1. The message clearly references the specific action being approved (e.g.,
+   "push the tag", "commit the README fix", "approve the push").
+2. The message is unambiguous in intent (e.g., "approved", "proceed", "go",
+   "lgtm", "ship it").
+3. The action being approved matches the action the agent is about to execute.
+
+### Acceptable patterns
+
+- "approved"
+- "proceed"
+- "go"
+- "lgtm"
+- "ship it"
+- "yes, push it"
+- "do it"
+- "approved — push the v0.6.0 tag"
+
+Standalone tokens like "approved" or "proceed" are valid when they follow a
+specific agent request that names the action being approved. The
+conversational context provides the action reference; the token provides the
+unambiguous intent.
+
+### Rejectable patterns
+
+- "ok" (too vague — does not reference the action)
+- "thanks" (not an approval)
+- "👍" (emoji-only, no semantic content)
+- "looks good" (approves the work, not the specific action)
+- Any message that does not reference the specific action
+
+### Agent behavior
+
+When an agent receives a message that could be interpreted as approval:
+
+1. Verify the message references the specific action.
+2. If unambiguous, proceed with the action.
+3. If ambiguous, ask for clarification before proceeding.
+4. Never assume approval from a vague message.
+
 ## Escalate vs. narrower interpretation
 
 ### When to escalate
