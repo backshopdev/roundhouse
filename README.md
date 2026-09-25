@@ -83,7 +83,7 @@ What you get:
 - A structured docs layout (`docs/decisions/`, `docs/specs/`, `docs/plans/`, `docs/architecture/`, `docs/contracts/`, `docs/implementation-maps/`)
 - Markdown validation via `markdownlint-cli2` (config not included; adopters provide their own) and a docs-check script
 
-The `.opencode/` directory and `opencode.json` are the workflow engine — agents, skills, and plugin configuration. Copy them from `src/` when you want to adopt the full workflow, or start with just the docs and add `.opencode/` and `opencode.json` later as your needs mature.
+The `.opencode/` directory and `opencode.json` are the workflow engine — agents, skills, and configuration. Copy them from `src/` when you want to adopt the full workflow, or start with just the docs and add `.opencode/` and `opencode.json` later as your needs mature.
 
 ## Workflow at a Glance
 
@@ -108,13 +108,13 @@ Two human gates control every changeset:
 
 ### Skill Architecture
 
-Skills load on demand — they sharpen judgment without creating another actor, session, or handoff. The root workflow has seven skills across three categories:
+Skills load on demand — they sharpen judgment without creating another actor, session, or handoff. The root workflow's core skill set is seven skills across three categories:
 
 - **Foundation** — planning-structure, commit-convention
 - **Artifact authoring** — harness, literature-note, opencode-configuration
 - **Review lens** — peer, security
 
-The template in `src/` expands to five categories with 41 skills, adding cross-cutting concern skills (security-privacy, accessibility, quality-attributes) and technology skills (react, typescript, astro, and others).
+The template in `src/` expands to five categories with 48 skills, adding cross-cutting concern skills (security-privacy, accessibility, quality-attributes) and technology skills (react, typescript, astro, and others).
 
 For full workflow mechanics — role detail, HITL gate enforcement, permission model, objective checks, and key rules — see [AGENTIC_WORKFLOW.md](AGENTIC_WORKFLOW.md).
 
@@ -124,7 +124,7 @@ For full workflow mechanics — role detail, HITL gate enforcement, permission m
 - **`src/`** — complete reusable template payload. Its `docs/` and `ktlo/`
   contain only reusable indexes/templates; root repository-specific durable
   docs remain outside the package.
-- **`.opencode/`** (root) — deployed (gitignored) copy of `src/.opencode/`; agents (orchestrator, document-author, reviewer), skills (planning-structure, commit-convention, peer, security, harness, literature-note, opencode-configuration), and plugin configuration.
+- **`.opencode/`** (root) — deployed (gitignored) copy of `src/.opencode/`; agents (orchestrator, document-author, implementor, reviewer), core skills (planning-structure, commit-convention, peer, security, harness, literature-note, opencode-configuration), and configuration.
 - **`docs/`** — durable artifacts: decisions, specs, and plans
 - **`ktlo/`** — keep-the-lights-on operational items (domain conventions, coding standards, sync procedures)
 - **`references/`** — literature notes that informed the guiding principles
