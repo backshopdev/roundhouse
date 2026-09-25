@@ -114,7 +114,7 @@ Skills load on demand — they sharpen judgment without creating another actor, 
 - **Artifact authoring** — harness, literature-note, opencode-configuration
 - **Review lens** — peer, security
 
-The template in `src/` expands to five categories with 48 skills, adding cross-cutting concern skills (security-privacy, accessibility, quality-attributes) and technology skills (react, typescript, astro, and others).
+The template in `src/` expands to 48 skills across multiple categories.
 
 For full workflow mechanics — role detail, HITL gate enforcement, permission model, objective checks, and key rules — see [AGENTIC_WORKFLOW.md](AGENTIC_WORKFLOW.md).
 
