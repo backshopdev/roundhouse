@@ -131,6 +131,13 @@ The human collaborator may also choose to abandon work at any point and restart 
 4. **Summarize the packet to the human and point them at the files to inspect
    with their own tool — do NOT render diffs** (saves I/O + tokens). Relay any
    attention-flags.
+
+   **Commit-specific note:** For commits, the post-commit summary is a brief
+   confirmation (commit hash, files changed) followed by the push approval
+   request. The commit message was already approved before execution; no
+   re-review is needed. The push remains a separate gate with explicit human
+   approval.
+
 5. **Human approves the work** → continue; **requests changes → return to step
    2** (`document-author`; the plan stays approved unless explicitly reopened).
 6. Design one or more meaningful review perspectives. Every perspective is a
