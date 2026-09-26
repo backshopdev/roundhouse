@@ -15,7 +15,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
-    "sync-opencode": "node scripts/sync-opencode.js",
+    "sync-roundhouse": "node scripts/sync-roundhouse.js",
     "test-sync": "node scripts/test-sync.js",
     "test-package": "node scripts/test-package.js"
   },

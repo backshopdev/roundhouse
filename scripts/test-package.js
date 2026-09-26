@@ -60,7 +60,7 @@ for (const file of packed) assert(allowedFiles.has(file), `package manifest excl
 for (const file of ["AGENTS.md", "AGENTIC_WORKFLOW.md", "CONTRIBUTING.md", "BUILDING.md", "TESTING.md", "docs/", "references/", "guiding-principles.md", "scripts/"]) {
   assert(![...packed].some((item) => item === file || item.startsWith(file)), `package allowlist excludes root artifact ${file}`);
 }
-for (const file of ["AGENTS.md", "AGENTIC_WORKFLOW.md", "CONTRIBUTING.md", "guiding-principles.md", "docs/", "references/", "scripts/sync-opencode.js", "scripts/test-sync.js", "scripts/test-package.js"]) {
+for (const file of ["AGENTS.md", "AGENTIC_WORKFLOW.md", "CONTRIBUTING.md", "guiding-principles.md", "docs/", "references/", "scripts/sync-roundhouse.js", "scripts/test-sync.js", "scripts/test-package.js"]) {
   assert(![...packed].some((item) => item === file || item.startsWith(file)), `package excludes ${file}`);
 }
 

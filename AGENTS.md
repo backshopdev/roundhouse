@@ -65,7 +65,7 @@ command:
 All changes to source files must be made in `src/` first, then synced to root:
 
 ```bash
-npm run sync-opencode
+npm run sync-roundhouse
 ```
 
 The sync copies `src/.opencode/` over root `.opencode/` (overwriting stale

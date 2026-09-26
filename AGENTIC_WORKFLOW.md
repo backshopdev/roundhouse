@@ -101,10 +101,10 @@ skills, workflow-docs, `docs-check.js`, and `opencode.json` is `src/`. Root
 After any change to `src/.opencode/` or `src/opencode.json`, sync to root:
 
 ```bash
-npm run sync-opencode
+npm run sync-roundhouse
 ```
 
-The sync script (`scripts/sync-opencode.js`) copies `src/.opencode/` over root
+The sync script (`scripts/sync-roundhouse.js`) copies `src/.opencode/` over root
 `.opencode/` and `src/opencode.json` over root `opencode.json`, overwriting
 stale files. Root-only artifacts (`node_modules/`, `data/`, `package.json`,
 `.gitignore`) are preserved because they do not exist in `src/`. The script is

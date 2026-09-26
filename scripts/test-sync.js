@@ -4,7 +4,7 @@
 /**
  * test-sync.js
  *
- * Automated tests for sync-opencode.js. Verifies:
+ * Automated tests for sync-roundhouse.js. Verifies:
  *   1. Sync runs without error
  *   2. All src/.opencode/ files exist in root .opencode/ after sync
  *   3. Root-only artifacts are preserved (not deleted)
@@ -38,7 +38,7 @@ const { execSync } = require("child_process");
 const repoRoot = path.resolve(__dirname, "..");
 const srcDir = path.join(repoRoot, "src", ".opencode");
 const srcOpenCodeJson = path.join(repoRoot, "src", "opencode.json");
-const syncScript = path.join(__dirname, "sync-opencode.js");
+const syncScript = path.join(__dirname, "sync-roundhouse.js");
 
 // ─── Temp fixture setup ─────────────────────────────────────────────────────
 // Tests run in an isolated OS temp directory so the real repo root is never
@@ -63,7 +63,7 @@ const fixtureSrcOpenCodeJson = path.join(tempRoot, "src", "opencode.json");
 
 /**
  * Root-only artifacts that must be preserved after sync.
- * Must match the ROOT_ONLY list in sync-opencode.js.
+ * Must match the ROOT_ONLY list in sync-roundhouse.js.
  */
 const ROOT_ONLY = [
   "node_modules",

@@ -18,11 +18,11 @@ node_modules/
 .settings.local
 
 # Root .opencode/ is a deployed instance of src/.opencode/; never track directly.
-# Changes belong in src/.opencode/ and are synced here by `npm run sync-opencode`.
+# Changes belong in src/.opencode/ and are synced here by `npm run sync-roundhouse`.
 /.opencode/
 
 # Root opencode.json is a deployed instance of src/opencode.json; never track directly.
-# Changes belong in src/opencode.json and are synced here by `npm run sync-opencode`.
+# Changes belong in src/opencode.json and are synced here by `npm run sync-roundhouse`.
 /opencode.json
 
 # Build output

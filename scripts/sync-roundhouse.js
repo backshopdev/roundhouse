@@ -2,7 +2,7 @@
 "use strict";
 
 /**
- * sync-opencode.js
+ * sync-roundhouse.js
  *
  * Mirrors the package's consumer-side `update()` behavior for the source
  * repo's development environment:
