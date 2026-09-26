@@ -67,6 +67,12 @@ The token needs package read permission (classic tokens use `read:packages`)
 and the account must be granted access to the package. Fork this repository if
 you need to customize the workflow rather than editing deployed files.
 
+If `npx @backshopdev/roundhouse init` fails with "roundhouse is not a
+command" or a 404 error against the public registry, the `.npmrc`
+configuration above is missing or incorrect. Without the scope mapping,
+npm falls back to `https://registry.npmjs.org` where the private
+package does not exist.
+
 ## Adopting the Template
 
 To use this workflow in your own repository:
