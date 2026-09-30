@@ -45,17 +45,29 @@ Load this skill when the orchestrator delegates a commit task with:
 
 ### Commit Execution
 
-- New commit: `git commit -F <tmpfile>`
-- Amend: `git commit --amend -F <tmpfile>`
+- New commit: `git commit -F -` (pipe message via stdin) OR `git commit -F <unique-tmpfile>`
+- Amend: `git commit --amend -F -` (pipe message via stdin) OR `git commit --amend -F <unique-tmpfile>`
 - Obtain fresh OpenCode `once` confirmation for the exact command
 
 #### Multi-line messages
 
 Single-line commits are forbidden per commit-convention standards. The
 commit-convention requires multi-line messages with a subject, body, and
-footers. Write the full message to a temporary file and use the `-F` form
-shown above, then delete the temp file. The `-m` form exists but is not
-recommended because it is not reliable across all Windows shells.
+footers.
+
+**Preferred: pipe via stdin.** Use `git commit -F -` and provide the
+message via stdin (e.g., PowerShell here-string, `echo` with proper
+escaping, or a shell heredoc). This avoids temp file collisions across
+sessions.
+
+**Alternative: unique temp file path.** If stdin piping is not feasible,
+write the message to a temp file with a unique name (e.g., include the
+PID or a timestamp: `commit-msg-<pid>-<timestamp>.txt`). Never reuse a
+shared temp file path across sessions — stale content from a previous
+session can contaminate the commit.
+
+The `-m` form exists but is not recommended because it is not reliable
+across all Windows shells.
 
 ### Post-commit Verification
 
