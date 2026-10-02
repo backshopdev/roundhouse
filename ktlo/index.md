@@ -12,4 +12,8 @@ Operational "keep the lights on" items. Links are relative, same-directory only 
 - [Pin dependency versions exactly; pause-and-escalate on every update](./KTLO-20260905-02.md) — Establishes the policy of pinning all dependency versions exactly (no caret/tilde ranges) and treating every dependency update as a deliberate, conscious act — pause-and-escalate, not automatic. — `[project]` — 2026-09-05
 - [Establish mentorship posture in the orchestrator for human learning contexts](./KTLO-20260905-03.md) — When the human is working in an area of limited knowledge, the orchestrator adopts a mentorship posture (walking through reasoning explicitly, naming assumptions, explaining the why) rather than delivering bare conclusions. Opt-out path needed; final shape to be determined through the standard Socratic interview → DEC → SPEC → PLAN → product process. — `[project]` — 2026-09-05
 
+## Templates
+
+- [KTLO template](./template.md) — canonical skeleton for new KTLO items.
+
 - Add new items as `ktlo/KTLO-YYYYMMDD-NN.md` marked `[project]` and linked from this index
