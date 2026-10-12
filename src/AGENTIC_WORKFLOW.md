@@ -107,6 +107,18 @@ assumptions, and Proposed investigation. Findings return upstream for
 reassessment and may reopen or revise the approved plan. Routine exploration
 within approved assumptions does not require the skill.
 
+## Root/Template Synchronization
+
+Root `.opencode/` and `opencode.json` are deployed instances of `src/.opencode/` and `src/opencode.json`. The source of truth for agents, skills, workflow-docs, `docs-check.js`, and `opencode.json` is `src/`. Root `.opencode/` and root `opencode.json` are gitignored; never edit them directly.
+
+After any change to `src/.opencode/` or `src/opencode.json`, sync to root:
+
+```bash
+npm run sync-roundhouse
+```
+
+The sync script (`scripts/sync-roundhouse.js`) is idempotent and platform-independent. Top-level files in `src/` (e.g., `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`) are seeded to root on first install; once root copies exist they are consumer-owned. To re-sync a top-level file, edit root directly or delete the root file before re-running sync.
+
 ## Routing Table
 
 Load the relevant resource based on your task:
@@ -131,6 +143,18 @@ Load the relevant resource based on your task:
   required perspective returns non-`BLOCKED`, no human-accepted finding remains
   unresolved, and the human approves the commit message.
 - Any accepted change restarts human work approval and agent review.
+
+### Re-review scope after accepted findings
+
+When a re-review follows accepted findings, the reviewer covers the **full final state** of the changed files, not just the lines touched by the corrections. The justification: corrections can introduce collateral damage to surrounding context (e.g., a wording change that breaks a blockquote continuation, a link update that affects paragraph flow), so the prior review's verdict on unchanged parts is invalidated by any correction. The reviewer may attest that "carry-forward findings from the prior review still apply to the unchanged parts," but the verdict is on the *final state* as a unit.
+
+### Two-turn separation of review and commit gates
+
+A clean review verdict (or a verdict where all findings have been accepted or dismissed) is acknowledged in its own turn, before the commit message is drafted. The human's acknowledgment form is:
+
+> [brief confirmation of review contents] The review came back clean. Shall we proceed to the commit gate?
+
+The orchestrator only proceeds to `commit-convention` and message drafting in the *next* turn, after the acknowledgment. This separates two gates that are easy to conflate when presented together: "the work passed review" and "the commit message is approved."
 
 ## Key Rules
 

@@ -114,13 +114,7 @@ Two human gates control every changeset:
 
 ### Skill Architecture
 
-Skills load on demand — they sharpen judgment without creating another actor, session, or handoff. The root workflow's core skill set is seven skills across three categories:
-
-- **Foundation** — planning-structure, commit-convention
-- **Artifact authoring** — harness, literature-note, opencode-configuration
-- **Review lens** — peer, security
-
-The template in `src/` expands to 48 skills across multiple categories.
+Skills load on demand — they sharpen judgment without creating another actor, session, or handoff. The root workflow's core skill set is enumerated in the skill allowlist; see `AGENTIC_WORKFLOW.md` for the full routing table.
 
 For full workflow mechanics — role detail, HITL gate enforcement, permission model, objective checks, and key rules — see [AGENTIC_WORKFLOW.md](AGENTIC_WORKFLOW.md).
 

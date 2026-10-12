@@ -30,6 +30,16 @@ These rules apply to all agents in all contexts:
 5. **Prefer deterministic checks over prose-based inspection.** Use tools and
    scripts to validate what can be validated objectively.
 
+## Keeping the template in sync
+
+Root copies of the workflow docs are deployed from `src/` via the `sync-roundhouse` script. To pick up template updates after editing files under `src/`, run:
+
+```bash
+npm run sync-roundhouse
+```
+
+The sync script (`scripts/sync-roundhouse.js`) is idempotent and platform-independent; see `AGENTIC_WORKFLOW.md` for the full synchronization contract.
+
 ## Read on Demand
 
 Load only the resources relevant to your current task. Do not read all linked

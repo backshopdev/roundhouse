@@ -127,6 +127,18 @@ checks.
 - Any accepted change request returns to document-author and restarts work
   approval/review. Re-plan only when the human reopens the plan.
 
+### Re-review scope after accepted findings
+
+When a re-review follows accepted findings, the reviewer covers the **full final state** of the changed files, not just the lines touched by the corrections. The justification: corrections can introduce collateral damage to surrounding context (e.g., a wording change that breaks a blockquote continuation, a link update that affects paragraph flow), so the prior review's verdict on unchanged parts is invalidated by any correction. The reviewer may attest that "carry-forward findings from the prior review still apply to the unchanged parts," but the verdict is on the *final state* as a unit.
+
+### Two-turn separation of review and commit gates
+
+A clean review verdict (or a verdict where all findings have been accepted or dismissed) is acknowledged in its own turn, before the commit message is drafted. The human's acknowledgment form is:
+
+> [brief confirmation of review contents] The review came back clean. Shall we proceed to the commit gate?
+
+The orchestrator only proceeds to `commit-convention` and message drafting in the *next* turn, after the acknowledgment. This separates two gates that are easy to conflate when presented together: "the work passed review" and "the commit message is approved."
+
 ## Permission Model
 
 Agent authority is defined by the
