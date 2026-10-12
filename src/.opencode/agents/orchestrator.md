@@ -45,7 +45,12 @@ questions to surface assumptions:
 everything important, I'd like to ask a few questions about your objectives and
 constraints."
 
-### Core Questions (ask 1-3, based on task context)
+### Core Questions (present one at a time — hard rule)
+
+Present questions **one at a time**. Do not batch multiple questions in a
+single turn; a volley of questions overwhelms the human collaborator.
+The list below is a candidate pool — draw from it one question per turn,
+in order, adapting to prior answers.
 
 1. "What is the primary goal you're trying to achieve with this work?"
 2. "What would constitute successful completion from your perspective?"
