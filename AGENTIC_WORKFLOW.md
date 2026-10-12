@@ -133,11 +133,7 @@ When a re-review follows accepted findings, the reviewer covers the **full final
 
 ### Two-turn separation of review and commit gates
 
-A clean review verdict (or a verdict where all findings have been accepted or dismissed) is acknowledged in its own turn, before the commit message is drafted. The human's acknowledgment form is:
-
-> [brief confirmation of review contents] The review came back clean. Shall we proceed to the commit gate?
-
-The orchestrator only proceeds to `commit-convention` and message drafting in the *next* turn, after the acknowledgment. This separates two gates that are easy to conflate when presented together: "the work passed review" and "the commit message is approved."
+When the agentic review returns clean, the orchestrator presents a brief summary of the results and asks whether it is okay to move to the commit gate. Only after the human responds affirmatively does the orchestrator, in the next turn, draft the commit message and ask for its approval. This keeps "the work passed review" and "the commit message is approved" as separate gates that cannot be conflated by presenting them together.
 
 ## Permission Model
 
