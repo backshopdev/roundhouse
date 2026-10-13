@@ -45,9 +45,20 @@ Load this skill when the orchestrator delegates a commit task with:
 
 ### Commit Execution
 
-- New commit: `git commit -F -` (pipe message via stdin) OR `git commit -F <unique-tmpfile>`
-- Amend: `git commit --amend -F -` (pipe message via stdin) OR `git commit --amend -F <unique-tmpfile>`
+- New commit: `npm run commit -- --subject "<subject>" --body "<body>"` (or `--body-file <path>` for long bodies) — or `--message-file <path>` when the full approved message is pre-composed
+- Amend: `npm run commit -- --amend --subject "<subject>" --body "<body>"`
 - Obtain fresh OpenCode `once` confirmation for the exact command
+- When the approved message contains non-ASCII characters (em-dashes, smart
+  quotes, accented names, arrows, etc.), use `--message-file <path>`. Inline
+  `--subject`/`--body` arguments pass through the shell/npm/cmd.exe transport
+  (`npm run commit -- --subject "…"`) before reaching the script's
+  `process.argv`, and that transport is not covered by the script's byte-clean
+  guarantee. `--body-file <path>` protects the body only: the body is decoded as
+  UTF-8 and re-encoded (byte-exact for valid UTF-8 text), but the subject is
+  always supplied as an inline argv argument, so `--body-file` does not protect
+  it. Use `--message-file <path>` whenever *any* part of the message — including
+  the subject — contains non-ASCII; `--message-file` is a pure byte
+  pass-through.
 
 #### Multi-line messages
 
@@ -55,16 +66,12 @@ Single-line commits are forbidden per commit-convention standards. The
 commit-convention requires multi-line messages with a subject, body, and
 footers.
 
-**Preferred: pipe via stdin.** Use `git commit -F -` and provide the
-message via stdin (e.g., PowerShell here-string, `echo` with proper
-escaping, or a shell heredoc). This avoids temp file collisions across
-sessions.
+`npm run commit` composes the subject, body, and footers into a single
+multi-line message with byte-exact UTF-8, avoiding PowerShell encoding
+corruption (per DEC-20260906-01).
 
-**Alternative: unique temp file path.** If stdin piping is not feasible,
-write the message to a temp file with a unique name (e.g., include the
-PID or a timestamp: `commit-msg-<pid>-<timestamp>.txt`). Never reuse a
-shared temp file path across sessions — stale content from a previous
-session can contaminate the commit.
+`git commit -F -` (stdin) and raw `git commit -F <tmpfile>` from
+PowerShell are **not** acceptable for agentic commits on this repo.
 
 The `-m` form exists but is not recommended because it is not reliable
 across all Windows shells.

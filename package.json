@@ -15,9 +15,11 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
+    "commit": "node scripts/commit.js",
     "sync-roundhouse": "node scripts/sync-roundhouse.js",
     "test-sync": "node scripts/test-sync.js",
-    "test-package": "node scripts/test-package.js"
+    "test-package": "node scripts/test-package.js",
+    "test-commit": "node scripts/test-commit.js"
   },
   "license": "MIT",
   "engines": {
