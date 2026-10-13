@@ -16,8 +16,9 @@ Literature considered while building this workflow. Links are relative per the i
 - [arXiv 2607.17598v1 — Progressive Disclosure for Long-Context Agents](./arxiv-2607-17598v1-progressive-disclosure-long-context.md) — Finds that one level of progressive routing helps agent performance but additional nesting levels do not improve and may reduce accuracy. — `[project]` — abstract/snippet only — informs GP01 — 2026-09-01
 - [HumanLayer — Skill Issue: Harness Engineering for Coding Agents](./humanlayer-skill-issue.md) — Iterative harness-engineering recipe — start minimal, test on representative work, retain only instructions that fix demonstrated failures; skills as reusable knowledge. — `[project]` — abstract/snippet only — informs GP01, GP02, GP07 — 2026-09-01
 - [agents.md — AGENTS.md Open Standard](./agents-md-open-standard.md) — Open standard defining `AGENTS.md` format and conventions, including monorepo nesting rules where the closest `AGENTS.md` to the edited file takes precedence. — `[project]` — abstract/snippet only — informs GP01, GP02 — 2026-09-01
+- [John Gall — *Systemantics: How Systems Work and Especially How They Fail*](./gall-systemantics.md) — Uses secondhand systems ideas as a qualified lens for adding workflow complexity only for specific, evidenced problems or needs surfaced through use or design/evaluation—not speculatively and not only after post-release failure. — `[project]` — primary text inaccessible; secondary summary (partial) — informs GP01 (qualified) — 2026-10-13
 
-Total: 14 notes (3 substantiated, 11 abstract/snippet only).
+Total: 15 notes (3 substantiated, 11 abstract/snippet only, 1 primary text inaccessible with secondary summary).
 
 ## Integrity rule
 A principle may cite `[Source: ...]` only for a source with status **retrieved**.

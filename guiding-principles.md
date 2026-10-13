@@ -7,6 +7,7 @@ GP01: Progressive disclosure - start simple, layer complexity as needed
 - Prevents context rot by not dumping all information upfront
 - **Conditional routing**: every linked resource states **when** it should be read and **what question** it answers (pattern: when → read → purpose). Do not instruct agents to read all linked files by default; each link carries an activation condition.
 - **Routing depth**: prefer one routing hop (metadata → full instructions) before actionable content. Add another level only when the additional separation has demonstrated value; deeper nesting can degrade accuracy without improving routing.
+- Add workflow complexity only for specific, evidenced problems or needs surfaced through use or identified during design/evaluation; do not add it speculatively.
 - Operationalized: AGENTS.md starts compact (≤100-line budget), expands only when task type warrants; skills expose name + description for routing, full SKILL.md loaded on demand
 
 GP02: Single source of truth - all artifacts in dedicated directories, never scattered
