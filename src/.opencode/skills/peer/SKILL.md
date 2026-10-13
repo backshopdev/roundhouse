@@ -26,6 +26,13 @@ In the document-authoring workflow, peer review additionally assesses:
   populated? Are edge cases addressed?
 - **Usefulness:** Will this document serve its intended audience? Does it
   answer the questions a reader will have?
+- **Documentation accuracy and completeness:** For implementation changes,
+  compare behavior with relevant documentation, including implementation maps,
+  architecture documents, and specifications where applicable. Classify a
+  material mismatch or omission that leaves consumers with a materially
+  incorrect or incomplete understanding as `Blocker`. A clarity or style
+  suggestion that does not materially mislead consumers is non-blocking and
+  retains an existing severity level based on its impact.
 
 ## Review model
 
@@ -59,6 +66,13 @@ Read outward as needed to test integration, but anchor findings to the supplied
 changes and criteria. Do not turn review into an audit of unrelated legacy debt.
 
 ## Finding calibration
+
+Use `Blocker` for material documentation accuracy or completeness gaps as
+defined above; a `Blocker` prevents approval. Do not use it for a non-misleading
+clarity or style suggestion. Such suggestions use one existing severity level
+below, calibrated to their consequence. Each finding has exactly one
+classification: either `Blocker` or one existing severity, never a separate
+status and severity.
 
 | Level | Use when | Do not use for |
 | --- | --- | --- |
@@ -95,8 +109,8 @@ affected.
 Inspect the complete changed artifact and enough neighboring context to evaluate
 integration. Map criteria to evidence, assess objective-check coverage, and
 distinguish observed facts from inferred consequences. Each actionable finding
-should include one `Critical | Major | Medium | Low | Nit` severity, confidence,
-anchor, impact, and suggested direction.
+should include one classification (`Blocker` or `Critical | Major | Medium |
+Low | Nit`), confidence, anchor, impact, and suggested direction.
 
 Escalate when criteria conflict, the domain skill is missing, effective behavior
 cannot be established read-only, or the change crosses an undisclosed trust or

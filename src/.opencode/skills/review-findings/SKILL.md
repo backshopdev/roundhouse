@@ -32,13 +32,10 @@ skills-loaded: peer + <domain skill(s)> [+ security]
 
 **Verdict:** APPROVE | FINDINGS | BLOCKED
 
-### Blocking Issues
-<list blocking issues here, or "None">
-
-### Non-Blocking Issues
+### Findings
 
 **F1: <brief title>**
-- **Severity:** Critical | Major | Medium | Low | Nit
+- **Classification:** Blocker | Critical | Major | Medium | Low | Nit
 - **Confidence:** High | Medium | Low
 - **Files affected:** <file paths with line numbers if applicable>
 - **Description:** <brief description of the issue>
@@ -46,6 +43,12 @@ skills-loaded: peer + <domain skill(s)> [+ security]
 
 **F2: <brief title>**
 ...
+
+Use exactly one classification per finding. `Blocker` is the classification for
+a material documentation accuracy/completeness gap and prevents approval. Use
+an existing severity (`Critical | Major | Medium | Low | Nit`) for a
+non-blocking clarity/style suggestion that does not materially mislead
+consumers. Do not add a second blocking-status or severity field to a finding.
 
 verification-results:
   - <check performed>: <result>
@@ -74,7 +77,9 @@ scannable format while preserving the structure needed for triage.
 
 ## Constraints
 
-- Use only `Critical | Major | Medium | Low | Nit` finding severities.
+- Use exactly one finding classification: `Blocker` or `Critical | Major |
+  Medium | Low | Nit`. A `Blocker` prevents approval; do not represent the same
+  finding with an additional status or severity value.
 - Use `F1`, `F2`, `F3` format for finding IDs (no zero-padding). IDs are
   session-scoped and stable within a packet.
 - Include material assumptions and open questions even when the verdict is
