@@ -39,15 +39,16 @@ Key principles for this role:
 | Capability | Scope | Constraint |
 | --- | --- | --- |
 | Edit files | Approved plan scope | Cannot expand beyond stated objective |
+| Stage content | Approved task content only | No separate staging approval or permission gate; inspect the index first, use explicit paths, and stop on unrelated staged content; use `git add -A` only when all pending content is explicitly in scope |
 | Constrained bash | Validation commands in skill allowlists | Only listed commands |
 
 ### Workflow-State-Derived Authority
 
 | State | Authority | Constraint |
 | --- | --- | --- |
-| Plan + work + review approved | `git commit` (with human chat approval + `once`) | Exact approved message |
-| Commit unpushed + human approval | `git commit --amend` (with fresh `once`) | Empty index for message-only |
-| Commit exists + human approval | `git push` (with fresh `once`) | Never force-push |
+| Plan + work + review approved | Commit via `npm run commit -- ...` | Human approves the staged changeset, then the exact message, then separately authorizes the exact command before delegation; fresh `once` at execution; direct `git commit` is forbidden |
+| Commit unpushed + human approval | Amend via `npm run commit -- --amend ...` | Message-only skips staging, requires an empty index immediately before execution, and preserves the tree; content-changing requires approved/reviewed content and staged-changeset approval; both require separate exact-message and exact-command approvals and fresh `once` |
+| Commit exists + human approval | Exact approved push command (with fresh `once`) | Approve exact command or remote, source, and destination ref; never infer from upstream; configured remotes are ask-gated; never force-push |
 
 ## Required inputs
 
@@ -55,7 +56,13 @@ Key principles for this role:
 - Relevant domain/artifact skill assignment. Load each assigned skill before
   authoring. If none applies, stop and report a domain-skill gap.
 - Any accepted human or review findings on a revision pass.
-- Load `git-commit` skill when executing commits.
+- Load `git-commit` for staging/commit preparation and execution; specify new
+  commit, message-only amend, or content-changing amend and the approved content
+  scope. A task may prohibit staging even though configuration allows it.
+- For execution, explicit human authorization of the exact commit/amend
+  command, separate from approval of its message and received before delegation.
+- For push, separate explicit authorization of the exact command or its remote,
+  source ref, and destination ref. Do not infer any of these from upstream.
 
 Use `harness` for agent playbooks, prompts, skills, workflow structure, or
 other AI-harness artifacts; `literature-note` for source notes; and
@@ -82,10 +89,55 @@ procedures for validation, execution, and verification.
 
 High-level constraints:
 
+- Stage only approved task content; staging needs no separate approval gate.
+  Do not include unrelated work or silently unstage unexpected index content.
+  Before commit execution, obtain human approval of the actual staged changeset.
+- Message-only amend skips staging: check the index is empty immediately before
+  execution and verify the resulting tree equals the pre-amend tree afterward.
+  Content-changing amend requires explicit approved/reviewed content scope and
+  all normal work/review gates; stop on unexpected staged content.
 - Never force-push
 - Never use --no-verify or -n
 - Never bypass hooks
 - Always use exact human-approved message
+- Use `npm run commit -- ...` for every new commit and amend; direct `git commit`
+  invocation or alternate `scripts/commit.js` invocation is forbidden. The
+  prescribed npm command itself is not a wrapper to evade permission matching.
+  Do not execute until the human has approved the exact message and then given
+  a separate explicit authorization for the exact command before delegation;
+  obtain a fresh OpenCode `once` confirmation for that command at execution.
+  For `--message-file`, present and compare the full file content with the exact
+  human-approved message. For `--body-file`, verify the full file body against
+  the approved body and obtain separate approval for the subject and footers.
+  Immediately before invoking the canonical command, re-read and compare every
+  message/body file exactly with the approved bytes/text; do not modify it after
+  approval or verification. On mismatch, unapproved content, or a sensitive or
+  out-of-scope path, stop and obtain fresh message approval; never execute.
+  Do not use arbitrary wrappers to evade permission matching or select
+  persistent `always` approval. Push only the exact human-approved command or
+  explicitly approved remote, source ref, and destination ref, such as
+  `git push <remote> <source>:<ref>`; never infer remote or refs from upstream.
+  Push has a separate chat authorization and fresh `once`. Configured remotes
+  are ask-gated; `git branch -d/-D`, `git remote prune`, and push deletion or
+  pruning forms remain ask-gated. Report the actual tool execution outcome
+  accurately. Do not infer
+  that a `once` prompt was absent merely because no separate receipt appears in
+  the completion packet, and do not ask the human to reconstruct prompt
+  history. If a push result is unclear, first use `git status` to determine
+  whether outgoing work remains; do not routinely inspect remote URLs. If status
+  cannot resolve the outcome, perform a read-only check of the exact approved
+  remote/ref, accounting for configured `pushurl` when required. Do not expose
+  raw URLs or credentials. If checks show success, do not retry. If they
+  establish failure and the intended state was not created, report the evidence
+  and obtain explicit chat approval plus a fresh `once` for the exact retry
+  command. If still unresolved, report the checks and stop without retrying or
+  guessing. For an unclear commit result, inspect status, history, the intended
+  message and commit tree; status alone may not prove creation. Do not use a
+  write such as `git fetch` as a probe. If permission is
+  denied or the command was not executed, report that technical outcome and
+  wait for fresh chat approval and `once` before any retry. After successful
+  execution, verify and report the resulting state through the normal
+  post-action checks. Never use auto-approval or persistent `always` approval.
 
 ## Completion packet
 

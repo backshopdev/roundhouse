@@ -138,10 +138,10 @@ The human collaborator may also choose to abandon work at any point and restart 
    attention-flags.
 
    **Commit-specific note:** For commits, the post-commit summary is a brief
-   confirmation (commit hash, files changed) followed by the push approval
-   request. The commit message was already approved before execution; no
-   re-review is needed. The push remains a separate gate with explicit human
-   approval.
+    confirmation (commit hash, files changed) followed by the push approval
+    request. The commit message and exact execution command were separately
+    authorized before execution; no re-review is needed. The push remains a
+    separate authorization for its explicit destination.
 
 5. **Human approves the work** → continue; **requests changes → return to step
    2** (`document-author`; the plan stays approved unless explicitly reopened).
@@ -169,9 +169,16 @@ The human collaborator may also choose to abandon work at any point and restart 
    review.
 10. When every required perspective has returned a non-`BLOCKED` packet and no
     human-accepted finding remains unresolved, confirm document-author's
-    objective checks passed, load `commit-convention`, draft the message, and
-    obtain message approval. Only then delegate the exact approved commit to
-    `document-author`.
+    objective checks passed. Have `document-author` stage only the approved
+    content and report the actual staged changeset; staging needs no separate
+    approval gate. Obtain human approval of that staged changeset, then load
+    `commit-convention`, draft the message, and obtain message approval.
+    Then present the exact `npm run commit -- ...` command in chat and obtain a
+    separate explicit human authorization to execute that exact command. Only
+    after both approvals may it be delegated to `document-author`; the fresh
+    OpenCode `once` confirmation occurs for the exact command at execution time.
+    Message approval alone never authorizes execution. Apply the file-backed
+    message rules in the Commit Gate below.
 
 ### Amendment path
 
@@ -180,12 +187,19 @@ corrected with a new commit. Before authorizing amend, have `document-author`
 report branch/upstream divergence and staged-content state. If whether `HEAD`
 has reached a remote is uncertain, stop rather than amend.
 
-- **Message only:** require an empty index, validate and obtain human approval
-  for the exact replacement message, then delegate the exact amendment command.
-- **Staged content:** treat every staged path as authored work. It must first
-  receive human work approval, every required non-`BLOCKED` review perspective,
-  resolution of every human-accepted finding, and approval of the exact amended
-  message before the command is delegated.
+- **Message only:** skip staging. Require an empty index immediately before
+  execution, validate and obtain human approval for the exact replacement
+  message, then obtain separate explicit human authorization for the exact
+  amendment command before delegating it. Record the pre-amend tree and require
+  tree preservation afterward.
+- **Content-changing:** specify the explicit approved content scope, including
+  any unstaged content to prepare. All content must receive normal plan/work
+  approval, every required non-`BLOCKED` review perspective, and resolution of
+  every human-accepted finding. Have `document-author` inspect the index and
+  stage only that content; stop on unexpected staged content. Obtain human
+  approval of the actual staged changeset, then the exact amended message,
+  before separate explicit authorization for the exact amendment command and
+  delegation.
 - **After amend:** require verification of the resulting commit, exact message,
   tree, and branch/upstream state before considering any push. An amend never
   carries push approval forward.
@@ -205,12 +219,54 @@ has reached a remote is uncertain, stop rather than amend.
 - Roles overlap — human and agents each bring their own strengths; not a rigid
   fit-vs-quality split.
 - The orchestrator drafts the commit message per the discoverable
-  `commit-convention` skill and gets explicit human sign-off before committing.
-- Delegate only the exact approved commit or eligible amend command. Every
-  `git commit`, `git commit --amend`, and `git push` requires explicit human
-  chat approval and a fresh OpenCode `once` confirmation for that exact command.
-  Message approval precedes command confirmation. Never amend a pushed commit,
-  force-push, bypass hooks with `--no-verify`/`-n`, or use a shell, alias,
-  `git -c`, or other wrapper to evade permission matching. Never run this
-  harness with OpenCode `--auto` or enable auto-approve, and never select
-  persistent `always` approval for commit, amend, push, or network gates.
+  `commit-convention` skill after human approval of the actual staged changeset
+  (an empty index instead for message-only amend), and gets explicit human
+  message approval. After
+  that approval, show the exact `npm run commit -- ...` command and get a
+  distinct explicit human authorization for that exact execution before
+  delegating it. A `once` prompt is separate technical enforcement at execution,
+  not a substitute for either chat authorization.
+- For `--message-file`, present and approve its entire content as the exact
+  message. For `--body-file`, present and approve its complete body and
+  separately approve the subject and footers. Require document-author to
+  re-read and compare each file with the approved bytes/text immediately before
+  invoking the command; it must not be changed after approval or verification.
+  Mismatch, unapproved content, or a sensitive/out-of-scope path means stop and
+  obtain fresh message approval, not execute.
+- Delegate only the exact approved commit or eligible amend command. New
+  commits and amends must use the supported `npm run commit -- ...` procedure;
+  direct `git commit` invocation is forbidden. Require distinct explicit chat
+  approvals for the message and then the exact commit/amend command before
+  delegation, followed by a fresh OpenCode `once` confirmation for that command.
+  Push only the exact human-approved command or explicitly approved remote,
+  source ref, and destination ref, such as `git push <remote> <source>:<ref>`;
+  never infer a remote or ref from upstream configuration. Push requires
+  separate explicit chat approval and a fresh `once` for that exact command.
+  Configured remotes are ask-gated; `git branch -d/-D`, `git remote prune`, and
+  push deletion/pruning forms remain ask-gated. Never amend a pushed
+  commit, force-push, bypass hooks with `--no-verify`/`-n`, or use a shell,
+  alias, `git -c`, or other arbitrary wrapper to evade permission matching.
+  The prescribed `npm run commit` procedure is not a permission-evasion
+  wrapper. Never run this harness with OpenCode `--auto` or enable auto-approve,
+  and never select persistent `always` approval for commit, amend, push, or
+  network gates.
+- Treat explicit chat approval as the human decision gate and `once` as
+  per-command technical enforcement. Do not ask the human afterward to remember
+  or attest whether the prompt appeared. Interpret and report the actual tool
+  execution outcome for the exact command. On successful execution, verify the
+  resulting commit, amended state, or push through the normal post-action
+  checks. If a push result is unclear, first use `git status` to determine
+  whether outgoing work remains; do not routinely inspect remote URLs. If status
+  cannot resolve the outcome, perform a read-only check of the exact approved
+  remote/ref, accounting for configured `pushurl` when required. Do not expose
+  raw URLs or credentials. Do not probe with a write such as `git fetch`. If
+  checks show success, do not retry. If they establish failure and the intended
+  state was not created, report the evidence and obtain explicit chat approval
+  plus a fresh `once` for the exact retry command. If still unresolved, report
+  the checks and stop without retrying or guessing. For an unclear commit
+  result, inspect status, history, the intended message and commit tree; status
+  alone may not prove whether it was created. Push approval is separate from
+  commit approval. If permission is denied or the command is not
+  executed, report that outcome; do not issue another write until the required
+  fresh chat approval and `once`. Never use direct `git commit`, wrappers,
+  auto-approval, persistent `always` approval, or an alternate command or path.

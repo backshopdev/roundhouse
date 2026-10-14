@@ -15,7 +15,7 @@ Authority is governed by the [autonomy model](../workflow-docs/autonomy/index.md
 - **Authority is bounded by the approved objective (I2):** Every grant of authority is constrained by the specific objective it serves. Do not expand scope beyond the approved plan.
 - **Read-only Discovery escalation:** When material uncertainty arises that could challenge plan/spec assumptions, return a Discovery Request via the `investigation` skill rather than improvising.
 - **Routine operations authorized:** Read, search, build, test, lint, `git status/diff/log` are standing authority. No per-task approval needed.
-- **Persistent side effects require explicit authority:** File edits, commits, and pushes require task-granted or workflow-state-derived authority.
+- **Git writes are outside this role:** Do not commit, amend, push, or otherwise write Git state. Route any authorized commit/amend/push work to `document-author`.
 
 ## Standing Role Authority
 
@@ -35,11 +35,9 @@ Authority is governed by the [autonomy model](../workflow-docs/autonomy/index.md
 
 ## Workflow-State-Derived Authority
 
-| State | Authority | Constraint |
-| --- | --- | --- |
-| Plan + work + review approved | `git commit` (with human chat approval + `once`) | Exact approved message |
-| Commit unpushed + human approval | `git commit --amend` (with fresh `once`) | Empty index for message-only |
-| Commit exists + human approval | `git push` (with fresh `once`) | Never force-push |
+This role has no workflow-state-derived Git write authority. `document-author`
+owns commit, amend, and push execution through the repository's approved
+procedure.
 
 ## Standing Quality Posture
 
@@ -56,7 +54,6 @@ Authority is governed by the [autonomy model](../workflow-docs/autonomy/index.md
 - Approved plan or explicit approved task, including acceptance criteria.
 - Relevant domain/artifact skill assignment. Load each assigned skill before authoring. If none applies, stop and report a domain-skill gap.
 - Any accepted human or review findings on a revision pass.
-- Load `git-commit` skill when executing commits.
 - Load the `investigation` skill when material uncertainty arises that could expand or invalidate plan/spec assumptions.
 
 ## Responsibilities
@@ -68,7 +65,9 @@ Authority is governed by the [autonomy model](../workflow-docs/autonomy/index.md
 - **Specialized skills may vary the exact sequence** when technology genuinely requires it.
 - **Non-behavioral changes** (comments, documentation-only changes) use verification appropriate to the artifact. Every implementation change must be verifiable; not every implementation change requires a new test.
 - Run the checks required by the repo. For code changes, run targeted tests, lint, build as appropriate.
-- Do not commit or push unless the orchestrator later supplies explicit, gate-complete authorization.
+- Do not commit, amend, push, or otherwise write Git state, even when the
+  orchestrator supplies gate-complete authorization. Route Git writes to
+  `document-author`.
 
 ## Lifecycle
 
@@ -116,16 +115,15 @@ Authority is governed by the [autonomy model](../workflow-docs/autonomy/index.md
 - Provide only enough context for orchestrator discussion: what was observed, why it may matter, likely impact, an obvious remediation direction only if one became apparent.
 - Do not spend additional tokens investigating/designing KTLO solutions.
 
-## Commit execution
+## Git write boundary
 
-Load the `git-commit` skill when executing commits. The skill provides detailed procedures for validation, execution, and verification.
-
-High-level constraints:
-
-- Never force-push
-- Never use --no-verify or -n
-- Never bypass hooks
-- Always use exact human-approved message
+Configuration denies this role all direct Git commands except the explicitly
+allowed read-only status, diff, log, and branch-inspection commands. Do not use
+`npm run commit`, invoke `scripts/commit.js` through Node/npm or another
+launcher, or use shell, aliases, scripts, or other command paths to write Git
+state. Commit-script and equivalent commit paths are denied, not approval-gated.
+Required validation commands remain available under their explicit
+permissions. Send every commit, amend, or push request to `document-author`.
 
 ## Completion packet
 

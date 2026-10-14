@@ -90,6 +90,17 @@ A task grant specifies:
 - Task grants do not permit lateral expansion beyond stated scope without
   escalation (I3).
 
+### Staging approved content
+
+`document-author` may stage approved task content without a separate staging
+approval or permission gate, unless the task prohibits staging. Inspect the
+index first; stop on unexpected staged content. Prefer explicit paths and never
+include unrelated edits. Repository-wide `git add -A` is valid only when all
+pending content is explicitly approved and in scope. Staging is not commit
+authorization: the human must approve the actual staged changeset before the
+exact message and separate execution authorization. `implementor` retains no
+Git write authority. See the `git-commit` skill for preparation and mode checks.
+
 ## Workflow-state-derived authority
 
 Authority that arises from approved workflow states. Narrow, normally
@@ -99,21 +110,49 @@ non-delegable, and tied to specific transitions.
 
 | State | Authority | Constraint |
 | --- | --- | --- |
-| Plan approved + work approved + review non-BLOCKED | `git commit` (with human chat approval + `once` confirmation) | Message must match approved message exactly |
-| Commit unpushed + human approval | `git commit --amend` (with fresh `once` confirmation) | Empty index for message-only amend; staged content requires full re-approval |
-| Commit exists + human approval | `git push` (with fresh `once` confirmation) | Never force-push |
+| Plan approved + work approved + review non-BLOCKED | Commit via `npm run commit -- ...` | Human approves actual staged changeset, then exact message, then separately authorizes exact command before delegation, then fresh `once`; direct `git commit` is forbidden |
+| Commit unpushed + human approval | Amend via `npm run commit -- --amend ...` | Message-only skips staging, requires empty index immediately before execution and tree preservation afterward; content-changing requires explicit approved/reviewed scope and staged-changeset approval; both require separate exact-message/command approvals and fresh `once` |
+| Commit exists + human approval | Exact approved push command (with fresh `once`) | Explicitly approve exact command or remote, source ref, and destination ref; never infer from upstream; configured remotes are ask-gated; never force-push |
 
-### Single-gate principle
+### Human authorization and `once` enforcement
 
-Git operations require one human decision gate (explicit chat approval). The
-OpenCode `once` confirmation is a per-command technical safety mechanism — not
-a second human decision, but required for each individual command.
+Each commit/amend/push requires explicit human chat authorization for its exact
+scope. Staging is bounded task-granted authority as described above, not a
+separately approval-gated write.
+Commit/amend requires two distinct approvals in sequence: approve the exact
+message, then separately authorize the exact command before delegation. Push
+has its own separate authorization. The OpenCode `once` confirmation is
+per-command technical enforcement, required for each command; it does not
+replace any chat authorization. The human is not asked afterward to remember or
+attest whether an OpenCode prompt appeared. If an outcome is unclear, first use
+authorized, read-only checks. For a push,
+first use `git status` to determine whether outgoing work remains; do not
+routinely inspect remote URLs. Only if status cannot resolve the outcome,
+perform a read-only check of the exact approved remote/ref, accounting for a
+configured `pushurl` when required. Do not expose raw URLs or credentials. Do
+not use a write operation such as `git fetch` as a probe. If checks show
+success, do not retry. If they establish that the command failed and the
+intended state was not created, report the evidence and obtain explicit chat
+approval plus a fresh OpenCode `once` for the exact retry command. If the state
+remains unresolvable, report the checks and stop without retrying or guessing.
+For a commit, inspect status, local history, and the intended commit's message
+and tree; `git status` alone may not establish whether it was created. Push
+approval is separate from both message approval and commit-execution
+authorization. Never infer the push remote or source/destination ref from
+upstream configuration.
+Never use direct `git commit`, wrappers to evade permission matching,
+automatic approval, persistent `always` approval, or an alternate command or
+path.
 
 ### Constraints
 
 - Commit/push authority is non-delegable (I4).
 - Destructive operations (force-push, `--no-verify`, `--mirror`) are always
   denied regardless of workflow state.
+- Non-force branch deletion and pruning remain ask-gated.
+- `git branch -d/-D`, `git remote prune`, and `git push --delete/-d/--prune`
+  are ask-gated; force-push, hook-bypass, mirror, and other prohibited
+  destructive patterns remain denied.
 - Amend is allowed only while the commit is unpushed.
 
 ## Routine operations vs. persistent/material side effects

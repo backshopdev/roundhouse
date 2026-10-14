@@ -141,25 +141,68 @@ Load the relevant resource based on your task:
 - **Gate 1:** Explicit human plan approval before substantive work.
 - **Gate 2:** Human work approval before agent review. Commit only after every
   required perspective returns non-`BLOCKED`, no human-accepted finding remains
-  unresolved, and the human approves the commit message.
+  unresolved, and the human first approves the exact message and then separately
+  authorizes the exact commit command in chat before delegation. The command also
+  requires a fresh OpenCode `once` confirmation at execution.
 - Any accepted change restarts human work approval and agent review.
 
 ### Re-review scope after accepted findings
 
 When a re-review follows accepted findings, the reviewer covers the **full final state** of the changed files, not just the lines touched by the corrections. The justification: corrections can introduce collateral damage to surrounding context (e.g., a wording change that breaks a blockquote continuation, a link update that affects paragraph flow), so the prior review's verdict on unchanged parts is invalidated by any correction. The reviewer may attest that "carry-forward findings from the prior review still apply to the unchanged parts," but the verdict is on the *final state* as a unit.
 
-### Two-turn separation of review and commit gates
+### Separate review, message, and execution approvals
 
-When the agentic review returns clean, the orchestrator presents a brief summary of the results and asks whether it is okay to move to the commit gate. Only after the human responds affirmatively does the orchestrator, in the next turn, draft the commit message and ask for its approval. This keeps "the work passed review" and "the commit message is approved" as separate gates that cannot be conflated by presenting them together.
+When the agentic review returns clean, the orchestrator presents a brief summary of the results and asks whether it is okay to move to the commit gate. Only after the human responds affirmatively does the orchestrator draft the commit message and ask for its approval. After message approval, the orchestrator presents the exact commit command and asks for separate explicit authorization to execute it before delegation. The approval to move forward, message approval, and execution authorization remain distinct; none is conflated with the fresh OpenCode `once` confirmation at execution.
+
+Before message approval, `document-author` prepares only approved task content
+and reports the actual staged changeset for human approval. Staging itself needs
+no separate approval or permission gate unless the task prohibits it; inspect
+the index first, use explicit paths, and stop on unrelated staged content.
+Repository-wide `git add -A` requires all pending content to be explicitly
+approved and in scope. Message-only amend skips staging, requires an empty index
+immediately before execution, and verifies tree preservation afterward.
+Content-changing amend requires explicit approved/reviewed content scope and
+all normal work/review gates before approval of the actual staged changeset.
 
 ## Key Rules
 
 - No stage advances without passing checks.
 - Only the orchestrator conducts human-facing Socratic interviewing.
-- Every `git commit` and `git push` requires explicit human chat approval plus
-  a fresh OpenCode `once` confirmation for the exact command.
+- Every new commit and amend uses the supported `npm run commit -- ...`
+  procedure; direct `git commit` and alternate `scripts/commit.js` invocation
+  are forbidden. The human approves the exact message, then separately
+  authorizes the exact command in chat before delegation; a fresh OpenCode
+  `once` is also required at execution. This prescribed procedure is not a
+  wrapper to evade permission matching. Push only the exact human-approved
+  command or the approved remote, source ref, and destination ref, using an
+  explicit command such as `git push <remote> <source>:<ref>`; never infer
+  remote or refs from upstream. Each push requires separate explicit chat
+  approval and a fresh `once` for that exact command. Configured remotes are
+  ask-gated; `git branch -d/-D`, `git remote prune`, and push deletion/pruning
+  forms remain ask-gated.
+- Treat explicit chat approval as the human decision gate and `once` as
+  per-command technical enforcement, not another decision. Do not ask the human
+  afterward to remember or attest whether the prompt appeared. The exact
+  command's tool execution result is the tool-side outcome; after successful
+  execution, verify the resulting state through normal post-action checks. If
+  a push result is unclear, first use `git status` to determine whether outgoing
+  work remains; do not routinely inspect remote URLs. Use a read-only check of
+  the exact approved remote/ref only if status cannot resolve the outcome,
+  accounting for configured `pushurl` when required. Do not expose raw URLs or
+  credentials. If checks establish success, do not retry. If they establish
+  failure and the intended state was not created, report the evidence and get
+  explicit chat approval plus a fresh `once` for the exact retry command. If
+  still unresolved, report the checks and stop. Do not use a write operation
+  such as `git fetch` as a probe. For unclear commit results, inspect status,
+  history, the intended message, and commit tree; status alone may not prove
+  whether a commit was created. If permission is denied or a command is not
+  executed, report that outcome and wait for fresh chat approval and `once`
+  before any retry. Never use arbitrary wrappers, auto-approval, persistent
+  `always` approval, or an alternate command or path.
 - Never force-push, bypass hooks, use wrappers to evade permissions, or select
   persistent `always` approval.
+- `document-author` owns commit/amend/push execution; `implementor` has no Git
+  write authority and must route those operations to `document-author`.
 - Durable artifacts live in `docs/` and `ktlo/`; review packets remain in
   context.
 - Questions open dialog; only explicit commands authorize implementation.
