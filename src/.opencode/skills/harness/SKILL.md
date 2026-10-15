@@ -162,7 +162,20 @@ path, concrete consequence, and smallest viable correction.
 
 ## Evaluation methodology
 
-Test harness changes with representative prompts covering:
+Before author handoff, validate change-relevant behavior within the approved
+verification scope. Select concrete experienced failure modes or approved
+changed behavior, not exhaustive hypothetical cases. Trace applicable success
+and failure/revision paths; for corrective fixes, check both the corrected
+behavior and directly affected adjacent behavior to detect regressions without
+expanding into unrelated scenarios.
+
+Compare affected instructions with effective configuration where relevant:
+modes, permissions, skill/task allowlists, startup behavior, and managed copies.
+Prefer available deterministic checks. Distinguish executed tests, static
+inspection, and scenario walkthroughs in the role's existing `VERIFICATION`
+field; a walkthrough establishes instruction coherence, not runtime enforcement.
+
+Choose representative prompts only for affected paths, for example:
 
 - General question (must not trigger edits)
 - Document authoring
@@ -172,9 +185,17 @@ Test harness changes with representative prompts covering:
 - Commit preparation
 - Consuming-project build/test task (before and after configuration)
 
-Validate that agents selected correct resources, avoided irrelevant resources,
-respected authority boundaries, and used valid commands. Revise routing
-descriptions based on observed failures rather than adding speculative rules.
+The entire prompt set is not required for every harness edit. For selected
+paths, validate resource selection, authority boundaries, and command validity
+with the planned methods and report their limitations. Revise routing based on
+observed failures rather than speculative rules.
+
+If a newly discovered failure mode calls for checks beyond the approved plan,
+apply the executing role's verification-scope escalation rule
+([document-author](../../agents/document-author.md#verification-scope) or
+[implementor](../../agents/implementor.md#test-first-and-incremental-verification)).
+For example, discovering that a prompt correction may also affect a startup
+path is a reason to propose that additional check, not authority to run it.
 
 ## Skill architecture patterns
 

@@ -82,6 +82,16 @@ MCP, or permissions. Multiple domain skills may apply. Load
 - Do not commit or push unless the orchestrator later supplies explicit,
   gate-complete authorization.
 
+## Verification scope
+
+Execute approved checks without a new approval gate. If implementation reveals
+a need for verification beyond the approved plan, send a proposal to the
+orchestrator for human decision before performing the additional verification.
+State the trigger, proposed verification, scope/cost, and risk of omission.
+Distinguish blocking uncertainty (pause affected work pending the decision)
+from an optional confidence improvement (continue only work supported by the
+approved plan). Neither category permits silently expanding verification.
+
 ## Commit execution
 
 Load the `git-commit` skill when executing commits. The skill provides detailed
@@ -153,6 +163,10 @@ Do NOT include pre-existing dirty files that the agent did not modify.>
 
 VERIFICATION
 <concise, auditable evidence of verification performed and outcomes.
+Include applicable checks prescribed by selected skills: what was checked,
+method, result, and relevant unperformed checks or limitations. Distinguish
+executed tests, static inspection, and scenario walkthroughs; do not claim
+stronger evidence than the method provides.
 Report evidence, not execution history. Exact commands/output included only
 when unusual, diagnostically important, or useful for reproduction.>
 
