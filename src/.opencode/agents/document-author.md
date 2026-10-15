@@ -46,8 +46,8 @@ Key principles for this role:
 
 | State | Authority | Constraint |
 | --- | --- | --- |
-| Plan + work + review approved | Commit via `npm run commit -- ...` | Human approves the staged changeset, then the exact message, then separately authorizes the exact command before delegation; fresh `once` at execution; direct `git commit` is forbidden |
-| Commit unpushed + human approval | Amend via `npm run commit -- --amend ...` | Message-only skips staging, requires an empty index immediately before execution, and preserves the tree; content-changing requires approved/reviewed content and staged-changeset approval; both require separate exact-message and exact-command approvals and fresh `once` |
+| Plan + work + review approved | Commit via `npm run commit -- ...` | Human gives a SINGLE combined chat approval of the staged changeset and exact message; that approval authorizes scope, exact message, and the exact command; fresh `once` at execution; direct `git commit` is forbidden |
+| Commit unpushed + human approval | Amend via `npm run commit -- --amend ...` | Message-only skips staging, requires an empty index immediately before execution, and preserves the tree; content-changing requires approved/reviewed content and staged-changeset approval; both use the SINGLE combined chat approval and a fresh `once` |
 | Commit exists + human approval | Exact approved push command (with fresh `once`) | Approve exact command or remote, source, and destination ref; never infer from upstream; configured remotes are ask-gated; never force-push |
 
 ## Required inputs
@@ -59,8 +59,11 @@ Key principles for this role:
 - Load `git-commit` for staging/commit preparation and execution; specify new
   commit, message-only amend, or content-changing amend and the approved content
   scope. A task may prohibit staging even though configuration allows it.
-- For execution, explicit human authorization of the exact commit/amend
-  command, separate from approval of its message and received before delegation.
+- For execution, a SINGLE combined human chat approval covering the staged
+  changeset (empty index for message-only amend), the exact message, and the
+  exact commit/amend command. The orchestrator presents the changeset and
+  message together; the combined approval authorizes all three. There is no
+  separate chat authorization for the command.
 - For push, separate explicit authorization of the exact command or its remote,
   source ref, and destination ref. Do not infer any of these from upstream.
 
@@ -102,7 +105,9 @@ High-level constraints:
 
 - Stage only approved task content; staging needs no separate approval gate.
   Do not include unrelated work or silently unstage unexpected index content.
-  Before commit execution, obtain human approval of the actual staged changeset.
+  Before commit execution, obtain human combined approval of the staged
+  changeset (empty index for message-only amend) together with the exact
+  message; that combined approval also authorizes the exact command.
 - Message-only amend skips staging: check the index is empty immediately before
   execution and verify the resulting tree equals the pre-amend tree afterward.
   Content-changing amend requires explicit approved/reviewed content scope and
@@ -114,9 +119,12 @@ High-level constraints:
 - Use `npm run commit -- ...` for every new commit and amend; direct `git commit`
   invocation or alternate `scripts/commit.js` invocation is forbidden. The
   prescribed npm command itself is not a wrapper to evade permission matching.
-  Do not execute until the human has approved the exact message and then given
-  a separate explicit authorization for the exact command before delegation;
-  obtain a fresh OpenCode `once` confirmation for that command at execution.
+  Do not execute until the human has given a SINGLE combined approval
+  covering the staged changeset (empty index for message-only amend), the
+  exact message, and the exact command. The orchestrator presents the
+  changeset and message together; there is no separate chat authorization
+  for the command. Obtain a fresh OpenCode `once` confirmation for the
+  command at execution.
 - **Approved message transport.** When the full approved message is in hand
   (subject, body, footers, blank-line separators), pass it via
   `--message-file <path>`. Do not split the approved message into separate

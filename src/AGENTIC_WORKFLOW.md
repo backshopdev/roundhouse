@@ -141,28 +141,45 @@ Load the relevant resource based on your task:
 - **Gate 1:** Explicit human plan approval before substantive work.
 - **Gate 2:** Human work approval before agent review. Commit only after every
   required perspective returns non-`BLOCKED`, no human-accepted finding remains
-  unresolved, and the human first approves the exact message and then separately
-  authorizes the exact commit command in chat before delegation. The command also
-  requires a fresh OpenCode `once` confirmation at execution.
+  unresolved, and the human gives a SINGLE combined chat approval that covers
+  the staged changeset (empty index for message-only amend), the exact commit
+  message, and the exact `npm run commit -- ...` command. There is no separate
+  chat authorization for the command; the command still requires a fresh
+  OpenCode `once` confirmation at execution.
 - Any accepted change restarts human work approval and agent review.
 
 ### Re-review scope after accepted findings
 
 When a re-review follows accepted findings, the reviewer covers the **full final state** of the changed files, not just the lines touched by the corrections. The justification: corrections can introduce collateral damage to surrounding context (e.g., a wording change that breaks a blockquote continuation, a link update that affects paragraph flow), so the prior review's verdict on unchanged parts is invalidated by any correction. The reviewer may attest that "carry-forward findings from the prior review still apply to the unchanged parts," but the verdict is on the *final state* as a unit.
 
-### Separate review, message, and execution approvals
+### Combined approval at the commit gate
 
-When the agentic review returns clean, the orchestrator presents a brief summary of the results and asks whether it is okay to move to the commit gate. Only after the human responds affirmatively does the orchestrator draft the commit message and ask for its approval. After message approval, the orchestrator presents the exact commit command and asks for separate explicit authorization to execute it before delegation. The approval to move forward, message approval, and execution authorization remain distinct; none is conflated with the fresh OpenCode `once` confirmation at execution.
+When the agentic review returns clean, the orchestrator presents a brief
+summary of the results and asks whether it is okay to move to the commit gate.
+After the human responds affirmatively, the orchestrator drafts the commit
+message and presents a SINGLE combined chat message containing, in that order,
+the actual staged changeset (or the empty index for message-only amend) and
+the proposed exact commit message (or full file content for `--message-file`).
+The human's combined approval of that message authorizes scope, the exact
+message, and the exact `npm run commit -- ...` command — there is no separate
+chat authorization for the command. The fresh OpenCode `once` confirmation at
+execution is separate per-command technical enforcement, not a substitute for
+the combined approval.
 
-Before message approval, `document-author` prepares only approved task content
-and reports the actual staged changeset for human approval. Staging itself needs
-no separate approval or permission gate unless the task prohibits it; inspect
-the index first, use explicit paths, and stop on unrelated staged content.
-Repository-wide `git add -A` requires all pending content to be explicitly
-approved and in scope. Message-only amend skips staging, requires an empty index
-immediately before execution, and verifies tree preservation afterward.
-Content-changing amend requires explicit approved/reviewed content scope and
-all normal work/review gates before approval of the actual staged changeset.
+Before combined approval, `document-author` prepares only approved task content
+and reports the actual staged changeset (empty index for message-only amend).
+The orchestrator combines that changeset with the proposed exact commit
+message in a SINGLE chat message; combined human approval authorizes scope,
+the exact message, and the exact `npm run commit -- ...` command. Staging
+itself needs no separate approval or permission gate unless the task
+prohibits it; inspect the index first, use explicit paths, and stop on
+unrelated staged content. Repository-wide `git add -A` requires all pending
+content to be explicitly approved and in scope. Message-only amend skips
+staging, requires an empty index immediately before execution, and verifies
+tree preservation afterward. Content-changing amend requires explicit
+approved/reviewed content scope and all normal work/review gates before the
+combined approval covers the actual staged changeset and the exact amended
+message.
 
 ## Key Rules
 
@@ -170,10 +187,12 @@ all normal work/review gates before approval of the actual staged changeset.
 - Only the orchestrator conducts human-facing Socratic interviewing.
 - Every new commit and amend uses the supported `npm run commit -- ...`
   procedure; direct `git commit` and alternate `scripts/commit.js` invocation
-  are forbidden. The human approves the exact message, then separately
-  authorizes the exact command in chat before delegation; a fresh OpenCode
-  `once` is also required at execution. This prescribed procedure is not a
-  wrapper to evade permission matching. Push only the exact human-approved
+  are forbidden. A SINGLE combined human chat approval covers the staged
+  changeset (empty index for message-only amend), the exact message, and the
+  exact `npm run commit -- ...` command — there is no separate chat
+  authorization for the command. A fresh OpenCode `once` is also required at
+  execution. This prescribed procedure is not a wrapper to evade permission
+  matching. Push only the exact human-approved
   command or the approved remote, source ref, and destination ref, using an
   explicit command such as `git push <remote> <source>:<ref>`; never infer
   remote or refs from upstream. Each push requires separate explicit chat

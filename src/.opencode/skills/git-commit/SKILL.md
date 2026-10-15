@@ -22,11 +22,17 @@ gate, unless the task explicitly prohibits staging.
 - **Approved content scope**: Explicit content and expected files; "all changes"
   is valid only when all pending content is explicitly approved and in scope
 - **Commit mode**: New commit, message-only amend, or content-changing amend
-- **Execution only**: Human approval of the actual staged changeset (empty index
-  for message-only amend) and exact message text
-- **Push authorization**: "yes" or "no"
-- **Execution only — commit authorization**: separate human chat authorization for the
-  exact command, obtained after message approval and before delegation
+- **Execution only — combined approval**: a SINGLE combined chat approval from
+  the human covering, in order, the actual staged changeset (empty index
+  reported instead for message-only amend) and the exact message text (or full
+  file content for `--message-file`). The combined approval authorizes scope,
+  the exact message, and the exact `npm run commit -- ...` command — there is
+  no separate chat authorization for the command. Execution still requires a
+  fresh OpenCode `once` confirmation for the exact command at execution time
+  (separate per-command technical enforcement, not a substitute for the
+  combined approval).
+- **Push authorization**: "yes" or "no" (separate from the combined commit
+  approval and from the `once` confirmation)
 - For an authorized push: the exact approved command, or the approved remote,
   source ref, and destination ref. Never infer a remote or ref from upstream.
 
@@ -58,10 +64,13 @@ gate, unless the task explicitly prohibits staging.
      do not stage the entire file.
 4. Inspect `git diff --cached --stat` and the full `git diff --cached`; compare
    paths and content with the approved scope. On any mismatch, STOP and report.
-5. Return the actual staged changeset for human approval before exact-message
-   approval and then separate exact-command authorization before delegation.
-   Message-only amend reports the empty index instead. Do not execute while
-   any of these approvals is missing.
+5. Return the actual staged changeset together with the exact message text as
+   the SINGLE combined chat message for human approval. Message-only amend
+   reports the empty index instead of a changeset. The combined approval
+   authorizes scope, the exact message, and the exact `npm run commit -- ...`
+   command — there is no separate chat authorization for the command. Do not
+   execute while combined approval (and the fresh `once` at execution) is
+   missing.
 
 ### Commit Execution
 
@@ -76,12 +85,13 @@ gate, unless the task explicitly prohibits staging.
 - Amend: `npm run commit -- --amend --message-file <path>` (same supported
   transport for the full approved amended message)
 - `npm run commit -- ...` is the required supported procedure for every new
-  commit and amend. Direct `git commit` invocation is forbidden. The exact
-  message must be approved first, followed by separate explicit human
-  authorization for the exact npm command before delegation; the exact command
-  must also receive a fresh OpenCode `once` confirmation at execution. This
-  prescribed repository procedure is not a wrapper to evade permission
-  matching. Do not substitute arbitrary wrappers or alternate commands.
+  commit and amend. Direct `git commit` invocation is forbidden. A SINGLE
+  combined human chat approval covering the staged changeset (empty index
+  for message-only amend), the exact message, and the exact npm command must
+  be obtained before delegation. The exact command must also receive a fresh
+  OpenCode `once` confirmation at execution. This prescribed repository
+  procedure is not a wrapper to evade permission matching. Do not substitute
+  arbitrary wrappers or alternate commands.
 - When the full approved message is in hand (subject, body, footers, and any
   blank-line separators), agents pass it via `--message-file <path>`. Do not
   split the approved message into separate `--subject` and `--body`
@@ -251,12 +261,58 @@ arises; do not relax the contract to fit available tooling:
 
 **Walkthroughs.** The following illustrate the contract:
 
-- *Normal commit.* The agent's pre-execution evidence shows: staged
-  content matches the approved scope, the message file equals the
-  approved bytes, and the index has no drift. Post-execution: `git log
-  -1` shows the new commit at HEAD with the expected tree, and the
-  committed message matches the approved message modulo
+- *Normal commit.* `document-author` stages only the approved task content
+  using explicit paths, inspects `git diff --cached --stat` and the full
+  cached diff against the approved scope, and reports the actual staged
+  changeset. The orchestrator drafts the commit message per
+  `commit-convention`, then presents a SINGLE combined chat message
+  containing the staged changeset and the proposed exact commit message
+  (in that order). The human approves the combined message; that
+  approval authorizes scope, exact message, and the exact
+  `npm run commit -- --message-file <path>` command — there is no
+  separate chat authorization for the command. The orchestrator
+  delegates the exact command; `document-author` re-reads the message
+  file and compares its bytes with the approved message immediately
+  before execution, then runs the command and obtains a fresh OpenCode
+  `once` confirmation for that exact command. Pre-execution evidence:
+  staged content matches the approved scope, the message file equals
+  the approved bytes, and the index has no drift. Post-execution:
+  `git log -1` shows the new commit at HEAD with the expected tree, and
+  the committed message matches the approved message modulo
   trailing-newline normalization.
+- *Message-only amend (empty-index scope).* `document-author` skips
+  staging entirely, requires `git diff --cached --exit-code` to confirm
+  the empty index, and records the pre-amend commit and tree
+  (`git log -1 --format=%H:%T`). The orchestrator drafts the exact
+  replacement message, then presents a SINGLE combined chat message
+  containing the empty-index confirmation and the proposed exact
+  replacement message (in that order). The human approves the combined
+  message; that approval authorizes scope (empty index), exact message,
+  and the exact `npm run commit -- --amend --message-file <path>`
+  command. The orchestrator delegates the exact command;
+  `document-author` re-reads the message file, re-confirms the empty
+  index and the recorded pre-amend commit/tree immediately before
+  execution, then runs the command with a fresh `once`. Post-execution:
+  `git log -1 --format=%T` equals the recorded pre-amend tree (tree
+  preservation), and the committed message matches the approved
+  replacement message modulo trailing-newline normalization.
+- *Content-changing amend.* `document-author` has already received
+  explicit approved/reviewed content scope and all normal plan/work/review
+  gates. The agent inspects the index, stages only the approved content
+  using explicit paths, stops on unrelated staged content, and reports
+  the actual staged changeset. The orchestrator drafts the exact
+  amended message, then presents a SINGLE combined chat message
+  containing the staged changeset and the proposed exact amended
+  message (in that order). The human approves the combined message;
+  that approval authorizes scope, exact amended message, and the exact
+  `npm run commit -- --amend --message-file <path>` command. The
+  orchestrator delegates the exact command; `document-author` re-reads
+  the message file and confirms the index matches the approved scope
+  immediately before execution, then runs the command with a fresh
+  `once`. Post-execution: the amended commit reflects the approved
+  staged content, the committed message matches the approved amended
+  message modulo trailing-newline normalization, and branch/upstream
+  state is unchanged (amend never carries push approval forward).
 - *Equivalent inspection.* The agent needs to demonstrate "no divergence
   from upstream before amend" and chooses `git log --oneline @{u}..`
   rather than an explicit divergence query. The outcome (no unpushed

@@ -139,9 +139,10 @@ The human collaborator may also choose to abandon work at any point and restart 
 
    **Commit-specific note:** For commits, the post-commit summary is a brief
     confirmation (commit hash, files changed) followed by the push approval
-    request. The commit message and exact execution command were separately
-    authorized before execution; no re-review is needed. The push remains a
-    separate authorization for its explicit destination.
+    request. Scope, exact message, and the exact execution command were
+    authorized together in the SINGLE combined human approval before
+    execution; no re-review is needed. The push remains a separate
+    authorization for its explicit destination.
 
 5. **Human approves the work** → continue; **requests changes → return to step
    2** (`document-author`; the plan stays approved unless explicitly reopened).
@@ -171,14 +172,18 @@ The human collaborator may also choose to abandon work at any point and restart 
     human-accepted finding remains unresolved, confirm document-author's
     objective checks passed. Have `document-author` stage only the approved
     content and report the actual staged changeset; staging needs no separate
-    approval gate. Obtain human approval of that staged changeset, then load
-    `commit-convention`, draft the message, and obtain message approval.
-    Then present the exact `npm run commit -- ...` command in chat and obtain a
-    separate explicit human authorization to execute that exact command. Only
-    after both approvals may it be delegated to `document-author`; the fresh
-    OpenCode `once` confirmation occurs for the exact command at execution time.
-    Message approval alone never authorizes execution. Apply the file-backed
-    message rules in the Commit Gate below.
+    approval gate. Load `commit-convention`, draft the message, then present a
+    SINGLE combined chat message containing, in that order, the actual staged
+    changeset and the proposed exact commit message (or full file content for
+    `--message-file`). The human's approval of that combined message authorizes
+    scope, the exact message, and the exact `npm run commit -- ...` command —
+    there is no separate chat authorization for the command. After combined
+    approval, delegate the exact command to `document-author`; the fresh
+    OpenCode `once` confirmation occurs for that exact command at execution
+    time and is separate per-command technical enforcement, not a substitute
+    for the combined approval. Combined approval together with the fresh
+    `once` is required to delegate execution. Apply the file-backed message
+    rules in the Commit Gate below.
 
 ### Amendment path
 
@@ -188,18 +193,18 @@ report branch/upstream divergence and staged-content state. If whether `HEAD`
 has reached a remote is uncertain, stop rather than amend.
 
 - **Message only:** skip staging. Require an empty index immediately before
-  execution, validate and obtain human approval for the exact replacement
-  message, then obtain separate explicit human authorization for the exact
-  amendment command before delegating it. Record the pre-amend tree and require
-  tree preservation afterward.
+  execution. Present the empty index together with the exact replacement
+  message in a SINGLE combined chat message; obtain combined human approval
+  covering scope (empty index), exact message, and the exact amendment
+  command. Record the pre-amend tree and require tree preservation afterward.
 - **Content-changing:** specify the explicit approved content scope, including
   any unstaged content to prepare. All content must receive normal plan/work
   approval, every required non-`BLOCKED` review perspective, and resolution of
   every human-accepted finding. Have `document-author` inspect the index and
-  stage only that content; stop on unexpected staged content. Obtain human
-  approval of the actual staged changeset, then the exact amended message,
-  before separate explicit authorization for the exact amendment command and
-  delegation.
+  stage only that content; stop on unexpected staged content. Present the
+  actual staged changeset together with the exact amended message in a SINGLE
+  combined chat message; obtain combined human approval covering scope,
+  exact message, and the exact amendment command.
 - **After amend:** require verification of the resulting commit, exact message,
   tree, and branch/upstream state before considering any push. An amend never
   carries push approval forward.
@@ -219,13 +224,14 @@ has reached a remote is uncertain, stop rather than amend.
 - Roles overlap — human and agents each bring their own strengths; not a rigid
   fit-vs-quality split.
 - The orchestrator drafts the commit message per the discoverable
-  `commit-convention` skill after human approval of the actual staged changeset
-  (an empty index instead for message-only amend), and gets explicit human
-  message approval. After
-  that approval, show the exact `npm run commit -- ...` command and get a
-  distinct explicit human authorization for that exact execution before
-  delegating it. A `once` prompt is separate technical enforcement at execution,
-  not a substitute for either chat authorization.
+  `commit-convention` skill, then presents a SINGLE combined chat message
+  containing, in that order, the actual staged changeset (an empty index
+  instead for message-only amend) and the proposed exact commit message (or
+  full file content for `--message-file`). The human's approval of that
+  combined message authorizes scope, the exact message, and the exact
+  `npm run commit -- ...` command — there is no separate chat authorization
+  for the command. A `once` prompt is separate per-command technical
+  enforcement at execution, not a substitute for the combined approval.
 - For `--message-file`, present and approve its entire content as the exact
   message. For `--body-file`, present and approve its complete body and
   separately approve the subject and footers. Require document-author to
@@ -235,9 +241,10 @@ has reached a remote is uncertain, stop rather than amend.
   obtain fresh message approval, not execute.
 - Delegate only the exact approved commit or eligible amend command. New
   commits and amends must use the supported `npm run commit -- ...` procedure;
-  direct `git commit` invocation is forbidden. Require distinct explicit chat
-  approvals for the message and then the exact commit/amend command before
-  delegation, followed by a fresh OpenCode `once` confirmation for that command.
+  direct `git commit` invocation is forbidden. The exact message, scope, and
+  command are covered by the SINGLE combined human approval — there is no
+  separate chat authorization for the command — followed by a fresh OpenCode
+  `once` confirmation for that exact command.
   Push only the exact human-approved command or explicitly approved remote,
   source ref, and destination ref, such as `git push <remote> <source>:<ref>`;
   never infer a remote or ref from upstream configuration. Push requires

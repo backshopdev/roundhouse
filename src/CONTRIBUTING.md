@@ -31,27 +31,34 @@ commit or require reviewers to replace their original verdicts with `APPROVE`.
   separate staging approval or permission gate, unless the task prohibits it.
   Inspect the index first, use explicit paths, and stop on unrelated staged
   content. Use repository-wide `git add -A` only when all pending content is
-  explicitly approved and in scope. Human approval of the actual staged
-  changeset precedes message approval and execution authorization.
-- **Commit message:** the orchestrator drafts it per the standard and shows it
-  to the human for approval. Document-author may execute only the exact command
-  containing the approved message.
-- **Command enforcement:** after the exact message is approved in chat, the
-  human must separately authorize the exact commit/amend command in chat before
-  delegation. Document-author must use `npm run commit -- ...` for every new
-  commit and amend; direct `git commit` or alternate `scripts/commit.js`
-  invocation is forbidden. The exact command also requires a fresh OpenCode
-  `once` confirmation at execution. This prescribed repository procedure is
-  not a wrapper to evade permission matching. An amend
+  explicitly approved and in scope. The actual staged changeset (or empty
+  index for message-only amend) is combined with the exact commit message in
+  a SINGLE chat message; combined human approval covers scope, exact
+  message, and the exact commit/amend command.
+- **Commit message:** the orchestrator drafts it per the standard and combines
+  it with the staged changeset in a SINGLE chat message to the human for
+  approval. Document-author may execute only the exact command containing the
+  approved message.
+- **Command enforcement:** the human's combined approval of the staged
+  changeset and the exact commit message also authorizes the exact
+  `npm run commit -- ...` command — there is no separate chat authorization
+  for the command. Document-author must use `npm run commit -- ...` for
+  every new commit and amend; direct `git commit` or alternate
+  `scripts/commit.js` invocation is forbidden. The exact command still
+  requires a fresh OpenCode `once` confirmation at execution. This
+  prescribed repository procedure is not a wrapper to evade permission
+  matching. An amend
   is eligible only while the commit is unpushed. Before amend, verify
   branch/upstream divergence and staged-content state; afterward, verify the
   resulting commit, exact message, tree, and branch state before any push. A
   message-only amend skips staging, requires an empty index immediately before
-  execution and the exact newly human-approved message, and verifies tree
+  execution and the exact newly human-approved message (presented together
+  with the empty index in the combined chat message), and verifies tree
   preservation afterward. Content-changing amend requires explicit approved
   content scope and all normal plan/work/review gates, including every required
   non-`BLOCKED` perspective and no unresolved human-accepted finding; stop on
-  unexpected staged content and obtain approval of the actual staged changeset.
+  unexpected staged content and obtain combined approval of the actual staged
+  changeset and the exact amended message.
   If the commit was pushed, use a new commit. Push only the exact human-approved
   command or approved remote, source ref, and destination ref with an explicit
   command such as `git push <remote> <source>:<ref>`; never infer remote or refs
