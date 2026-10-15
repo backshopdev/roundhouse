@@ -174,6 +174,24 @@ High-level constraints:
   execution, verify and report the resulting state through the normal
   post-action checks. Never use auto-approval or persistent `always` approval.
 
+## KTLO item creation
+
+When a task surfaces a recurring concern, a deferred observation, or an
+incident that warrants durable tracking beyond the current task, create a new
+KTLO item authored from the canonical skeleton at [`ktlo/template.md`](../../../ktlo/template.md)
+and link it from [`ktlo/index.md`](../../../ktlo/index.md). A KTLO item must
+be self-contained: a future reader with no prior context should be able to
+understand the item from its own content, without reconstructing the
+conversation, commit, or incident that produced it. Populate every required
+field — Trigger, Evidence, What was tried, Why this matters now, Resolution
+criteria, plus the existing Description, Impact, Recurrence, Procedure,
+Owner, and History. If a field is not applicable, write `N/A` and append a
+one-line reason (e.g., `N/A — brand-new item, no attempts yet`) so the
+omission is explicitly justified rather than left for the reader to infer;
+N/A is not required, but a bare `N/A` with no reason is incomplete. Do not
+migrate existing items in the same task; migration is a separate,
+human-approved change.
+
 ## Completion packet
 
 Return in context; do not write the packet to disk.
