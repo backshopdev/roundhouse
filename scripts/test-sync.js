@@ -9,18 +9,20 @@
  *   2. All src/.opencode/ files exist in root .opencode/ after sync
  *   3. Root-only artifacts are preserved (not deleted)
  *   4. Stale files (in root but not in src) are removed
- *   5. --verify flag works correctly
- *   6. --verify detects discrepancies (negative test)
+ *   5. --mode verify flag works correctly
+ *   6. --mode verify detects discrepancies (negative test)
  *   7. opencode.json content is synced from src
- *   8. --verify checks opencode.json integrity
- *   9. --verify-only detects opencode.json content discrepancy
- *  10. --verify-only detects missing root opencode.json
+ *   8. --mode verify checks opencode.json integrity
+ *   9. --mode verify detects opencode.json content discrepancy
+ *  10. --mode verify detects missing root opencode.json
  *  11. Sync fails when src/opencode.json is missing
  *  12. Mode 2 creates missing seed files at root
  *  13. Mode 2 leaves existing seed files alone
- *  14. --verify-only detects Mode 2 drift
+ *  14. --mode verify detects Mode 2 drift
  *  15. Empty consumer dir gets fully populated by sync
  *  16. Existing consumer with customizations — Mode 1 replaces, Mode 2 preserves
+ *  17. Missing --mode flag exits non-zero with a clear error
+ *  18. Invalid --mode value exits non-zero
  *
  * Tests run in an isolated OS temp directory (created from os.tmpdir())
  * so they never touch the real repo root. A copy of src/ is placed in the
@@ -174,7 +176,7 @@ function runSync(args, options = {}) {
 // ─── Test 1: Sync runs without error ────────────────────────────────────────
 console.log("\nTest 1: Sync runs without error");
 try {
-  const output = runSync();
+  const output = runSync("--mode sync");
   assert(output.includes("Synced:"), "Sync reports success message");
   assert(
     output.includes("up to date"),
@@ -220,7 +222,7 @@ for (const artifact of ROOT_ONLY) {
 
 // Run sync
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(false, `Sync ran successfully in test 3 (got: ${err.message})`);
 }
@@ -270,7 +272,7 @@ assert(fs.existsSync(staleDir), "Stale test directory created");
 
 // Run sync
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(false, `Sync ran successfully in test 4 (got: ${err.message})`);
 }
@@ -278,24 +280,24 @@ try {
 assert(!fs.existsSync(staleFile), "Stale file was removed");
 assert(!fs.existsSync(staleDir), "Stale directory was removed");
 
-// ─── Test 5: --verify flag works ────────────────────────────────────────────
-console.log("\nTest 5: --verify flag reports success when in sync");
+// ─── Test 5: --mode verify flag works ────────────────────────────────────────────
+console.log("\nTest 5: --mode verify flag reports success when in sync");
 try {
-  const output = runSync("--verify");
+  const output = runSync("--mode verify");
   assert(
     output.includes("Integrity verification passed"),
-    "--verify reports integrity passed"
+    "--mode verify reports integrity passed"
   );
 } catch (err) {
-  assert(false, `--verify ran without error (got: ${err.message})`);
+  assert(false, `--mode verify ran without error (got: ${err.message})`);
 }
 
-// ─── Test 6: --verify detects discrepancies (negative test) ─────────────────
-console.log("\nTest 6: --verify detects discrepancies (negative test)");
+// ─── Test 6: --mode verify detects discrepancies (negative test) ─────────────────
+console.log("\nTest 6: --mode verify detects discrepancies (negative test)");
 
 // Step 1: Ensure baseline is in sync
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(false, `Baseline sync succeeded in test 6 (got: ${err.message})`);
 }
@@ -318,12 +320,12 @@ if (targetFile) {
     `Deleted ${targetFile} from root to create discrepancy`
   );
 
-  // Step 3: Run --verify-only and expect failure (exit code 1)
-  // --verify-only runs integrity check without syncing, so the discrepancy persists
+  // Step 3: Run --mode verify and expect failure (exit code 1)
+  // --mode verify runs integrity check without syncing, so the discrepancy persists
   let combinedOutput = "";
   let exitCode = null;
   try {
-    combinedOutput = runSync("--verify-only");
+    combinedOutput = runSync("--mode verify");
     exitCode = 0;
   } catch (err) {
     exitCode = err.status;
@@ -332,16 +334,16 @@ if (targetFile) {
 
   assert(
     exitCode === 1,
-    `--verify-only exited with code 1 when discrepancy exists (got: ${exitCode})`
+    `--mode verify exited with code 1 when discrepancy exists (got: ${exitCode})`
   );
   assert(
     combinedOutput.includes("Missing in root"),
-    "--verify-only output reports missing file"
+    "--mode verify output reports missing file"
   );
 
   // Step 4: Re-sync to restore the deleted file for subsequent tests
   try {
-    runSync();
+    runSync("--mode sync");
     assert(
       fs.existsSync(targetPath),
       `Re-sync restored ${targetFile}`
@@ -356,7 +358,7 @@ if (targetFile) {
 // ─── Test 7: opencode.json content is synced from src ───────────────────────
 console.log("\nTest 7: opencode.json content is synced from src");
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(false, `Sync ran without error in test 7 (got: ${err.message})`);
 }
@@ -373,29 +375,29 @@ assert(
   "Root opencode.json content matches src/opencode.json byte-for-byte"
 );
 
-// ─── Test 8: --verify checks opencode.json integrity ────────────────────────
-console.log("\nTest 8: --verify checks opencode.json integrity");
+// ─── Test 8: --mode verify checks opencode.json integrity ────────────────────────
+console.log("\nTest 8: --mode verify checks opencode.json integrity");
 try {
-  const output = runSync("--verify");
+  const output = runSync("--mode verify");
   assert(
     output.includes("opencode.json matches src/opencode.json"),
-    "--verify output confirms opencode.json integrity"
+    "--mode verify output confirms opencode.json integrity"
   );
 } catch (err) {
   assert(
     false,
-    `--verify ran without error in test 8 (got: ${err.message})`
+    `--mode verify ran without error in test 8 (got: ${err.message})`
   );
 }
 
-// ─── Test 9: --verify-only detects opencode.json content discrepancy ────────
+// ─── Test 9: --mode verify detects opencode.json content discrepancy ────────
 console.log(
-  "\nTest 9: --verify-only detects opencode.json content discrepancy"
+  "\nTest 9: --mode verify detects opencode.json content discrepancy"
 );
 
 // Ensure baseline is in sync
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(
     false,
@@ -417,11 +419,11 @@ try {
     "Root opencode.json modified to create discrepancy"
   );
 
-  // Run --verify-only and expect failure
+  // Run --mode verify and expect failure
   let test9Output = "";
   let test9ExitCode = null;
   try {
-    test9Output = runSync("--verify-only");
+    test9Output = runSync("--mode verify");
     test9ExitCode = 0;
   } catch (err) {
     test9ExitCode = err.status;
@@ -430,16 +432,16 @@ try {
 
   assert(
     test9ExitCode === 1,
-    `--verify-only exited with code 1 for opencode.json mismatch (got: ${test9ExitCode})`
+    `--mode verify exited with code 1 for opencode.json mismatch (got: ${test9ExitCode})`
   );
   assert(
     test9Output.includes("does not match src/opencode.json"),
-    "--verify-only output reports opencode.json content mismatch"
+    "--mode verify output reports opencode.json content mismatch"
   );
 } finally {
   // Always restore root opencode.json, even if setup or verification fails.
   try {
-    runSync();
+    runSync("--mode sync");
   } catch (err) {
     test9ResyncError = err;
   } finally {
@@ -464,12 +466,12 @@ assert(
   "Re-sync restored root opencode.json content"
 );
 
-// ─── Test 10: --verify-only detects missing root opencode.json ──────────────
-console.log("\nTest 10: --verify-only detects missing root opencode.json");
+// ─── Test 10: --mode verify detects missing root opencode.json ──────────────
+console.log("\nTest 10: --mode verify detects missing root opencode.json");
 
 // Ensure baseline is in sync
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(
     false,
@@ -484,11 +486,11 @@ assert(
   "Root opencode.json deleted to create discrepancy"
 );
 
-// Run --verify-only and expect failure
+// Run --mode verify and expect failure
 let test10Output = "";
 let test10ExitCode = null;
 try {
-  test10Output = runSync("--verify-only");
+  test10Output = runSync("--mode verify");
   test10ExitCode = 0;
 } catch (err) {
   test10ExitCode = err.status;
@@ -497,17 +499,17 @@ try {
 
 assert(
   test10ExitCode === 1,
-  `--verify-only exited with code 1 for missing opencode.json (got: ${test10ExitCode})`
+  `--mode verify exited with code 1 for missing opencode.json (got: ${test10ExitCode})`
 );
 assert(
   test10Output.includes("Missing") &&
     test10Output.includes("opencode.json"),
-  "--verify-only output reports missing root opencode.json"
+  "--mode verify output reports missing root opencode.json"
 );
 
 // Restore by re-syncing
 try {
-  runSync();
+  runSync("--mode sync");
   assert(
     fs.existsSync(destOpenCodeJson),
     "Re-sync restored root opencode.json"
@@ -534,7 +536,7 @@ try {
   let test11Output = "";
   let test11ExitCode = null;
   try {
-    test11Output = runSync();
+    test11Output = runSync("--mode sync");
     test11ExitCode = 0;
   } catch (err) {
     test11ExitCode = err.status;
@@ -577,7 +579,7 @@ assert(!fs.existsSync(buildingPath), "Pre-test: root/BUILDING.md deleted");
 assert(!fs.existsSync(testingPath), "Pre-test: root/TESTING.md deleted");
 
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(false, `Sync ran without error in test 12 (got: ${err.message})`);
 }
@@ -606,7 +608,7 @@ assert(
 );
 
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(false, `Sync ran without error in test 13 (got: ${err.message})`);
 }
@@ -623,12 +625,12 @@ assert(
 // Clean up: delete the sentinel so the next sync re-creates it from src/
 try { fs.unlinkSync(buildingPath); } catch {}
 
-// ─── Test 14: --verify-only detects Mode 2 drift ────────────────────────────
-console.log("\nTest 14: --verify-only detects Mode 2 drift");
+// ─── Test 14: --mode verify detects Mode 2 drift ────────────────────────────
+console.log("\nTest 14: --mode verify detects Mode 2 drift");
 
 // Ensure baseline is in sync (re-creates BUILDING.md from src/)
 try {
-  runSync();
+  runSync("--mode sync");
 } catch (err) {
   assert(false, `Baseline sync succeeded in test 14 (got: ${err.message})`);
 }
@@ -644,11 +646,11 @@ assert(
   "root/BUILDING.md deleted to create Mode 2 drift"
 );
 
-// Run --verify-only and expect failure
+// Run --mode verify and expect failure
 let test14Output = "";
 let test14ExitCode = null;
 try {
-  test14Output = runSync("--verify-only");
+  test14Output = runSync("--mode verify");
   test14ExitCode = 0;
 } catch (err) {
   test14ExitCode = err.status;
@@ -657,17 +659,17 @@ try {
 
 assert(
   test14ExitCode === 1,
-  `--verify-only exited with code 1 for Mode 2 drift (got: ${test14ExitCode})`
+  `--mode verify exited with code 1 for Mode 2 drift (got: ${test14ExitCode})`
 );
 assert(
   test14Output.includes("Mode 2 drift") ||
     test14Output.includes("missing from root"),
-  "--verify-only output reports Mode 2 drift"
+  "--mode verify output reports Mode 2 drift"
 );
 
 // Re-sync to clean state for any subsequent runs
 try {
-  runSync();
+  runSync("--mode sync");
   assert(
     fs.existsSync(buildingPath),
     "Re-sync restored root/BUILDING.md"
@@ -687,7 +689,7 @@ assert(
 );
 
 try {
-  runSync("", { consumer: test15Dir });
+  runSync("--mode sync", { consumer: test15Dir });
 } catch (err) {
   assert(false, `Sync populated empty consumer (got: ${err.message})`);
 }
@@ -832,7 +834,7 @@ fs.mkdirSync(test16Dir, { recursive: true });
 // Mirror the seed file shape by running sync once on the empty consumer,
 // then customizing. (We can't simply rely on a hand-rolled mirror because
 // Mode 2 logic is the behavior under test.)
-runSync("", { consumer: test16Dir });
+runSync("--mode sync", { consumer: test16Dir });
 
 // Mode 1 targets: overwrite .opencode/ agents and opencode.json with
 // sentinels; add a stale file inside .opencode/.
@@ -887,7 +889,7 @@ const srcImplementorPath = path.join(
 
 // Run sync against the customized consumer.
 try {
-  runSync("", { consumer: test16Dir });
+  runSync("--mode sync", { consumer: test16Dir });
 } catch (err) {
   assert(false, `Sync ran on customized consumer (got: ${err.message})`);
 }
@@ -918,6 +920,51 @@ assert(
 assert(
   fs.readFileSync(test16TestingPath, "utf-8") === mode2Sentinel,
   "test16: TESTING.md sentinel preserved (Mode 2 left alone)"
+);
+
+// ─── Test 17: Missing --mode flag exits non-zero with a clear error ─────────
+console.log("\nTest 17: Missing --mode flag exits non-zero with a clear error");
+
+let test17Output = "";
+let test17ExitCode = null;
+try {
+  test17Output = runSync(); // no --mode provided
+  test17ExitCode = 0;
+} catch (err) {
+  test17ExitCode = err.status;
+  test17Output = (err.stdout || "") + "\n" + (err.stderr || "");
+}
+
+assert(
+  test17ExitCode === 2,
+  `Missing --mode exited with code 2 (got: ${test17ExitCode})`
+);
+assert(
+  test17Output.includes("--mode") &&
+    (test17Output.includes("required") || test17Output.includes("missing")),
+  "Missing --mode error message mentions --mode is required"
+);
+
+// ─── Test 18: Invalid --mode value exits non-zero ───────────────────────────
+console.log("\nTest 18: Invalid --mode value exits non-zero");
+
+let test18Output = "";
+let test18ExitCode = null;
+try {
+  test18Output = runSync("--mode bogus");
+  test18ExitCode = 0;
+} catch (err) {
+  test18ExitCode = err.status;
+  test18Output = (err.stdout || "") + "\n" + (err.stderr || "");
+}
+
+assert(
+  test18ExitCode === 2,
+  `Invalid --mode exited with code 2 (got: ${test18ExitCode})`
+);
+assert(
+  test18Output.includes("invalid") && test18Output.includes("--mode"),
+  "Invalid --mode error message mentions invalid --mode"
 );
 
 // ─── Temp cleanup ───────────────────────────────────────────────────────────

@@ -68,8 +68,10 @@ command:
 All changes to source files must be made in `src/` first, then synced to root:
 
 ```bash
-npm run sync-roundhouse
+npm run sync-roundhouse -- --mode sync
 ```
+
+Note: the double-dash (`--`) is required to pass script flags through `npm run`, and the script now requires `--mode` explicitly.
 
 The sync copies `src/.opencode/` over root `.opencode/` (overwriting stale
 files) and copies any missing seed files from `src/` to root. Root-only
@@ -77,11 +79,11 @@ artifacts (`node_modules/`, `data/`, `package.json`, `package-lock.json`, `.giti
 are preserved because the sync script's preserve list protects them; they
 don't normally exist in `src/`.
 
-`--verify-only` and `--verify` exit non-zero when either mode has drift,
+`--mode verify` (read-only) exits non-zero when either mode has drift,
 listing the missing files. Run `npm run test-sync` to execute the automated
 test suite for the sync script. It verifies sync correctness, root-only
 artifact preservation, stale file removal, Mode 1 and Mode 2 seed-file
-behavior, and `--verify` integrity checks (including discrepancy detection).
+behavior, and `--mode verify` integrity checks (including discrepancy detection).
 
 ## Authority and Autonomy
 

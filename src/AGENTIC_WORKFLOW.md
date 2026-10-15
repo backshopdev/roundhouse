@@ -134,8 +134,10 @@ Root `.opencode/` and `opencode.json` are deployed instances of `src/.opencode/`
 After any change to `src/.opencode/` or `src/opencode.json`, sync to root:
 
 ```bash
-npm run sync-roundhouse
+npm run sync-roundhouse -- --mode sync
 ```
+
+Note: the double-dash (`--`) is required to pass script flags through `npm run`, and the script now requires `--mode` explicitly (use `sync` to deploy or `verify` to check without writing).
 
 The sync script (`scripts/sync-roundhouse.js`, relative to the consumer-repo root) is idempotent and platform-independent. Top-level files in `src/` (e.g., `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`) are seeded to root on first install; once root copies exist they are consumer-owned. To re-sync a top-level file, edit root directly or delete the root file before re-running sync.
 

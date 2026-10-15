@@ -15,7 +15,14 @@
  *                      root are left untouched — once present, they're
  *                      consumer-owned.
  *
- * `--verify-only` and `--verify` exit non-zero when either mode has drift.
+ * Usage:
+ *   node scripts/sync-roundhouse.js --mode <sync|verify> [--src <path>] [--consumer <path>]
+ *
+ * Modes:
+ *   sync    Deploy src/.opencode/ and src/opencode.json to root, seed any
+ *           missing src/ files to root, then run integrity verification.
+ *   verify  Read-only: run integrity verification only. Exits non-zero when
+ *           either mode has drift, listing the missing files.
  *
  * Path overrides (used by tests to operate in an isolated temp directory):
  *   --src <path>      Override source root (default: <consumerRoot>/src)
@@ -27,26 +34,61 @@ const fs = require("fs");
 const path = require("path");
 const { ROOT_ONLY, collectRelativePaths, copyMissing, deploy } = require("../package/deploy-roundhouse");
 
+const USAGE = `Usage: node scripts/sync-roundhouse.js --mode <sync|verify> [--src <path>] [--consumer <path>]
+
+Modes:
+  sync    Deploy src/.opencode/ and src/opencode.json to root, seed any
+          missing src/ files to root, then run integrity verification.
+  verify  Read-only: run integrity verification only. Exits non-zero when
+          either mode has drift, listing the missing files.
+
+Options:
+  --src <path>       Override source root (default: <consumerRoot>/src)
+  --consumer <path>  Override destination root (default: this script's
+                     parent directory's parent, i.e. the repo root)
+
+Examples:
+  node scripts/sync-roundhouse.js --mode sync
+  node scripts/sync-roundhouse.js --mode verify
+`;
+
 const defaultConsumerRoot = path.resolve(__dirname, "..");
 
 function parseArgs() {
   const args = process.argv.slice(2);
   const flags = {
-    verify: args.includes("--verify"),
-    verifyOnly: args.includes("--verify-only"),
+    mode: undefined,
     src: undefined,
     consumer: undefined,
   };
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--src") {
-      if (!args[i + 1] || args[i + 1].startsWith("--")) fail("Error: --src requires a path argument");
+    if (args[i] === "--mode") {
+      if (!args[i + 1] || args[i + 1].startsWith("--")) usageError("Error: --mode requires a value (sync or verify).");
+      flags.mode = args[++i];
+    } else if (args[i] === "--src") {
+      if (!args[i + 1] || args[i + 1].startsWith("--")) usageError("Error: --src requires a path argument.");
       flags.src = args[++i];
     } else if (args[i] === "--consumer") {
-      if (!args[i + 1] || args[i + 1].startsWith("--")) fail("Error: --consumer requires a path argument");
+      if (!args[i + 1] || args[i + 1].startsWith("--")) usageError("Error: --consumer requires a path argument.");
       flags.consumer = args[++i];
+    } else if (args[i].startsWith("--")) {
+      usageError(`Error: unknown flag: ${args[i]}`);
+    } else {
+      usageError(`Error: unexpected positional argument: ${args[i]}`);
     }
   }
+  if (!flags.mode) usageError("Error: --mode is required (sync or verify).");
+  if (flags.mode !== "sync" && flags.mode !== "verify") {
+    usageError(`Error: invalid --mode value: ${flags.mode} (must be sync or verify).`);
+  }
   return flags;
+}
+
+function usageError(message) {
+  console.error(message);
+  console.error("");
+  console.error(USAGE);
+  process.exit(2);
 }
 
 function fail(message) {
@@ -94,7 +136,6 @@ function verifyIntegrity(srcRoot, consumerRoot, srcDir, destDir) {
 
 function main() {
   const flags = parseArgs();
-  if (flags.verifyOnly && flags.verify) console.log("Note: --verify is redundant with --verify-only; ignoring --verify.");
 
   const consumerRoot = flags.consumer ? path.resolve(flags.consumer) : defaultConsumerRoot;
   const srcRoot = flags.src ? path.resolve(flags.src) : path.join(consumerRoot, "src");
@@ -109,11 +150,14 @@ function main() {
   const destOpenCodeJson = path.join(consumerRoot, "opencode.json");
 
   if (!fs.existsSync(srcDir)) fail(`Error: source directory not found: ${srcDir}`);
-  if (flags.verifyOnly) {
+
+  if (flags.mode === "verify") {
     verifyIntegrity(srcRoot, consumerRoot, srcDir, destDir);
     verifyOpenCodeJson(srcOpenCodeJson, destOpenCodeJson);
     return;
   }
+
+  // flags.mode === "sync"
   deploy({ sourceDir: srcDir, destinationDir: destDir, sourceJson: srcOpenCodeJson, destinationJson: destOpenCodeJson });
   console.log("Root .opencode/ and opencode.json are now up to date with src/.");
   for (const entry of fs.readdirSync(srcRoot)) {
@@ -121,10 +165,8 @@ function main() {
     copyMissing(path.join(srcRoot, entry), path.join(consumerRoot, entry), false, console.log, consumerRoot);
   }
   console.log("Seed files are never overwritten; managed .opencode/ and opencode.json are overwritten.");
-  if (flags.verify) {
-    verifyIntegrity(srcRoot, consumerRoot, srcDir, destDir);
-    verifyOpenCodeJson(srcOpenCodeJson, destOpenCodeJson);
-  }
+  verifyIntegrity(srcRoot, consumerRoot, srcDir, destDir);
+  verifyOpenCodeJson(srcOpenCodeJson, destOpenCodeJson);
 }
 
 main();

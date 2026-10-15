@@ -35,10 +35,10 @@ These rules apply to all agents in all contexts:
 Root copies of the workflow docs are deployed from `src/` via the `sync-roundhouse` script. To pick up template updates after editing files under `src/`, run:
 
 ```bash
-npm run sync-roundhouse
+npm run sync-roundhouse -- --mode sync
 ```
 
-The sync script (`scripts/sync-roundhouse.js`, relative to the consumer-repo root) is idempotent and platform-independent; see `AGENTIC_WORKFLOW.md` for the full synchronization contract.
+Note: the double-dash (`--`) is required to pass script flags through `npm run`, and the script now requires `--mode` explicitly (use `sync` to deploy or `verify` to check without writing). The sync script (`scripts/sync-roundhouse.js`, relative to the consumer-repo root) is idempotent and platform-independent; see `AGENTIC_WORKFLOW.md` for the full synchronization contract.
 
 ## Read on Demand
 
