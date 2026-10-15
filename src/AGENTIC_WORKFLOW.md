@@ -137,7 +137,7 @@ After any change to `src/.opencode/` or `src/opencode.json`, sync to root:
 npm run sync-roundhouse
 ```
 
-The sync script (`scripts/sync-roundhouse.js`) is idempotent and platform-independent. Top-level files in `src/` (e.g., `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`) are seeded to root on first install; once root copies exist they are consumer-owned. To re-sync a top-level file, edit root directly or delete the root file before re-running sync.
+The sync script (`scripts/sync-roundhouse.js`, relative to the consumer-repo root) is idempotent and platform-independent. Top-level files in `src/` (e.g., `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`) are seeded to root on first install; once root copies exist they are consumer-owned. To re-sync a top-level file, edit root directly or delete the root file before re-running sync.
 
 When a task changes both `src/` and root artifacts, change `src/` first, then
 sync. The document-author must verify synchronization as part of objective

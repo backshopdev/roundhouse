@@ -38,7 +38,7 @@ Root copies of the workflow docs are deployed from `src/` via the `sync-roundhou
 npm run sync-roundhouse
 ```
 
-The sync script (`scripts/sync-roundhouse.js`) is idempotent and platform-independent; see `AGENTIC_WORKFLOW.md` for the full synchronization contract.
+The sync script (`scripts/sync-roundhouse.js`, relative to the consumer-repo root) is idempotent and platform-independent; see `AGENTIC_WORKFLOW.md` for the full synchronization contract.
 
 ## Read on Demand
 
@@ -57,5 +57,8 @@ files by default.
 | Decomposing work into a plan | `planning-structure` skill | Apply planning structure requirements and acceptance criteria |
 | Working with testability, constructor injection, or characterization tests | `design-for-testability` skill | Load foundational testability guidance |
 | Enabling tests on legacy code where current structure blocks normal testing | `test-enablement` skill | Load legacy-code enablement techniques (Feathers-style seams) |
+| Material uncertainty could change plan or spec assumptions | `investigation` skill | Apply the read-only investigation procedure for material uncertainty |
+| Executing a commit, amend, or push | `git-commit` skill | Apply the canonical commit/amend/push procedure and exact-command contracts |
+| Consolidating reviewer output into the final report | `review-findings` skill | Format consolidated review output using the mandatory template |
 | Building or running the project | [`BUILDING.md`](BUILDING.md) | Learn build prerequisites and commands |
 | Running tests | [`TESTING.md`](TESTING.md) | Learn test commands and coverage expectations |

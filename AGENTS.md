@@ -34,7 +34,7 @@ files by default.
 
 | When | Read | Purpose |
 | --- | --- | --- |
-| Understanding the end-to-end workflow | [`AGENTIC_WORKFLOW.md`](AGENTIC_WORKFLOW.md) | Learn stages, gates, roles, orchestration loop, and key rules |
+| Understanding the end-to-end workflow | [`AGENTIC_WORKFLOW.md`](AGENTIC_WORKFLOW.md) | Learn stable roles, the workflow, remediation flow, HITL gates, permission model, and key rules |
 | Authoring or reviewing an artifact | Applicable domain skill | Load artifact-specific or review-lens procedures |
 | Validating documentation | `docs-check` skill or document-author responsibilities | Run and interpret objective checks (markdown lint, JSON validation, link/index validation, frontmatter, secrets) |
 | Preparing a commit | `commit-convention` skill | Apply the normative commit grammar and amendment rules |
@@ -44,6 +44,9 @@ files by default.
 | Decomposing work into a plan | `planning-structure` skill | Apply planning structure requirements and acceptance criteria |
 | Working with testability, constructor injection, or characterization tests | `design-for-testability` skill | Load foundational testability guidance |
 | Enabling tests on legacy code where current structure blocks normal testing | `test-enablement` skill | Load legacy-code enablement techniques (Feathers-style seams) |
+| Material uncertainty could change plan or spec assumptions | `investigation` skill | Apply the read-only investigation procedure for material uncertainty |
+| Executing a commit, amend, or push | `git-commit` skill | Apply the canonical commit/amend/push procedure and exact-command contracts |
+| Consolidating reviewer output into the final report | `review-findings` skill | Format consolidated review output using the mandatory template |
 | Understanding authority and autonomy | [`src/.opencode/workflow-docs/autonomy/index.md`](src/.opencode/workflow-docs/autonomy/index.md) | Learn the autonomy model, authority types, escalation protocol, and session lifetime rules |
 
 ## OpenCode Synchronization
