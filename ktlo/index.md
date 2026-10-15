@@ -16,6 +16,7 @@ Operational "keep the lights on" items. Links are relative, same-directory only 
 - [README accuracy: "seven skills across three categories" claim](./KTLO-20261009-03.md) — Reconciles `README.md` line 117's "seven skills across three categories" claim with the actual skill allowlist (currently 4 skills), the same enumeration issue already fixed on an earlier line. — `[project]` — 2026-10-09
 - [`src/AGENTS.md` and `src/AGENTIC_WORKFLOW.md` sync script references](./KTLO-20261009-04.md) — Resolves the pre-existing root-vs-`src/` divergence where root documents reference `npm run sync-roundhouse` but the template copies do not mention the sync script. — `[project]` — 2026-10-09
 - [Granular installation options](./KTLO-20261009-05.md) — Explores making the `init`/`update` lifecycle more granular so consumers do not have to adopt the full template; main concern is letting consumers pick which skills to install rather than receiving all 48. — `[project]` — 2026-10-09
+- [Assess deferred Git inspection allowances](./KTLO-20261015-01.md) — Records the confirmed `ls-files` gap, separate unresolved staging denial, and deferred inspection candidates requiring later human approval. — `[project]` — 2026-10-15
 
 ## Templates
 

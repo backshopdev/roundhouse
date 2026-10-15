@@ -73,6 +73,8 @@
           "* git *": "deny",
           "*git commit*": "deny",
           "*git.exe commit*": "deny",
+          "git ls-files": "allow",
+          "git ls-files *": "allow",
           "git diff": "allow",
           "git diff *": "allow",
           "git status": "allow",
