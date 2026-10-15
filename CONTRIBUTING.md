@@ -2,7 +2,11 @@
 
 This document defines how changes are made, reviewed, and committed in this repository.
 
-This is a **populate-once** file for consuming repos: copy it in, set the tracker key format below, and leave the rest aligned with the shared standard. The commit *grammar* itself is owned by the discoverable `commit-convention` skill — this file points to it rather than restating every rule.
+This is a **populate-once** file for consuming repos: copy it in during setup,
+set your tracker key format below, and leave the rest aligned with the shared
+standard. The commit *grammar* itself is owned by the discoverable
+`commit-convention` skill — this file points to it rather than restating every
+rule.
 
 ## Human-in-the-loop (HITL) — hard gate on every commit
 
@@ -32,16 +36,16 @@ commit or require reviewers to replace their original verdicts with `APPROVE`.
   separate staging approval or permission gate, unless the task prohibits it.
   Inspect the index first, use explicit paths, and stop on unrelated staged
   content. Use repository-wide `git add -A` only when all pending content is
-  explicitly approved and in scope. Human approval of the actual staged
-  changeset precedes message approval and execution authorization.
-- **Commit message:** the orchestrator drafts it per the standard and shows it
-  to the human for approval. This approves the message only.
-- **Command enforcement:** after message approval, the orchestrator presents
-  the exact commit/amend command and obtains separate explicit human chat
-  authorization before delegation. Document-author must use
-  `npm run commit -- ...` for every new commit and amend; direct `git commit` or
-  alternate `scripts/commit.js` invocation is forbidden. The exact command
-  also requires a fresh OpenCode `once` confirmation at execution. This
+  explicitly approved and in scope.
+- **Commit message:** the orchestrator drafts it per the standard for human
+  approval. Document-author may execute only the exact command containing the
+  approved message.
+- **Command enforcement:** human approval is required at the commit gate; the
+  exact approval contract (staged changeset, exact message, and exact
+  `npm run commit -- ...` command) is defined in the `git-commit` skill. A
+  fresh OpenCode `once` confirmation is required at execution. Document-author
+  must use `npm run commit -- ...` for every new commit and amend; direct
+  `git commit` or alternate `scripts/commit.js` invocation is forbidden. This
   prescribed repository procedure is not a wrapper to evade permission
   matching. An amend
   is eligible only while the commit is unpushed. Before amend, verify
@@ -52,11 +56,12 @@ commit or require reviewers to replace their original verdicts with `APPROVE`.
   preservation afterward. Content-changing amend requires explicit approved
   content scope and all normal plan/work/review gates, including every required
   non-`BLOCKED` perspective and no unresolved human-accepted finding; stop on
-  unexpected staged content and obtain approval of the actual staged changeset.
+  unexpected staged content and obtain approval of the actual staged changeset
+  and the exact amended message.
   If the commit was pushed, use a new commit. Push only the exact human-approved
-  command or explicitly approved remote, source ref, and destination ref with
-  an explicit command such as `git push <remote> <source>:<ref>`; never infer a
-  remote or ref from upstream. Every push requires separate explicit
+  command or approved remote, source ref, and destination ref with an explicit
+  command such as `git push <remote> <source>:<ref>`; never infer remote or
+  refs from upstream. Every push requires separate explicit
   chat approval and a fresh `once` for that exact command. Configured remotes
   are ask-gated; `git branch -d/-D`, `git remote prune`, and push deletion or
   pruning forms remain ask-gated. If a

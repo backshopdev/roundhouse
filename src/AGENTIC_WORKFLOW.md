@@ -6,18 +6,21 @@ document-authoring workflow template. For a concise introduction, see
 
 ## Agent Roles
 
-### 1. Orchestrator (primary)
+### 1. Orchestrator (primary, required entry point)
 
-The orchestrator is the only human-invokable agent. It conducts Socratic
-interviews, drafts authoring briefs, delegates work to subagents, presents
-review findings to the human, and manages the commit gate. It never edits files
-directly. See `.opencode/agents/orchestrator.md` for the full protocol.
+The orchestrator is the only human-invokable agent and the required entry
+point. It runs Socratic planning, enforces both HITL gates, delegates work,
+composes review perspectives from skills, consolidates findings, presents
+review findings to the human, and manages commit approval. It never edits
+files directly. See `.opencode/agents/orchestrator.md` for the full protocol.
 
 ### 2. document-author (subagent)
 
-The document-author agent implements the approved plan. It loads domain skills,
-creates and edits documentation files, runs validation checks, and returns a
-completion packet. It cannot delegate tasks. See
+The document-author agent implements the approved plan in isolated context. It
+loads relevant domain skills, creates and edits documentation files, owns the
+explicit changed-file list, runs repo objective checks, and returns a completion
+packet. It cannot delegate tasks. Accepted human/reviewer changes return here;
+the plan stays approved unless the human explicitly reopens it. See
 `.opencode/agents/document-author.md` for the full contract.
 
 ### 3. implementor (subagent)
@@ -30,10 +33,20 @@ changes, and returns a completion packet. It cannot delegate tasks. See
 
 ### 4. Reviewer (subagent)
 
-The reviewer agent provides independent, read-only review. It loads `peer` plus
-at least one relevant domain or lens skill, inspects the changed-file list and
-acceptance criteria, and reports findings with severity, confidence, and
-evidence. Multiple review sessions may run in parallel. See
+The reviewer agent provides independent, read-only review. Every review launches
+one or more independent review sessions in parallel, one session per meaningful
+perspective. Every session loads mandatory `peer` plus at least one relevant
+domain skill (for example, `harness`, `literature-note`, or
+`opencode-configuration`). Add `security` to that session if any listed change
+affects permissions, secrets, auth, MCP, plugins, executable tools/commands,
+network access, external directories, trust boundaries, or equivalent sensitive
+configuration, regardless of the session's perspective. If no domain skill
+applies, stop for a domain-skill gap; never run `peer` alone.
+
+Sessions are read-only and receive the changed-file list, acceptance criteria,
+author attention flags, and assigned skills explicitly. They report review
+results and assumptions to the orchestrator and never interview the human. Each
+session inspects the entire supplied changed-file list. See
 `.opencode/agents/reviewer.md` for the invocation contract.
 
 ## Skill Architecture
@@ -58,6 +71,13 @@ plus relevant lens skills. Sessions report findings to the orchestrator, which
 presents them to the human for triage. The human accepts, dismisses, or
 requests changes. Accepted changes return to document-author. The plan remains
 approved unless the human explicitly reopens it.
+
+### Consolidating findings and disputes
+
+The orchestrator may merge mechanical duplicate findings but retains session
+and skill provenance. Substantive disagreement is a **Debate** presented to the
+human for authoritative triage; the orchestrator never resolves it alone or
+rewrites an original reviewer verdict after triage.
 
 ## Remediation Flow
 
@@ -119,6 +139,25 @@ npm run sync-roundhouse
 
 The sync script (`scripts/sync-roundhouse.js`) is idempotent and platform-independent. Top-level files in `src/` (e.g., `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`) are seeded to root on first install; once root copies exist they are consumer-owned. To re-sync a top-level file, edit root directly or delete the root file before re-running sync.
 
+When a task changes both `src/` and root artifacts, change `src/` first, then
+sync. The document-author must verify synchronization as part of objective
+checks.
+
+## Objective Checks
+
+The document-author runs checks; there is no separate verifier. This is a docs
+and configuration repository: lint touched Markdown with
+`npx --yes markdownlint-cli2@0.23.2`, validate JSON/JSONC and OpenCode schema
+expectations, and check acceptance criteria, links/indexes, frontmatter,
+whitespace, secrets, root/template synchronization, and git status. Code
+lint/test/build is `N/A`.
+
+## Index and Link Discipline
+
+Every `index.md` uses relative links and links every sibling Markdown file plus
+each immediate child directory's `index.md`. It may link only to same-directory
+Markdown or an immediate child's `index.md`; no deep or absolute links.
+
 ## Routing Table
 
 Load the relevant resource based on your task:
@@ -138,67 +177,123 @@ Load the relevant resource based on your task:
 
 ## HITL Gates
 
-- **Gate 1:** Explicit human plan approval before substantive work.
-- **Gate 2:** Human work approval before agent review. Commit only after every
-  required perspective returns non-`BLOCKED`, no human-accepted finding remains
-  unresolved, and the human gives a SINGLE combined chat approval that covers
-  the staged changeset (empty index for message-only amend), the exact commit
-  message, and the exact `npm run commit -- ...` command. There is no separate
-  chat authorization for the command; the command still requires a fresh
-  OpenCode `once` confirmation at execution.
-- Any accepted change restarts human work approval and agent review.
+- **Gate 1 — plan approval:** obtain explicit human plan approval before
+  substantive work unless executing an already-approved written plan in the
+  repo.
+- **Gate 2 — commit approval:** human work approval precedes agent review. A
+  commit requires a non-`BLOCKED` packet from every required perspective, with
+  blocked sessions corrected and rerun, and no unresolved human-accepted
+  finding. Human approval is required at the commit gate; the exact approval
+  contract (staged changeset, exact message, and exact
+  `npm run commit -- ...` command) is defined in the `git-commit` skill. A
+  fresh OpenCode `once` confirmation is required at execution. Human-dismissed
+  findings do not block commit or require reviewers to change their original
+  verdicts to `APPROVE`.
+- Any accepted change restarts human work approval and agent review; re-plan
+  only when the human reopens the plan.
 
 ### Re-review scope after accepted findings
 
 When a re-review follows accepted findings, the reviewer covers the **full final state** of the changed files, not just the lines touched by the corrections. The justification: corrections can introduce collateral damage to surrounding context (e.g., a wording change that breaks a blockquote continuation, a link update that affects paragraph flow), so the prior review's verdict on unchanged parts is invalidated by any correction. The reviewer may attest that "carry-forward findings from the prior review still apply to the unchanged parts," but the verdict is on the *final state* as a unit.
 
-### Combined approval at the commit gate
+### Approval at the commit gate
 
-When the agentic review returns clean, the orchestrator presents a brief
-summary of the results and asks whether it is okay to move to the commit gate.
-After the human responds affirmatively, the orchestrator drafts the commit
-message and presents a SINGLE combined chat message containing, in that order,
-the actual staged changeset (or the empty index for message-only amend) and
-the proposed exact commit message (or full file content for `--message-file`).
-The human's combined approval of that message authorizes scope, the exact
-message, and the exact `npm run commit -- ...` command — there is no separate
-chat authorization for the command. The fresh OpenCode `once` confirmation at
-execution is separate per-command technical enforcement, not a substitute for
-the combined approval.
+Human approval is required at the commit gate. The exact approval contract —
+including how the staged changeset, exact message, and exact
+`npm run commit -- ...` command are presented and authorized — is defined in
+the `git-commit` skill. A fresh OpenCode `once` confirmation is required at
+execution. Load that skill for the current authoritative procedure.
 
-Before combined approval, `document-author` prepares only approved task content
-and reports the actual staged changeset (empty index for message-only amend).
-The orchestrator combines that changeset with the proposed exact commit
-message in a SINGLE chat message; combined human approval authorizes scope,
-the exact message, and the exact `npm run commit -- ...` command. Staging
-itself needs no separate approval or permission gate unless the task
+Before approval, `document-author` prepares only approved task content and
+reports the actual staged changeset (empty index for message-only amend).
+Staging itself needs no separate approval or permission gate unless the task
 prohibits it; inspect the index first, use explicit paths, and stop on
 unrelated staged content. Repository-wide `git add -A` requires all pending
 content to be explicitly approved and in scope. Message-only amend skips
 staging, requires an empty index immediately before execution, and verifies
 tree preservation afterward. Content-changing amend requires explicit
-approved/reviewed content scope and all normal work/review gates before the
-combined approval covers the actual staged changeset and the exact amended
-message.
+approved/reviewed content scope and all normal work/review gates.
+
+## Permission Model
+
+Agent authority is defined by the
+[autonomy model](src/.opencode/workflow-docs/autonomy/index.md). The autonomy
+model provides normative guidance; `opencode.json` provides technical
+enforcement. Both are authoritative; neither substitutes for the other.
+
+### Authority types
+
+Three authority types classify every action an agent can take:
+
+- **Standing role authority:** Permissions inherent to the agent's role (read,
+  search, routine operations). Stable and repeatable; no per-task approval
+  needed.
+- **Task-granted authority:** Authority conferred by an approved task handoff.
+  Bounded by the objective; expires when the task is accepted, abandoned, or
+  superseded.
+- **Workflow-state-derived authority:** Authority that arises from approved
+  workflow states (for example, git commit/push after full approval). Narrow
+  and non-delegable.
+
+All actions must satisfy the authority equation: capability × scope × purpose ×
+delegation constraint.
+
+### Friction reduction
+
+- **Content search:** Content search is a routine read operation with no side
+  effects; agents should reach for it freely.
+- **Web fetch:** The orchestrator has free web fetch for planning and synthesis.
+  Subagents are bounded by URLs listed in their task handoff; other URLs
+  require human approval.
+- **Git commit/amend/push:** Single-gate principle — one human gate (explicit
+  chat authorization for the exact side effect). Human approval is required at
+  the commit gate; the exact approval contract is defined in the `git-commit`
+  skill. Push approval is separate. The OpenCode `once` confirmation is
+  technical enforcement, not a substitute for chat authorization, and is
+  required for the exact command. Do not ask the human afterward to remember or
+  attest whether the prompt appeared. Treat the exact command's tool execution
+  result as the tool-side outcome; after successful execution, verify the
+  resulting state through normal post-action checks. If a push result is
+  unclear, first use `git status` to determine whether outgoing work remains;
+  do not routinely inspect remote URLs. If status cannot resolve the outcome,
+  perform a read-only check of the exact approved remote/ref only when status
+  cannot resolve it, accounting for configured `pushurl` when required. Do not
+  expose raw URLs or credentials. If checks show success, do not retry. If
+  they establish failure and the intended state was not created, report the
+  evidence and get explicit chat approval plus a fresh `once` for the exact
+  retry command. If still unresolved, report the checks and stop. Do not use a
+  write operation such as `git fetch` as a probe. For an unclear commit result,
+  inspect status, history, the intended message, and commit tree; status alone
+  may not prove whether it was created. If permission is denied or the command
+  is not executed, report that outcome and wait for fresh chat approval and
+  `once` before any retry. Push approval is separate from commit approval.
 
 ## Key Rules
 
-- No stage advances without passing checks.
+- No stage advances without passing checks; findings are inputs the human may
+  dismiss.
 - Only the orchestrator conducts human-facing Socratic interviewing.
 - Every new commit and amend uses the supported `npm run commit -- ...`
   procedure; direct `git commit` and alternate `scripts/commit.js` invocation
-  are forbidden. A SINGLE combined human chat approval covers the staged
-  changeset (empty index for message-only amend), the exact message, and the
-  exact `npm run commit -- ...` command — there is no separate chat
-  authorization for the command. A fresh OpenCode `once` is also required at
-  execution. This prescribed procedure is not a wrapper to evade permission
-  matching. Push only the exact human-approved
+  are forbidden. Human approval is required at the commit gate; the exact
+  approval contract is defined in the `git-commit` skill. A fresh OpenCode
+  `once` is required at execution. This prescribed procedure is not a wrapper
+  to evade permission matching. Push only the exact human-approved
   command or the approved remote, source ref, and destination ref, using an
   explicit command such as `git push <remote> <source>:<ref>`; never infer
   remote or refs from upstream. Each push requires separate explicit chat
   approval and a fresh `once` for that exact command. Configured remotes are
   ask-gated; `git branch -d/-D`, `git remote prune`, and push deletion/pruning
-  forms remain ask-gated.
+  forms remain ask-gated. An amend additionally requires a fresh confirmation
+  for its exact command and is allowed only while the commit is unpushed.
+  Message-only amend skips staging, requires an empty index immediately before
+  execution, and verifies tree preservation afterward. Content-changing amend
+  requires explicit approved/reviewed content scope and all normal work/review
+  gates; stop on unexpected staged content. Verify divergence and staged
+  state before amend, then the resulting commit/message/tree and branch state
+  after. Never force-push, bypass hooks, use arbitrary wrappers to evade
+  permissions, use OpenCode `--auto`/auto-approve, or select persistent
+  `always` approval. Correct an already-pushed commit with a new commit.
 - Treat explicit chat approval as the human decision gate and `once` as
   per-command technical enforcement, not another decision. Do not ask the human
   afterward to remember or attest whether the prompt appeared. The exact
@@ -218,6 +313,11 @@ message.
   executed, report that outcome and wait for fresh chat approval and `once`
   before any retry. Never use arbitrary wrappers, auto-approval, persistent
   `always` approval, or an alternate command or path.
+- Report the actual tool execution outcome and verify resulting state after
+  successful execution. Do not ask the human to recall prompt history or
+  infer that a `once` prompt was absent from a missing separate receipt. If
+  permission is denied or the command is not executed, stop and report that
+  outcome without an alternate command or path.
 - Never force-push, bypass hooks, use wrappers to evade permissions, or select
   persistent `always` approval.
 - `document-author` owns commit/amend/push execution; `implementor` has no Git
@@ -225,5 +325,6 @@ message.
 - Durable artifacts live in `docs/` and `ktlo/`; review packets remain in
   context.
 - Questions open dialog; only explicit commands authorize implementation.
-- Keep models unpinned and permissions least-privileged.
+- Keep models unpinned and permissions least-privileged. OpenCode config-time
+  changes require quitting and restarting OpenCode before they take effect.
 - Restart OpenCode after config, agent, skill, or plugin changes.

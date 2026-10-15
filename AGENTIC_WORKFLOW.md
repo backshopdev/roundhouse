@@ -121,11 +121,10 @@ checks.
 - **Gate 2 — commit approval:** human work approval precedes agent review. A
   commit requires a non-`BLOCKED` packet from every required perspective, with
   blocked sessions corrected and rerun, and no unresolved human-accepted
-  finding, followed by explicit human approval of the
-  `commit-convention`-compliant message. After message approval, the
-  orchestrator presents the exact `npm run commit -- ...` command and obtains a
-  separate explicit human authorization to execute it before delegation. The
-  exact command also requires a fresh OpenCode `once` at execution. Human-
+  finding. Human approval is required at the commit gate; the exact approval
+  contract (staged changeset, exact message, and exact
+  `npm run commit -- ...` command) is defined in the `git-commit` skill. A
+  fresh OpenCode `once` confirmation is required at execution. Human-
   dismissed findings do not block commit or require reviewers to change their
   original verdicts to `APPROVE`.
 - Any accepted change request returns to document-author and restarts work
@@ -135,19 +134,23 @@ checks.
 
 When a re-review follows accepted findings, the reviewer covers the **full final state** of the changed files, not just the lines touched by the corrections. The justification: corrections can introduce collateral damage to surrounding context (e.g., a wording change that breaks a blockquote continuation, a link update that affects paragraph flow), so the prior review's verdict on unchanged parts is invalidated by any correction. The reviewer may attest that "carry-forward findings from the prior review still apply to the unchanged parts," but the verdict is on the *final state* as a unit.
 
-### Separate review, message, and execution approvals
+### Approval at the commit gate
 
-When the agentic review returns clean, the orchestrator presents a brief summary of the results and asks whether it is okay to move to the commit gate. Only after the human responds affirmatively does the orchestrator draft the commit message and ask for its approval. After message approval, the orchestrator presents the exact commit command and asks for separate explicit authorization to execute it before delegation. The approval to move forward, message approval, and execution authorization remain distinct; none is conflated with the fresh OpenCode `once` confirmation at execution.
+Human approval is required at the commit gate. The exact approval contract —
+including how the staged changeset, exact message, and exact
+`npm run commit -- ...` command are presented and authorized — is defined in
+the `git-commit` skill. A fresh OpenCode `once` confirmation is required at
+execution. Load that skill for the current authoritative procedure.
 
-Before message approval, `document-author` prepares only approved task content
-and reports the actual staged changeset for human approval. Staging itself needs
-no separate approval or permission gate unless the task prohibits it; inspect
-the index first, use explicit paths, and stop on unrelated staged content.
-Repository-wide `git add -A` requires all pending content to be explicitly
-approved and in scope. Message-only amend skips staging, requires an empty index
-immediately before execution, and verifies tree preservation afterward.
-Content-changing amend requires explicit approved/reviewed content scope and
-all normal work/review gates before approval of the actual staged changeset.
+Before approval, `document-author` prepares only approved task content and
+reports the actual staged changeset (empty index for message-only amend).
+Staging itself needs no separate approval or permission gate unless the task
+prohibits it; inspect the index first, use explicit paths, and stop on
+unrelated staged content. Repository-wide `git add -A` requires all pending
+content to be explicitly approved and in scope. Message-only amend skips
+staging, requires an empty index immediately before execution, and verifies
+tree preservation afterward. Content-changing amend requires explicit
+approved/reviewed content scope and all normal work/review gates.
 
 ## Permission Model
 
@@ -185,11 +188,11 @@ for the complete classification.
   Subagents are bounded by URLs listed in their task handoff; other URLs
   require human approval.
 - **Git commit/amend/push:** Single-gate principle — one human gate (explicit chat
-  authorization for the exact side effect). Commit-message approval is not
-  execution authorization: obtain separate explicit approval for the exact
-  commit command after message approval and before delegation. Push approval is
-  separate. The OpenCode `once` confirmation is technical enforcement, not a
-  substitute for chat authorization, and is required for the exact command. Do not ask the human
+  authorization for the exact side effect). Human approval is required at the
+  commit gate; the exact approval contract is defined in the `git-commit`
+  skill. Push approval is separate. The OpenCode `once` confirmation is
+  technical enforcement, not a substitute for chat authorization, and is
+  required for the exact command. Do not ask the human
   afterward to remember or attest whether the prompt appeared. Treat the exact
   command's tool execution result as the tool-side outcome; after successful
   execution, verify the resulting state through normal post-action checks. If
@@ -232,11 +235,11 @@ remain after the relevant grants.
 - Only the orchestrator conducts human-facing Socratic interviewing.
 - Every new commit and amend by document-author uses the supported
   `npm run commit -- ...` procedure; direct `git commit` and alternate
-  `scripts/commit.js` invocation are forbidden. The human approves the exact
-  message, then separately authorizes the exact commit/amend command in chat
-  before delegation; the exact npm command also requires a fresh OpenCode
-  `once` at execution. This prescribed procedure is not a wrapper to evade
-  permission matching. Push only the exact human-approved command or the
+  `scripts/commit.js` invocation are forbidden. Human approval is required at
+  the commit gate; the exact approval contract is defined in the `git-commit`
+  skill. A fresh OpenCode `once` confirmation is required at execution. This
+  prescribed procedure is not a wrapper to evade permission matching. Push
+  only the exact human-approved command or the
   explicitly approved remote, source ref, and destination ref, with an explicit
   command such as `git push <remote> <source>:<ref>`; never infer a remote or
   ref from upstream. Push requires separate explicit chat approval and a fresh
@@ -247,12 +250,11 @@ remain after the relevant grants.
   the commit is unpushed. Message-only amend skips staging, requires an empty
   index immediately before execution, and verifies tree preservation afterward.
   Content-changing amend requires explicit approved/reviewed content scope and
-  all normal gates, including human approval of the actual staged changeset;
-  stop on unexpected staged content. Verify divergence and staged state before
-  amend, then the resulting commit/message/tree and branch state after.
-  Never force-push, bypass hooks, use arbitrary wrappers to evade permissions,
-  use OpenCode `--auto`/auto-approve, or select persistent `always` approval.
-  Correct an already-pushed commit with a new commit.
+  all normal gates; stop on unexpected staged content. Verify divergence and
+  staged state before amend, then the resulting commit/message/tree and branch
+  state after. Never force-push, bypass hooks, use arbitrary wrappers to evade
+  permissions, use OpenCode `--auto`/auto-approve, or select persistent
+  `always` approval. Correct an already-pushed commit with a new commit.
 - Report the actual tool execution outcome and verify resulting state after
   successful execution. Do not ask the human to recall prompt history or infer
   that a `once` prompt was absent from a missing separate receipt. If permission
@@ -269,7 +271,8 @@ remain after the relevant grants.
   failure and the intended state was not created, report the evidence and wait
   for explicit chat approval plus a fresh `once` for the exact retry command.
   If still unresolved, report the checks and stop without retrying or guessing.
-- Persistent artifacts live in `~/docs/`; chat review packets are ephemeral.
+- Persistent artifacts live in `docs/` and `ktlo/`; chat review packets are
+  ephemeral.
 - `document-author` owns commit/amend/push execution; `implementor` has no Git
   write authority and routes those operations to `document-author`.
 - A question/opinion probe opens dialog, not file edits; implementation requires
