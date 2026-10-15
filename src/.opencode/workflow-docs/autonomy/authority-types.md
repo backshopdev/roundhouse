@@ -110,8 +110,8 @@ non-delegable, and tied to specific transitions.
 
 | State | Authority | Constraint |
 | --- | --- | --- |
-| Plan approved + work approved + review non-BLOCKED | Commit via `npm run commit -- ...` | Human approves actual staged changeset, then exact message, then separately authorizes exact command before delegation, then fresh `once`; direct `git commit` is forbidden |
-| Commit unpushed + human approval | Amend via `npm run commit -- --amend ...` | Message-only skips staging, requires empty index immediately before execution and tree preservation afterward; content-changing requires explicit approved/reviewed scope and staged-changeset approval; both require separate exact-message/command approvals and fresh `once` |
+| Plan + work + review approved | Commit via `npm run commit -- ...` | Human gives a SINGLE combined chat approval of the staged changeset and exact message; that approval authorizes scope, exact message, and the exact command; fresh `once` at execution; direct `git commit` is forbidden |
+| Commit unpushed + human approval | Amend via `npm run commit -- --amend ...` | Message-only skips staging, requires an empty index immediately before execution, and preserves the tree; content-changing requires approved/reviewed content and staged-changeset approval; both use the SINGLE combined chat approval and a fresh `once` |
 | Commit exists + human approval | Exact approved push command (with fresh `once`) | Explicitly approve exact command or remote, source ref, and destination ref; never infer from upstream; configured remotes are ask-gated; never force-push |
 
 ### Human authorization and `once` enforcement
@@ -119,8 +119,10 @@ non-delegable, and tied to specific transitions.
 Each commit/amend/push requires explicit human chat authorization for its exact
 scope. Staging is bounded task-granted authority as described above, not a
 separately approval-gated write.
-Commit/amend requires two distinct approvals in sequence: approve the exact
-message, then separately authorize the exact command before delegation. Push
+Commit/amend uses a SINGLE combined chat approval of the staged changeset
+or empty index (for message-only amend) and the exact message; that approval
+authorizes scope, exact message, and the exact `npm run commit -- ...`
+command — no separate chat authorization for the command. Push
 has its own separate authorization. The OpenCode `once` confirmation is
 per-command technical enforcement, required for each command; it does not
 replace any chat authorization. The human is not asked afterward to remember or
