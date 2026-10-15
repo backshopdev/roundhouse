@@ -132,6 +132,14 @@ state. Commit-script and equivalent commit paths are denied, not approval-gated.
 Required validation commands remain available under their explicit
 permissions. Send every commit, amend, or push request to `document-author`.
 
+When handing off to `document-author`, deliver the approved message as
+exact bytes (or as an in-scope path the human has approved) so
+`document-author` can pass it via `--message-file` without splitting the
+approved content into shell-level inline argv. Do not split the subject and
+body into separate transport arguments in the handoff — that puts the
+approved bytes through the shell layer that the `git-commit` contract
+explicitly excludes from its byte-clean guarantee.
+
 ## Completion packet
 
 Return in context; do not write the packet to disk.

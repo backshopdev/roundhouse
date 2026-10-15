@@ -71,8 +71,10 @@ gate, unless the task explicitly prohibits staging.
   commits and content-changing amends, require the index to match the exact
   human-approved staged content. Stop on unexpected staged content or changed
   scope; do not stage additional content after changeset approval.
-- New commit: `npm run commit -- --subject "<subject>" --body "<body>"` (or `--body-file <path>` for long bodies) — or `--message-file <path>` when the full approved message is pre-composed
-- Amend: `npm run commit -- --amend --subject "<subject>" --body "<body>"`
+- New commit: `npm run commit -- --message-file <path>` (the supported
+  transport for the full approved message)
+- Amend: `npm run commit -- --amend --message-file <path>` (same supported
+  transport for the full approved amended message)
 - `npm run commit -- ...` is the required supported procedure for every new
   commit and amend. Direct `git commit` invocation is forbidden. The exact
   message must be approved first, followed by separate explicit human
@@ -80,26 +82,42 @@ gate, unless the task explicitly prohibits staging.
   must also receive a fresh OpenCode `once` confirmation at execution. This
   prescribed repository procedure is not a wrapper to evade permission
   matching. Do not substitute arbitrary wrappers or alternate commands.
-- When the approved message contains non-ASCII characters (em-dashes, smart
-  quotes, accented names, arrows, etc.), use `--message-file <path>`. Inline
-  `--subject`/`--body` arguments pass through the shell/npm/cmd.exe transport
-  (`npm run commit -- --subject "…"`) before reaching the script's
-  `process.argv`, and that transport is not covered by the script's byte-clean
-  guarantee. `--body-file <path>` protects the body only: the body is decoded as
-  UTF-8 and re-encoded (byte-exact for valid UTF-8 text), but the subject is
-  always supplied as an inline argv argument, so `--body-file` does not protect
-  it. Use `--message-file <path>` whenever *any* part of the message — including
-  the subject — contains non-ASCII; `--message-file` is a pure byte
-  pass-through.
+- When the full approved message is in hand (subject, body, footers, and any
+  blank-line separators), agents pass it via `--message-file <path>`. Do not
+  split the approved message into separate `--subject` and `--body`
+  transport arguments. The shell/npm/cmd.exe layer between the agent and
+  `commit.js`'s `process.argv` is not covered by the script's byte-clean
+  guarantee: inline args can be tokenized on whitespace, mangled by codepage
+  rules, or — on Windows cmd.exe — split on newline characters that occur
+  inside what is otherwise a single quoted argument. Only the file path
+  travels through that layer with `--message-file`; the message bytes are
+  read by `commit.js` via `fs.readFileSync` (Buffer), so the shell cannot
+  alter them. `--body-file <path>` protects only the body; the subject is
+  always supplied as an inline argv argument, so `--body-file` does not
+  protect it. `--message-file` is therefore the only byte-safe form for the
+  full approved message — not merely a workaround for non-ASCII inputs.
+- **Walkthrough — new commit (mode b):** the agent writes the exact
+  approved message bytes to a bounded temporary file (UTF-8, no BOM, no
+  encoding conversion), then runs `npm run commit -- --message-file <path>
+  [--amend]`. The path travels through the shell; the message bytes do not.
+- **Walkthrough — amend (mode b):** the same path form, with `--amend`. The
+  message-only amend case requires an empty index immediately before
+  invocation; the content-changing amend case requires staged content
+  matching the approved scope.
 
 #### File-backed message inputs
 
-- For `--message-file`, present the complete file content and compare it with
-  the exact human-approved message. Approval covers the full message, including
-  subject, body, footers, and the exact text/bytes passed to the commit script.
-- For `--body-file`, present and compare the complete body with the
-  human-approved body. Present and obtain separate approval for the subject and
-  every footer; body-file approval does not approve them.
+- For `--message-file` (the universal supported form), present the complete
+  file content and compare it with the exact human-approved message. Approval
+  covers the full message — subject, body, footers, and the exact
+  text/bytes passed to the commit script — and the file path.
+- `--body-file` is only acceptable when the agent cannot compose a single
+  full-message file in scope (for example, a configuration that supplies
+  the subject as an inline argv for a workflow-specific reason). For
+  `--body-file`, present and compare the complete body with the
+  human-approved body; present and obtain separate approval for the subject
+  and every footer; body-file approval does not approve them. The default
+  and preferred path remains `--message-file`.
 - Immediately before invoking canonical `npm run commit -- ...`, re-read every
   message/body file and compare its content exactly with the approved
   bytes/text. Do not normalize encoding or newlines, or modify, move, or replace
@@ -108,6 +126,11 @@ gate, unless the task explicitly prohibits staging.
   approved scope, stop without invoking the commit command and obtain fresh
   message approval (and approval for a safe, in-scope file path when needed).
   Re-verify after approval; any later file change invalidates the verification.
+- The file path passed to `--message-file` is itself an inline argv argument
+  and travels through the shell. It must be a safe, in-scope location (a
+  bounded temp file under the OS temp directory or a path the human has
+  explicitly approved). The file's *contents* are not subject to shell
+  transport because `commit.js` reads them as a Buffer.
 
 #### Multi-line messages
 
@@ -126,6 +149,11 @@ The `-m` form exists but is not recommended because it is not reliable
 across all Windows shells.
 
 ### Post-commit Verification
+
+The procedural steps below illustrate how the contract in the next section
+can be satisfied. The contract — not this procedure — is binding; an
+equivalent permitted inspection that demonstrates the same outcome is
+acceptable.
 
 1. Verify commit succeeded: `git log -1`
 2. Verify exact message matches
@@ -147,6 +175,101 @@ across all Windows shells.
    intended state was not created, report the evidence and obtain explicit
    human chat approval plus a fresh `once` for the exact retry command. If still
    unresolved, report the checks and stop without retrying or guessing.
+
+### Verification Contract
+
+Every commit execution is bound by this contract. Each obligation names an
+outcome the agent must demonstrate; it does not enumerate a specific
+command. The agent selects an equivalent permitted inspection — one it can
+perform within its authority — sufficient to demonstrate the outcome. Do
+not move approval into the script: human approval of the staged changeset,
+exact message text, and exact command remains separate from this contract
+and precedes execution.
+
+**Required outcomes before execution.** Before invoking `npm run commit`:
+
+- The staged changeset matches the approved content scope (paths and
+  bytes), or — for message-only amend — the index is empty.
+- The approved message is unchanged since human approval: the
+  `--message-file` content equals the approved bytes, or the inline argv
+  form (only when used under the narrow exception above) equals the
+  approved text. The file path is in scope and not sensitive.
+- The repository state is suitable for the operation: for amend, the
+  branch state matches the preconditions recorded in the pre-commit
+  validation; for new commit, the staged content matches the approved
+  scope with no extra unstaged or staged drift that should change the
+  commit.
+
+**Required outcomes after execution.** After the commit returns:
+
+- A commit is recorded in local history corresponding to the staged state
+  captured before execution, or — for message-only amend — to the recorded
+  pre-amend tree.
+- The committed message bytes match the approved message modulo git's
+  trailing-newline normalization. Any byte difference beyond that
+  normalization is a fatal mismatch (the script's exit 6 path is one such
+  signal).
+- Local state is consistent with no unintended side effects: no extra files
+  in the index, no spurious unstaged churn introduced by the commit, and
+  branch/upstream state as expected.
+- For push (when separately authorized): the push produced the
+  human-approved remote/ref state, and local history is consistent with the
+  remote ref.
+
+**Sufficient evidence per obligation.** An inspection satisfies an
+obligation when the resulting evidence is complete and unambiguous for
+that obligation: a reader can audit whether the outcome holds without
+relying on prose summary. The procedural steps above name specific
+inspections that demonstrate sufficiency for each obligation; the agent
+may substitute any equivalent permitted inspection that produces
+equivalent evidence. Inspections must be read-only or part of an approved
+command. Evidence lighter than the obligation requires (for example, a
+status-level summary when the obligation is byte-level) does not satisfy
+the obligation.
+
+**Escalation boundaries.** Stop and escalate when any of the following
+arises; do not relax the contract to fit available tooling:
+
+- **New authority or broader scope.** Satisfying an obligation would
+  require a command, tool, or scope not covered by the approved plan or
+  this contract (for example, a write the role does not have, or a
+  network reach the task does not authorize). Do not invent a new
+  command; ask the human or the orchestrator.
+- **Materially different cost/risk.** The available inspection would
+  carry materially different cost or risk than the obligation assumes
+  (for example, fetching from a remote, mutating unrelated paths, or
+  performing a destructive operation). A lighter inspection is not a
+  substitute when the obligation names heavier evidence.
+- **Changed evidence standard.** Relaxing the comparison the obligation
+  names (for example, accepting trailing-newline-equivalent for a
+  byte-exact obligation, or accepting "looks right" for a byte-diff
+  obligation) escalates; do not weaken comparison to fit available
+  tooling.
+- **Denied inspection.** A denied inspection does not justify a weaker
+  inspection. If no permitted inspection can demonstrate the obligation,
+  stop and escalate.
+
+**Walkthroughs.** The following illustrate the contract:
+
+- *Normal commit.* The agent's pre-execution evidence shows: staged
+  content matches the approved scope, the message file equals the
+  approved bytes, and the index has no drift. Post-execution: `git log
+  -1` shows the new commit at HEAD with the expected tree, and the
+  committed message matches the approved message modulo
+  trailing-newline normalization.
+- *Equivalent inspection.* The agent needs to demonstrate "no divergence
+  from upstream before amend" and chooses `git log --oneline @{u}..`
+  rather than an explicit divergence query. The outcome (no unpushed
+  commits) is the same, and the evidence is sufficient; no escalation.
+- *Denied inspection that escalates.* The agent needs to demonstrate
+  "remote ref state" but the role's permissions deny remote read
+  inspection. The agent stops and escalates; it does not accept
+  "no remote read was performed" as equivalent evidence.
+- *Post-commit message mismatch.* The agent reads
+  `git log -1 --format=%B` and observes a byte difference beyond
+  trailing-newline tolerance. The agent reports the diff detail and
+  stops; the script's exit 6 path is one such signal, and a chat-level
+  "looks fine" assertion does not bypass the byte-level obligation.
 
 ### Error Handling
 

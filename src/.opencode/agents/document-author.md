@@ -95,7 +95,8 @@ approved plan). Neither category permits silently expanding verification.
 ## Commit execution
 
 Load the `git-commit` skill when executing commits. The skill provides detailed
-procedures for validation, execution, and verification.
+procedures for validation, execution, and verification, plus the binding
+verification contract.
 
 High-level constraints:
 
@@ -116,14 +117,30 @@ High-level constraints:
   Do not execute until the human has approved the exact message and then given
   a separate explicit authorization for the exact command before delegation;
   obtain a fresh OpenCode `once` confirmation for that command at execution.
-  For `--message-file`, present and compare the full file content with the exact
-  human-approved message. For `--body-file`, verify the full file body against
-  the approved body and obtain separate approval for the subject and footers.
-  Immediately before invoking the canonical command, re-read and compare every
-  message/body file exactly with the approved bytes/text; do not modify it after
-  approval or verification. On mismatch, unapproved content, or a sensitive or
-  out-of-scope path, stop and obtain fresh message approval; never execute.
-  Do not use arbitrary wrappers to evade permission matching or select
+- **Approved message transport.** When the full approved message is in hand
+  (subject, body, footers, blank-line separators), pass it via
+  `--message-file <path>`. Do not split the approved message into separate
+  `--subject` and `--body` transport arguments. The shell/npm/cmd.exe layer
+  between this agent and `commit.js`'s `process.argv` is not covered by the
+  script's byte-clean guarantee: inline args can be tokenized on whitespace,
+  mangled by codepage rules, or — on Windows cmd.exe — split on newline
+  characters that occur inside what is otherwise a single quoted argument.
+  Only the file path travels through that layer with `--message-file`; the
+  message bytes are read by `commit.js` via `fs.readFileSync` (Buffer), so
+  the shell cannot alter them. `--message-file` is therefore the universal
+  supported form for the full approved message, not merely a workaround for
+  non-ASCII inputs. For new commit: `npm run commit -- --message-file <path>`.
+  For amend: `npm run commit -- --amend --message-file <path>`.
+- For `--message-file`, present and compare the full file content with the
+  exact human-approved message. For `--body-file` (only used under the
+  narrow exception in the `git-commit` skill), verify the full file body
+  against the approved body and obtain separate approval for the subject
+  and footers. Immediately before invoking the canonical command, re-read
+  and compare every message/body file exactly with the approved bytes/text;
+  do not modify it after approval or verification. On mismatch, unapproved
+  content, or a sensitive or out-of-scope path, stop and obtain fresh
+  message approval; never execute.
+- Do not use arbitrary wrappers to evade permission matching or select
   persistent `always` approval. Push only the exact human-approved command or
   explicitly approved remote, source ref, and destination ref, such as
   `git push <remote> <source>:<ref>`; never infer remote or refs from upstream.
