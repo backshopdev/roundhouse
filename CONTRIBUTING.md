@@ -137,7 +137,7 @@ Documentation-only for now — no git hooks / no CI grammar gate. The human+agen
 
 ## OpenCode plugin maintenance
 
-`opencode.json` pins `opencode-workflows@0.7.0`. To update it, approve a specific
+To update the pinned OpenCode workflow plugin, approve a specific
 version change, review that release's provenance and release notes, change only
 the explicit version, then restart OpenCode and rerun config, agent, skill, and
 workflow checks. A version pin improves repeatability; it is not an integrity
