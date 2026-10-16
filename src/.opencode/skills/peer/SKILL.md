@@ -116,3 +116,29 @@ Escalate when criteria conflict, the domain skill is missing, effective behavior
 cannot be established read-only, or the change crosses an undisclosed trust or
 ownership boundary. Findings inform human triage; they are not self-executing
 verdicts. Approve when the assigned perspective has no actionable issue.
+
+## Review depth
+
+Reviewers form their assessment independently of the author's verification narrative. Read the plan, acceptance criteria, and other normative docs directly; do not read the author's VERIFICATION field or ATTENTION-FLAGS prose as a substitute for ground-truth inspection. The author may supply artifacts (staged content, diffs, test outputs), but the reviewer reaches each conclusion through their own check.
+
+### Standard 5-item review checklist
+
+Every review walks these five items in order. Missing or vague coverage is itself a push-back trigger.
+
+1. **Scope confirmation** — Verify the changed-file list is complete and matches the reviewed scope. Cross-reference the plan, the orchestrator's handoff, and the file system; flag any drift.
+2. **Acceptance criteria walkthrough with groundability** — For each AC, ask: is this groundable (does an independent check exist)? Walk the AC against the actual artifact using that check. Mark PASS / FAIL / UNCERTAIN; abstention is a valid outcome. Any AC not walked is explicitly stated.
+3. **Adjacent surface** — Files the changeset might have broken or affected: consumers, indexes, references, configuration, tests, build steps. State what was inspected.
+4. **Domain lens** — The assigned domain skill is loaded and applied. Coverage is stated: which parts of the change were examined through that lens, and what was found.
+5. **Walkthrough** — The change is run through mentally as if the reviewer were a new user encountering it. State the path walked and the behavior that emerged.
+
+### Asymmetric evidence semantics
+
+Treat test-result evidence asymmetrically. A failing test is a strong reject signal; a single passing test is a weak accept signal. Pair pass signals with fail-side evidence (alternate scenarios, edge cases, negative tests) or demote the verdict from "verified" to "soft" / "likely." Pass and fail do not carry symmetric weight when forming a verdict.
+
+### Test execution when relevant
+
+If the changeset changes or claims to test code, scripts, configuration, or test files, run the relevant test suite and report the result as part of the per-AC evidence. Documentation-only changes do not require test execution; cite that exemption explicitly.
+
+### Per-item output
+
+Each checklist item produces 1–2 lines stating what was checked, the evidence, and what was found. No bare "PASS": every PASS cites the evidence that supports it; every FAIL or UNCERTAIN names the gap.

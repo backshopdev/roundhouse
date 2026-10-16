@@ -110,6 +110,7 @@ procedure.
 - Higher-level documentation may be synchronized after implementation stabilizes.
 - Before final verification, perform a deliberate documentation synchronization check across affected durable documentation.
 - The completion packet's `documentation` field reports the result of this check.
+- Code or configuration changes must include corresponding doc updates in the same changeset, or an explicit KTLO item if the doc work is deferred. The author lists the affected doc files in `ATTENTION-FLAGS` so the reviewer can verify doc/code alignment.
 
 ## No Quality Regression
 

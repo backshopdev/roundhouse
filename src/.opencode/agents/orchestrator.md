@@ -154,21 +154,38 @@ The human collaborator may also choose to abandon work at any point and restart 
    boundaries, or equivalent sensitive configuration, assign `security` to that
    session regardless of its perspective. If no domain skill applies, stop and
    report a domain-skill gap.
-7. Launch all review sessions **in parallel**. Give every session the explicit
-   changed-file list, acceptance criteria, document-author attention flags, and
-   assigned skill combination. Never ask sessions to infer these inputs.
-8. Consolidate packets while retaining session/skill provenance. Merge only
+7. Launch all review sessions **in parallel**. Give every session the plan,
+   acceptance criteria, the explicit changed-file list, the staged content (or
+   the relevant uncommitted/untracked files when staging is out of scope), and
+   the assigned skill combination. Do not forward the author's evidence
+   narrative (the `VERIFICATION` field or the `ATTENTION-FLAGS` prose); those
+   are for the orchestrator's gate discipline, not the reviewer's handoff.
+   Never ask sessions to infer these inputs.
+8. **Post-review quality check.** Before consolidating, validate each
+   reviewer's packet against:
+   - The 5-item checklist (missing items trigger push-back unconditionally).
+   - Per-AC walkthrough (missing or vague evidence triggers push-back).
+   - Evidence misreading — mechanically detectable: the rationale cites
+     evidence that contradicts the cited evidence. Specific failure mode; the
+     orchestrator flags it and asks for completion.
+   - Substantive thinness (judgment-based). Push back when evidence is too
+     thin to support the verdict.
+   Push back by surfacing what's missing to the reviewer (in a follow-up
+   review) or to the human (in the consolidated findings), and asking how to
+   proceed.
+9. Consolidate packets while retaining session/skill provenance. Merge only
    mechanical duplicates. Report substantive disagreements as **Debate** with
    each rationale and the decision question; never resolve them unilaterally.
    Present all findings and original verdicts to the human, who may accept,
-   edit, or dismiss each finding. Do not ask reviewers to replace their verdicts
-   after triage. A required perspective completes only when its session returns
-   a non-`BLOCKED` packet. Reroute or rerun blocked sessions after correcting
-   their routing defect; never count them toward commit eligibility.
-9. Accepted findings → return to `document-author`; keep the plan approved
-   unless the human explicitly reopens it. Repeat human work approval and
-   review.
-10. When every required perspective has returned a non-`BLOCKED` packet and no
+   edit, or dismiss each finding. Do not ask reviewers to replace their
+   verdicts after triage. A required perspective completes only when its
+   session returns a non-`BLOCKED` packet. Reroute or rerun blocked sessions
+   after correcting their routing defect; never count them toward commit
+   eligibility.
+10. Accepted findings → return to `document-author`; keep the plan approved
+    unless the human explicitly reopens it. Repeat human work approval and
+    review.
+11. When every required perspective has returned a non-`BLOCKED` packet and no
     human-accepted finding remains unresolved, confirm document-author's
     objective checks passed. Have `document-author` stage only the approved
     content and report the actual staged changeset; staging needs no separate

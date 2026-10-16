@@ -95,6 +95,13 @@ Distinguish blocking uncertainty (pause affected work pending the decision)
 from an optional confidence improvement (continue only work supported by the
 approved plan). Neither category permits silently expanding verification.
 
+## Documentation synchronization
+
+Code or configuration changes must include corresponding doc updates in the
+same changeset, or an explicit KTLO item if the doc work is deferred. The
+author lists the affected doc files in `ATTENTION-FLAGS` so the reviewer can
+verify doc/code alignment.
+
 ## Commit execution
 
 Load the `git-commit` skill when executing commits. The skill provides detailed
