@@ -131,6 +131,86 @@ BREAKING CHANGE: session history format changed; `scratch/sessions/*`
 from prior versions are not auto-migrated.
 ```
 
+## Pull request conventions
+
+Pull requests sit on top of the commit standard, but they are addressed to
+human reviewers, not to release-note tooling, so their shape differs.
+
+### PR title
+
+Write the title as an imperative sentence. Do **not** use a Conventional Commit
+type prefix, scope, or trailing period — the commit subject already carries
+that information, and PR titles read more clearly as plain descriptions of the
+change.
+
+The human example 'Create Spec for Human-Directed Branch and PR Workflow' was used for a real PR (see git history of this repo):
+
+```text
+Create Spec for Human-Directed Branch and PR Workflow
+```
+
+Do not use a commit subject as the PR title. The commit message standard (Conventional Commits style) is for commits only; PR titles use the imperative-sentence style defined in this section. For example, do not use:
+
+```text
+docs(spec): define human-directed branch and PR workflow
+```
+
+That style is reserved for commit subjects.
+
+### Branch name
+
+Branches use a predefined workstream prefix followed by a short kebab-case
+description in ASCII:
+
+- `feature/` — new functionality
+- `bugfix/` — issue-driven fix; an optional `<issue-key>-` prefix is allowed
+- `hotfix/` — urgent production fix
+- `docs/` — documentation-only
+- `chore/` — tooling and maintenance
+
+Examples:
+
+- `feature/review-depth-rules`
+- `bugfix/1234-pr-template-renders-blank`
+- `hotfix/2026-10-16-ci-token-leak`
+- `docs/20261016-workflow-changes`
+
+A branch is created for the work and must exist before its intended commits.
+Abandoned branches are not auto-deleted; any cleanup requires explicit human
+authorization.
+
+### PR body
+
+Use the two-section layout below, with the exact heading text and in this
+order. There is no required third heading.
+
+```markdown
+## What is the purpose of this PR?
+
+Paragraph(s) stating the actual intent and selected scope.
+
+- Change-summary bullet describing an actual change
+- ...
+
+## Steps to validate
+
+1. Concrete validation step a human reviewer can run or check.
+```
+
+The change-summary list under "What is the purpose of this PR?" is
+recommended at 15 bullets or fewer describing actual changes; this is a
+recommendation, not a hard cap, and consumers can configure a stricter
+limit if they wish.
+
+The body must accurately describe the actual selected scope and validation
+status (executed, static walkthrough, or pending). Do not copy these
+section headings as a substitute for substantive content, and do not claim
+unexecuted checks as passed. Drafts may disclose unfinished work and
+pending validation without implying completion.
+
+Departures from this template — including an additional third heading or a
+different structure — require explicit human approval before publication.
+
 ## Enforcement (current)
 
 Documentation-only for now — no git hooks / no CI grammar gate. The human+agent HITL review is the enforcement mechanism, and agents drafting commits load the commit-convention skill. Automated enforcement can be layered later if drift appears.
@@ -146,3 +226,4 @@ guarantee.
 ## Per-repo overrides (consume in your repo)
 - **Tracker / key format:** GitHub (`#<number>`) by default. Swap the footer format if your tracker differs.
 - **Extra types / scopes:** you may add repo-specific scopes; keep the base type set aligned with the source-of-truth skill.
+- **PR conventions:** consumers may override the PR title, branch name, and PR body conventions above in this section to match their own policy.
