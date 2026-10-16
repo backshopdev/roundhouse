@@ -2,9 +2,12 @@
 
 Structured specifications + acceptance criteria. One file per spec.
 
+[Docs index](../index.md)
+
 | Title | Description | Status | Date |
 |-------|-------------|--------|------|
 | [GitHub Packages full-template distribution v0.5.0](SPEC-20260903-01.md) | Defines v0.5.0 private npm distribution to GitHub Packages and the `init`/`update` lifecycle for the Roundhouse template. | Active | 2026-09-03 |
+| [Human-directed branches and GitHub PR creation](SPEC-20261016-01.md) | Defines proposed optional branch selection and human-approved GitHub PR publication, separating Git behavior from hosting operations. | Active | 2026-10-16 |
 
 ## Templates and archive
 
