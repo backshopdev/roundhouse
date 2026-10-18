@@ -33,7 +33,24 @@
           "commit-convention": "allow",
           "investigation": "allow",
           "planning-structure": "allow",
-          "review-findings": "allow"
+          "review-findings": "allow",
+          "architecture-document": "allow",
+          "contract-design": "allow",
+          "contract-guide": "allow",
+          "contract-publication": "allow",
+          "decision-record": "allow",
+          "docs-check": "allow",
+          "docs-publish": "allow",
+          "implementation-map": "allow",
+          "implementation-plan": "allow",
+          "json-schema": "allow",
+          "literature-note": "allow",
+          "openapi": "allow",
+          "repository-documentation": "allow",
+          "specification": "allow",
+          "git-commit": "allow",
+          "harness": "allow",
+          "opencode-configuration": "allow"
         }
       }
     },
