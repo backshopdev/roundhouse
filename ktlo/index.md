@@ -17,6 +17,7 @@ Operational "keep the lights on" items. Links are relative, same-directory only 
 - [`src/AGENTS.md` and `src/AGENTIC_WORKFLOW.md` sync script references](./KTLO-20261009-04.md) — Resolves the pre-existing root-vs-`src/` divergence where root documents reference `npm run sync-roundhouse` but the template copies do not mention the sync script. — `[project]` — 2026-10-09
 - [Granular installation options](./KTLO-20261009-05.md) — Explores making the `init`/`update` lifecycle more granular so consumers do not have to adopt the full template; main concern is letting consumers pick which skills to install rather than receiving all 48. — `[project]` — 2026-10-09
 - [Assess deferred Git inspection allowances](./KTLO-20261015-01.md) — Records the confirmed `ls-files` gap, separate unresolved staging denial, and deferred inspection candidates requiring later human approval. — `[project]` — 2026-10-15
+- [Socratic interview skill: encode the free-form interview style demonstrated in the 2026-10-17/18 taxonomy interview](./KTLO-20261018-01.md) — Captures the seven style properties of the free-form Socratic interview the human endorsed during the 2026-10-17/18 taxonomy interview, to be encoded in the Phase 4 `socratic-interview` skill per DEC-20261017-04. — `[project]` — 2026-10-18
 
 ## Templates
 
