@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-docs-implementation-plan",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Authoring and reviewing implementation plans: work packages, dependencies, change maps, and verification criteria.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

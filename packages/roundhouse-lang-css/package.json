@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-lang-css",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CSS and Sass: architecture, responsive design, and maintainability patterns.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

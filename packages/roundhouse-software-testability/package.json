@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-software-testability",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Testability practice: testable design, constructor injection, and legacy-code enablement seams.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

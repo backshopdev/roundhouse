@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-software-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Contract design decisions: when to use contracts, principles, and ownership.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

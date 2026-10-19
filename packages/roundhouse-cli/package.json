@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Installation tooling: discovers declared Roundhouse packages and runs init, compose, and verify against them.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

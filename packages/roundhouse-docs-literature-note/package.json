@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-docs-literature-note",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Source notes and summaries: retrieval status, citations, provenance, and derived principles.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

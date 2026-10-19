@@ -1,19 +1,7 @@
 {
   "name": "@backshopdev/roundhouse",
-  "version": "0.6.0",
-  "description": "Operational harness for human-agent collaboration workflow",
-  "bin": {
-    "roundhouse": "package/roundhouse.js"
-  },
-  "files": [
-    "package/",
-    "src/",
-    "README.md",
-    "LICENSE"
-  ],
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
+  "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
     "commit": "node scripts/commit.js",
     "sync-roundhouse": "node scripts/sync-roundhouse.js",
@@ -21,8 +9,5 @@
     "test-package": "node scripts/test-package.js",
     "test-commit": "node scripts/test-commit.js"
   },
-  "license": "MIT",
-  "engines": {
-    "node": ">= 24.0.0"
-  }
+  "engines": { "node": ">= 24.0.0" }
 }

@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-software-accessibility",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Accessibility practice: inclusive design, WCAG guidelines, and assistive-technology compatibility.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

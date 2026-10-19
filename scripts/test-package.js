@@ -1,33 +1,110 @@
 #!/usr/bin/env node
 "use strict";
 
+/**
+ * test-package.js — workspace-root + lifecycle suite.
+ *
+ * Asserts the converted root manifest's workspace-shell shape (SCEN-046),
+ * the 28 scaffolded workspace members' stub conformance (SCEN-047..049),
+ * and the deploy tool's lifecycle behavior against temp consumers (init /
+ * update semantics and safety rejections). The legacy publish/tarball
+ * assertions were dropped with the root's publish-oriented fields
+ * (SPEC-20261019-01); the lifecycle tests are unchanged.
+ */
+
 const assert = require("assert");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const { init } = require("../package/deploy-roundhouse");
-const { parseArgs } = require("node:util");
 
 const root = path.resolve(__dirname, "..");
 const src = path.join(root, "src");
 const cli = path.join(root, "package", "roundhouse.js");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 
-// Optional --version X.Y.Z flag for release-prep verification. When provided,
-// the test asserts package.json's version matches. When absent, the assertion
-// is skipped (backward-compatible with existing invocations that don't pass it).
-const { values: cliOptions } = parseArgs({
-  options: {
-    version: { type: "string" },
+// Root workspace-shell shape (SCEN-046): the field set is the contract.
+assert.strictEqual(packageJson.name, "@backshopdev/roundhouse", "root manifest keeps its name");
+assert.strictEqual(packageJson.private, true, "root manifest is a private workspace shell");
+assert.deepStrictEqual(packageJson.workspaces, ["packages/*"], "root manifest declares the packages/* workspace");
+assert.deepStrictEqual(
+  packageJson.scripts,
+  {
+    "commit": "node scripts/commit.js",
+    "sync-roundhouse": "node scripts/sync-roundhouse.js",
+    "test-sync": "node scripts/test-sync.js",
+    "test-package": "node scripts/test-package.js",
+    "test-commit": "node scripts/test-commit.js",
   },
-  strict: true,
-  allowPositionals: false,
-});
-const expectedVersion = cliOptions.version ?? null;
+  "root scripts stay verbatim"
+);
+assert.deepStrictEqual(packageJson.engines, { "node": ">= 24.0.0" }, "root engines stays verbatim");
+for (const droppedField of ["version", "description", "bin", "files", "publishConfig", "license"]) {
+  assert(!(droppedField in packageJson), `root manifest drops ${droppedField}`);
+}
 
-if (expectedVersion !== null) {
-  assert.strictEqual(packageJson.version, expectedVersion, `package.json version (${packageJson.version}) matches --version argument (${expectedVersion})`);
+// No lifecycle hooks on the workspace root (kept from the pre-conversion suite).
+const lifecycleHooks = ["prepublish", "prepare", "preprepare", "postprepare", "prepublishOnly", "prepack", "postpack", "publish", "postpublish", "preinstall", "install", "postinstall", "dependencies"];
+for (const hook of lifecycleHooks) assert(!packageJson.scripts?.[hook], `package has no ${hook} lifecycle script`);
+
+// Workspace members: the 28 scaffolded stubs (SCEN-047..049). The member set
+// is derived from the committed fixture's managed-entry owner values — the
+// @backshop/roundhouse-<subject> form as the whole value; TODO rationale
+// values select nothing. Each member directory name equals its npm name
+// minus the @backshop/ scope.
+const fixture = JSON.parse(fs.readFileSync(path.join(root, "references", "migration-baseline.json"), "utf8"));
+const ownerNames = new Set(
+  fixture.entries
+    .filter((entry) => entry.classification === "managed" && typeof entry.intendedPhase5Owner === "string")
+    .map((entry) => entry.intendedPhase5Owner)
+    .filter((owner) => /^@backshop\/roundhouse-[a-z0-9-]+$/.test(owner))
+);
+assert.strictEqual(ownerNames.size, 28, "the committed fixture derives exactly 28 workspace members");
+const memberNames = [...ownerNames].sort();
+const packagesDir = path.join(root, "packages");
+assert.deepStrictEqual(
+  fs.readdirSync(packagesDir).sort(),
+  memberNames.map((memberName) => memberName.slice("@backshop/".length)),
+  "packages/ contains exactly one directory per derived member and nothing else"
+);
+for (const memberName of memberNames) {
+  const memberDirName = memberName.slice("@backshop/".length);
+  const memberPath = path.join(packagesDir, memberDirName);
+  assert(fs.statSync(memberPath).isDirectory(), `member ${memberDirName} is a directory`);
+  assert.deepStrictEqual(
+    fs.readdirSync(memberPath).sort(),
+    ["package.json", "roundhouse.json"],
+    `member ${memberDirName} carries exactly the stub pair (no managed/ or seed/ directories)`
+  );
+  const stub = JSON.parse(fs.readFileSync(path.join(memberPath, "package.json"), "utf8"));
+  assert.strictEqual(stub.name, memberName, `member ${memberDirName} name equals its fixture owner value`);
+  assert.strictEqual(stub.version, "0.0.0", `member ${memberDirName} version is 0.0.0`);
+  assert.strictEqual(stub.private, true, `member ${memberDirName} is private`);
+  assert(
+    typeof stub.description === "string" && stub.description.length > 0 && !stub.description.includes("\n"),
+    `member ${memberDirName} description is a non-empty single line`
+  );
+  assert.deepStrictEqual(stub.engines, { "node": ">= 24.0.0" }, `member ${memberDirName} engines matches the root's`);
+  assert.deepStrictEqual(
+    Object.keys(stub).sort(),
+    ["description", "engines", "name", "private", "version"],
+    `member ${memberDirName} package.json carries no other members`
+  );
+  const envelope = JSON.parse(fs.readFileSync(path.join(memberPath, "roundhouse.json"), "utf8"));
+  assert.strictEqual(envelope.contractVersion, 1, `member ${memberDirName} contractVersion is 1`);
+  assert.deepStrictEqual(envelope.capabilities, [], `member ${memberDirName} capabilities are empty`);
+  assert.deepStrictEqual(envelope.requires, [], `member ${memberDirName} requires are empty`);
+  if (memberDirName === "roundhouse-core") {
+    assert.strictEqual(envelope.kind, "core", `member ${memberDirName} kind is core`);
+    assert.deepStrictEqual(Object.keys(envelope).sort(), ["capabilities", "contractVersion", "kind", "requires"], `member ${memberDirName} roundhouse.json carries no other members`);
+  } else if (memberDirName === "roundhouse-cli") {
+    assert(!("kind" in envelope), `member ${memberDirName} declares no kind`);
+    assert.deepStrictEqual(Object.keys(envelope).sort(), ["capabilities", "contractVersion", "requires"], `member ${memberDirName} roundhouse.json carries no other members`);
+  } else {
+    assert.strictEqual(envelope.kind, "capability", `member ${memberDirName} kind is capability`);
+    assert.deepStrictEqual(Object.keys(envelope).sort(), ["capabilities", "contractVersion", "kind", "requires"], `member ${memberDirName} roundhouse.json carries no other members`);
+  }
 }
 
 function files(dir, base = dir) {
@@ -38,52 +115,6 @@ function files(dir, base = dir) {
     else result.push(path.relative(base, full).split(path.sep).join("/"));
   }
   return result;
-}
-
-const npmCommand = "npm";
-const npmArgs = ["pack", "--dry-run", "--json", "--ignore-scripts"];
-const npmOptions = { cwd: root, encoding: "utf8", shell: process.platform === "win32" };
-const pack = JSON.parse(execFileSync(npmCommand, npmArgs, npmOptions))[0];
-const packed = new Set(pack.files.map((file) => file.path));
-const runtimeFiles = files(path.join(root, "package")).map((file) => `package/${file}`);
-const templateFiles = files(src).map((file) => `src/${file}`);
-const allowedFiles = new Set(["package.json", "README.md", "LICENSE", ...runtimeFiles, ...templateFiles]);
-assert.strictEqual(packageJson.license, "MIT", "package metadata declares the license");
-assert(packed.has("README.md"), "tarball manifest includes root README package metadata");
-assert(packed.has("LICENSE"), "tarball manifest includes LICENSE package metadata");
-assert(packed.has("src/README.md"), "tarball manifest includes template README deployment content");
-assert(packed.has("src/scratch/README.md"), "tarball manifest includes scratch");
-const lifecycleHooks = ["prepublish", "prepare", "preprepare", "postprepare", "prepublishOnly", "prepack", "postpack", "publish", "postpublish", "preinstall", "install", "postinstall", "dependencies"];
-for (const hook of lifecycleHooks) assert(!packageJson.scripts?.[hook], `package has no ${hook} lifecycle script`);
-for (const file of allowedFiles) assert(packed.has(file), `package manifest includes ${file}`);
-for (const file of packed) assert(allowedFiles.has(file), `package manifest excludes unexpected ${file}`);
-for (const file of ["AGENTS.md", "AGENTIC_WORKFLOW.md", "CONTRIBUTING.md", "BUILDING.md", "TESTING.md", "docs/", "references/", "guiding-principles.md", "scripts/"]) {
-  assert(![...packed].some((item) => item === file || item.startsWith(file)), `package allowlist excludes root artifact ${file}`);
-}
-for (const file of ["AGENTS.md", "AGENTIC_WORKFLOW.md", "CONTRIBUTING.md", "guiding-principles.md", "docs/", "references/", "scripts/sync-roundhouse.js", "scripts/test-sync.js", "scripts/test-package.js"]) {
-  assert(![...packed].some((item) => item === file || item.startsWith(file)), `package excludes ${file}`);
-}
-
-// Inspect and execute a real packed artifact. npm extracts the archive itself,
-// so this remains portable when an external tar executable is unavailable.
-const actualPack = JSON.parse(execFileSync(npmCommand, ["pack", "--json", "--ignore-scripts"], npmOptions))[0];
-const tarball = path.join(root, actualPack.filename);
-try {
-  const consumer = fs.mkdtempSync(path.join(os.tmpdir(), "roundhouse-packed-consumer-"));
-  try {
-    execFileSync(npmCommand, ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], { ...npmOptions, cwd: consumer });
-    const installedCli = path.join(consumer, "node_modules", "@backshopdev", "roundhouse", "package", "roundhouse.js");
-    assert(fs.existsSync(installedCli), "packed artifact installs its CLI");
-    const packedRun = (...args) => execFileSync(process.execPath, [installedCli, ...args], { cwd: consumer, encoding: "utf8" });
-    packedRun("init");
-    assert(fs.existsSync(path.join(consumer, "scratch", "README.md")), "packed CLI init delivers scratch");
-    const before = files(consumer).map((file) => [file, fs.statSync(path.join(consumer, file)).mtimeMs]);
-    packedRun("update", "--dry-run");
-    assert.deepStrictEqual(files(consumer).map((file) => [file, fs.statSync(path.join(consumer, file)).mtimeMs]), before, "packed CLI dry-run is non-mutating");
-    packedRun("update");
-  } finally { fs.rmSync(consumer, { recursive: true, force: true }); }
-} finally {
-  fs.rmSync(tarball, { force: true });
 }
 
 function run(temp, ...args) {

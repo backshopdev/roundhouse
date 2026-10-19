@@ -1,0 +1,9 @@
+{
+  "name": "@backshop/roundhouse-format-json-schema",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Authoring and reviewing JSON Schema definitions: structure, validation, and examples.",
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}
