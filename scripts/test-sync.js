@@ -23,10 +23,24 @@
  *  16. Existing consumer with customizations — Mode 1 replaces, Mode 2 preserves
  *  17. Missing --mode flag exits non-zero with a clear error
  *  18. Invalid --mode value exits non-zero
+ *  19. Managed junction rejection (mirrors test-package.js coverage)
+ *  20. Source-side junction rejection
+ *  21. Nested destination junction rejection
+ *  22. Unrelated consumer links ignored
+ *  23. Managed type-conflict repair
+ *  24. Path-escape rejection: deploy destination escapes consumer cwd (assertSafePath)
+ *  25. Path-escape rejection: copyMissing destination escapes consumer cwd (assertSafePath)
+ *  26. Path-escape rejection: symlinked path component inside consumer cwd (assertSafePath)
+ *  27. Root consumer-owned seed files are preserved untouched by sync
+ *  28. Self-hosting verification: --mode verify passes on the repo's own root
  *
  * Tests run in an isolated OS temp directory (created from os.tmpdir())
  * so they never touch the real repo root. A copy of src/ is placed in the
  * fixture so sync can be exercised with --src and --consumer overrides.
+ * Tests 24-26 exercise package/deploy-roundhouse.js's assertSafePath escape
+ * contract through its public API (deploy/copyMissing) because the sync CLI
+ * constructs every path internally and cannot produce an escaping path.
+ * Test 28 is the one real-repo touchpoint: --mode verify is read-only.
  *
  * Usage:
  *   node scripts/test-sync.js
@@ -36,6 +50,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { execSync } = require("child_process");
+const { deploy, copyMissing } = require("../package/deploy-roundhouse");
 
 const repoRoot = path.resolve(__dirname, "..");
 const srcDir = path.join(repoRoot, "src", ".opencode");
@@ -965,6 +980,314 @@ assert(
 assert(
   test18Output.includes("invalid") && test18Output.includes("--mode"),
   "Invalid --mode error message mentions invalid --mode"
+);
+
+// ─── Test 19: Managed junction rejection ────────────────────────────────────
+console.log("\nTest 19: Managed junction rejection (mirrors test-package.js)");
+
+// A junction at the managed .opencode root is rejected before any mutation.
+const outside19 = fs.mkdtempSync(path.join(tempRoot, "outside-19-"));
+fs.rmSync(destDir, { recursive: true, force: true });
+fs.symlinkSync(outside19, destDir, "junction");
+let test19Error = null;
+try {
+  runSync("--mode sync");
+} catch (err) {
+  test19Error = `${err.stdout || ""}\n${err.stderr || ""}\n${err.message}`;
+}
+assert(
+  test19Error && /symlink or junction/.test(test19Error),
+  "Sync rejects a junction at the managed .opencode root"
+);
+assert(fs.readdirSync(outside19).length === 0, "Junction target remains untouched");
+fs.rmSync(destDir, { recursive: true, force: true });
+fs.rmSync(outside19, { recursive: true, force: true });
+try {
+  runSync("--mode sync");
+  assert(
+    fs.existsSync(path.join(destDir, "agents")) && fs.statSync(path.join(destDir, "agents")).isDirectory(),
+    "Re-sync restored the managed root after the rejected junction"
+  );
+} catch (err) {
+  assert(false, `Re-sync succeeded in test 19 (got: ${err.message})`);
+}
+
+// ─── Test 20: Source-side junction rejection ────────────────────────────────
+console.log("\nTest 20: Source-side junction rejection");
+
+// A junction at the source .opencode root is rejected before any mutation.
+const outside20 = fs.mkdtempSync(path.join(tempRoot, "outside-20-"));
+const fixtureSrcOpenCodeDir = path.join(tempRoot, "src", ".opencode");
+fs.rmSync(fixtureSrcOpenCodeDir, { recursive: true, force: true });
+fs.symlinkSync(outside20, fixtureSrcOpenCodeDir, "junction");
+let test20Error = null;
+try {
+  runSync("--mode sync");
+} catch (err) {
+  test20Error = `${err.stdout || ""}\n${err.stderr || ""}\n${err.message}`;
+}
+assert(
+  test20Error && /source uses a symlink or junction/.test(test20Error),
+  "Sync rejects a junction at the source .opencode root"
+);
+assert(fs.readdirSync(outside20).length === 0, "Source junction target remains untouched");
+fs.rmSync(fixtureSrcOpenCodeDir, { recursive: true, force: true });
+fs.rmSync(outside20, { recursive: true, force: true });
+fs.cpSync(path.join(repoRoot, "src", ".opencode"), fixtureSrcOpenCodeDir, { recursive: true });
+try {
+  runSync("--mode sync");
+  assert(
+    fs.existsSync(path.join(fixtureSrcOpenCodeDir, "agents", "orchestrator.md")),
+    "Source .opencode restored from the repo and sync succeeds again"
+  );
+} catch (err) {
+  assert(false, `Re-sync succeeded in test 20 (got: ${err.message})`);
+}
+
+// ─── Test 21: Nested destination junction rejection ─────────────────────────
+console.log("\nTest 21: Nested destination junction rejection");
+
+// A junction nested inside the managed root is rejected and its target is
+// never written into.
+const outside21 = fs.mkdtempSync(path.join(tempRoot, "outside-21-"));
+const nestedLink21 = path.join(destDir, "agents");
+fs.rmSync(nestedLink21, { recursive: true, force: true });
+fs.symlinkSync(outside21, nestedLink21, "junction");
+let test21Error = null;
+try {
+  runSync("--mode sync");
+} catch (err) {
+  test21Error = `${err.stdout || ""}\n${err.stderr || ""}\n${err.message}`;
+}
+assert(
+  test21Error && /symlink or junction/.test(test21Error),
+  "Sync rejects a junction nested inside the managed root"
+);
+assert(fs.readdirSync(outside21).length === 0, "Nested destination target remains untouched");
+fs.rmSync(nestedLink21, { recursive: true, force: true });
+fs.rmSync(outside21, { recursive: true, force: true });
+try {
+  runSync("--mode sync");
+  assert(
+    fs.statSync(nestedLink21).isDirectory(),
+    "Re-sync restored the nested managed directory"
+  );
+} catch (err) {
+  assert(false, `Re-sync succeeded in test 21 (got: ${err.message})`);
+}
+
+// ─── Test 22: Unrelated consumer links ignored ──────────────────────────────
+console.log("\nTest 22: Unrelated consumer links ignored");
+
+// A junction elsewhere in the consumer tree is outside the paths sync reads
+// or writes; sync succeeds and leaves it alone.
+const outside22 = fs.mkdtempSync(path.join(tempRoot, "outside-22-"));
+const unrelatedLink22 = path.join(tempRoot, "consumer-only-link");
+fs.symlinkSync(outside22, unrelatedLink22, "junction");
+try {
+  runSync("--mode sync");
+  assert(fs.existsSync(unrelatedLink22), "Sync ignores unrelated consumer links");
+} catch (err) {
+  assert(false, `Sync succeeded with an unrelated consumer link (got: ${err.message})`);
+}
+fs.rmSync(unrelatedLink22, { recursive: true, force: true });
+fs.rmSync(outside22, { recursive: true, force: true });
+
+// ─── Test 23: Managed type-conflict repair ──────────────────────────────────
+console.log("\nTest 23: Managed type-conflict repair");
+
+// A consumer file at a managed directory path is deliberately replaced by
+// Mode 1 (repair), unlike seed paths which are skipped.
+const agentsDir23 = path.join(destDir, "agents");
+fs.rmSync(agentsDir23, { recursive: true, force: true });
+fs.writeFileSync(agentsDir23, "consumer conflict\n", "utf8");
+try {
+  runSync("--mode sync");
+  assert(fs.statSync(agentsDir23).isDirectory(), "Sync repairs a file at the managed agents path back to a directory");
+  assert(
+    fs.existsSync(path.join(agentsDir23, "orchestrator.md")),
+    "Repaired managed directory is repopulated from src"
+  );
+} catch (err) {
+  assert(false, `Sync repaired the managed type conflict (got: ${err.message})`);
+}
+
+// ─── Test 24: Path-escape rejection — deploy destination (assertSafePath) ───
+console.log("\nTest 24: Path-escape rejection: deploy destination escapes consumer cwd");
+
+// deploy builds its consumer root from destinationJson's directory; a
+// destination that traverses out of it must be rejected by assertSafePath
+// before any mutation.
+const consumerRoot24 = path.join(tempRoot, "escape-consumer-24");
+fs.mkdirSync(consumerRoot24, { recursive: true });
+let test24Error = null;
+try {
+  deploy({
+    sourceDir: path.join(tempRoot, "src", ".opencode"),
+    destinationDir: path.join(consumerRoot24, "..", "escaped-opencode-24"),
+    sourceJson: path.join(tempRoot, "src", "opencode.json"),
+    destinationJson: path.join(consumerRoot24, "opencode.json"),
+    log: () => {},
+  });
+} catch (err) {
+  test24Error = err.message;
+}
+assert(
+  test24Error && /escapes consumer cwd/.test(test24Error),
+  "deploy rejects a destination that escapes the consumer cwd (assertSafePath)"
+);
+assert(
+  !fs.existsSync(path.join(tempRoot, "escaped-opencode-24")),
+  "No directory was created outside the consumer cwd"
+);
+fs.rmSync(consumerRoot24, { recursive: true, force: true });
+
+// ─── Test 25: Path-escape rejection — copyMissing destination ───────────────
+console.log("\nTest 25: Path-escape rejection: copyMissing destination escapes consumer cwd");
+
+// The Mode 2 primitive enforces the same escape contract per destination.
+const consumerRoot25 = path.join(tempRoot, "escape-consumer-25");
+fs.mkdirSync(consumerRoot25, { recursive: true });
+let test25Error = null;
+try {
+  copyMissing(
+    path.join(tempRoot, "src", "BUILDING.md"),
+    path.join(consumerRoot25, "..", "escaped-building-25.md"),
+    false,
+    () => {},
+    consumerRoot25
+  );
+} catch (err) {
+  test25Error = err.message;
+}
+assert(
+  test25Error && /escapes consumer cwd/.test(test25Error),
+  "copyMissing rejects a destination that escapes the consumer cwd (assertSafePath)"
+);
+assert(
+  !fs.existsSync(path.join(tempRoot, "escaped-building-25.md")),
+  "No file was created outside the consumer cwd"
+);
+fs.rmSync(consumerRoot25, { recursive: true, force: true });
+
+// ─── Test 26: Path-escape rejection — symlinked path component ──────────────
+console.log("\nTest 26: Path-escape rejection: symlinked path component inside consumer cwd");
+
+// A destination whose path component is a symlink is rejected by
+// assertSafePath's component walk before any mutation, keeping the link
+// target untouched.
+const consumerRoot26 = path.join(tempRoot, "escape-consumer-26");
+fs.mkdirSync(consumerRoot26, { recursive: true });
+const outside26 = fs.mkdtempSync(path.join(tempRoot, "outside-26-"));
+const link26 = path.join(consumerRoot26, "link");
+fs.symlinkSync(outside26, link26, "junction");
+let test26Error = null;
+try {
+  copyMissing(
+    path.join(tempRoot, "src", "BUILDING.md"),
+    path.join(link26, "escaped-building-26.md"),
+    false,
+    () => {},
+    consumerRoot26
+  );
+} catch (err) {
+  test26Error = err.message;
+}
+assert(
+  test26Error && /uses a symlink or junction/.test(test26Error),
+  "assertSafePath rejects a destination whose path component is a symlink"
+);
+assert(fs.readdirSync(outside26).length === 0, "The symlink target remains untouched");
+fs.rmSync(link26, { recursive: true, force: true });
+fs.rmSync(outside26, { recursive: true, force: true });
+fs.rmSync(consumerRoot26, { recursive: true, force: true });
+
+// ─── Test 27: Root consumer-owned seed files are preserved untouched ────────
+console.log("\nTest 27: Root consumer-owned seed files are preserved untouched by sync");
+
+// The seed-from-start list (DEC-20261017-04): Mode 2's create-if-missing
+// guarantee means an existing consumer-owned copy is never overwritten.
+const seedFiles27 = [
+  "AGENTS.md",
+  "AGENTIC_WORKFLOW.md",
+  "BUILDING.md",
+  "TESTING.md",
+  "CONTRIBUTING.md",
+  "scratch/README.md",
+  "ktlo/index.md",
+  "ktlo/template.md",
+  "docs/index.md",
+];
+const sentinels27 = new Map();
+for (const relative of seedFiles27) {
+  const absolute = path.join(tempRoot, ...relative.split("/"));
+  assert(fs.existsSync(absolute), `Pre-test: seed file ${relative} exists at the consumer root`);
+  const sentinel = `# sentinel — consumer-owned, sync must not overwrite (${relative})\n`;
+  fs.writeFileSync(absolute, sentinel, "utf8");
+  sentinels27.set(relative, sentinel);
+}
+// Control: a managed file IS overwritten, proving sync ran and that this
+// test can detect an overwrite if the seed guarantee ever regresses.
+const controlManaged27 = path.join(destDir, "agents", "orchestrator.md");
+const controlSrcContent27 = fs.readFileSync(controlManaged27, "utf8");
+fs.writeFileSync(controlManaged27, "# consumer edit — Mode 1 must overwrite this\n", "utf8");
+try {
+  runSync("--mode sync");
+} catch (err) {
+  assert(false, `Sync ran in test 27 (got: ${err.message})`);
+}
+for (const [relative, sentinel] of sentinels27) {
+  const absolute = path.join(tempRoot, ...relative.split("/"));
+  assert(
+    fs.readFileSync(absolute, "utf8") === sentinel,
+    `Seed file ${relative} preserved untouched by sync`
+  );
+}
+assert(
+  fs.readFileSync(controlManaged27, "utf8") === controlSrcContent27,
+  "Control: managed file was overwritten back to src content (sync ran)"
+);
+// Restore the seed files from their src templates for state cleanliness.
+for (const relative of seedFiles27) {
+  fs.copyFileSync(
+    path.join(tempRoot, "src", ...relative.split("/")),
+    path.join(tempRoot, ...relative.split("/"))
+  );
+}
+
+// ─── Test 28: Self-hosting verification ─────────────────────────────────────
+console.log("\nTest 28: Self-hosting verification: --mode verify passes on the repo's own root");
+
+// The only real-repo touchpoint in this suite: --mode verify is read-only,
+// so running it against the Roundhouse repo's own root never mutates it.
+let test28Output = "";
+let test28ExitCode = null;
+try {
+  test28Output = execSync(`node "${syncScript}" --mode verify`, {
+    cwd: repoRoot,
+    encoding: "utf-8",
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+  test28ExitCode = 0;
+} catch (err) {
+  test28ExitCode = err.status;
+  test28Output = `${err.stdout || ""}\n${err.stderr || ""}`;
+}
+assert(
+  test28ExitCode === 0,
+  `Self-hosting verify exits 0 on the repo's own root (got: ${test28ExitCode})`
+);
+assert(
+  test28Output.includes("Integrity verification passed"),
+  "Self-hosting verify reports Mode 1 integrity passed"
+);
+assert(
+  test28Output.includes("Mode 2 integrity verification passed"),
+  "Self-hosting verify reports Mode 2 integrity passed"
+);
+assert(
+  test28Output.includes("matches src/opencode.json"),
+  "Self-hosting verify reports opencode.json integrity"
 );
 
 // ─── Temp cleanup ───────────────────────────────────────────────────────────

@@ -474,8 +474,8 @@
       "path": "scripts/test-migration-baseline.js",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "a37893c6bfc5fdaa30b29e71a2f248f022225fdd0546d302d913a5bbf9f5875a",
-      "sizeBytes": 44733
+      "sha256": "3305ec15afdc99c668ddd8af029337d7e4b754cb84374238624cd951cba50f76",
+      "sizeBytes": 45001
     },
     {
       "path": "scripts/test-package.js",
@@ -488,8 +488,8 @@
       "path": "scripts/test-sync.js",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "d4ed22e2a9dd0623ef51c9b4dece2a530ea6076ea536eafa5d53264fee5f8bc8",
-      "sizeBytes": 33122
+      "sha256": "7cfccca70f9435d190fd849597cf8d308de2c4d4c7d1bdb49436f688e49d35c5",
+      "sizeBytes": 47029
     },
     {
       "path": "src/.opencode/agents/document-author.md",

@@ -888,17 +888,19 @@ test("SCEN-039: fixture bytes are pinned on a CRLF-prone platform", () => {
   }
   // "Bytes equal the committed blob bytes": compare the working-tree fixture
   // against the index blob (git show :<path>), which equals the committed
-  // blob once committed. The fixture is untracked until the Slice A commit
-  // stages it, so the comparison fires whenever the path is in the index and
-  // is vacuous before that point.
-  const indexState = execFileSync(
+  // blob once committed. The comparison fires only when the fixture is
+  // identical in the working tree, the index, and HEAD (fully
+  // committed-clean); it defers whenever any of these differ, including
+  // staged-but-uncommitted windows — the committed-state guarantee is
+  // enforced from the first post-commit run, and the deferred windows are
+  // covered by SCEN-026's working-tree byte-truth plus the unconditional
+  // byte properties and the eol=lf pin above.
+  const fixtureStatus = execFileSync(
     "git",
-    ["ls-files", "--stage", "-z", "--", "references/migration-baseline.json"],
-    { cwd: repoRoot, encoding: "buffer" }
-  )
-    .toString("utf8")
-    .trim();
-  if (indexState) {
+    ["status", "--porcelain", "--", "references/migration-baseline.json"],
+    { cwd: repoRoot, encoding: "utf8" }
+  ).trim();
+  if (fixtureStatus === "") {
     const blobBytes = execFileSync("git", ["show", ":references/migration-baseline.json"], {
       cwd: repoRoot,
       encoding: "buffer",
