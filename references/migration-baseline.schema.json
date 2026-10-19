@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "migration-baseline.schema.json",
+  "title": "Roundhouse migration baseline fixture",
+  "description": "Machine-checkable authority for the references/migration-baseline.json fixture format (SPEC-20261017-01). Path uniqueness and sort order are intentionally not expressed here; the generator owns those checks.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Fixture format version; currently 1."
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entry"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "entries"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)[^\\\\:]+$",
+          "description": "Repo-root-relative POSIX path: forward slashes, no drive letters, no backslashes."
+        },
+        "base": {
+          "enum": [
+            "src",
+            "root"
+          ]
+        },
+        "classification": {
+          "enum": [
+            "managed",
+            "seed",
+            "root-only-artifact"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the file content at generation time; 64 lowercase hexadecimal characters."
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "File size in bytes at generation time."
+        },
+        "intendedPhase5Owner": {
+          "type": "string",
+          "description": "Human-authored annotation naming the @backshop/roundhouse-* package that will own the path after the Phase 5 atomic cutover. Present if and only if classification is managed."
+        }
+      },
+      "required": [
+        "path",
+        "base",
+        "classification",
+        "sha256",
+        "sizeBytes"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "base": {
+                "const": "src"
+              }
+            },
+            "required": [
+              "base"
+            ]
+          },
+          "then": {
+            "properties": {
+              "classification": {
+                "enum": [
+                  "managed",
+                  "seed"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "base": {
+                "const": "root"
+              }
+            },
+            "required": [
+              "base"
+            ]
+          },
+          "then": {
+            "properties": {
+              "classification": {
+                "const": "root-only-artifact"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "base": {
+                "const": "src"
+              },
+              "classification": {
+                "const": "managed"
+              }
+            },
+            "required": [
+              "base",
+              "classification"
+            ]
+          },
+          "then": {
+            "required": [
+              "intendedPhase5Owner"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "classification": {
+                "enum": [
+                  "seed",
+                  "root-only-artifact"
+                ]
+              }
+            },
+            "required": [
+              "classification"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "intendedPhase5Owner"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
