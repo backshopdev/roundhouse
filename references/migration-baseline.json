@@ -114,11 +114,11 @@
       "sizeBytes": 15563
     },
     {
-      "path": "docs/plans/PLAN-20261018-01.md",
+      "path": "docs/plans/archive/PLAN-20261018-01.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "a13959aebf82254d59fef4796910a4312e5e905778eeb7416034e033f64eb322",
-      "sizeBytes": 43198
+      "sha256": "724eb2935a5ad6fcaa65a34d3669d38b576fcb25619d9f97b26ce0ef4eff28d7",
+      "sizeBytes": 43202
     },
     {
       "path": "docs/releases/index.md",
@@ -427,6 +427,13 @@
       "classification": "root-only-artifact",
       "sha256": "95e0369c29e55df031084ed750c85949441979fbe47904a1191099d4eb2b137f",
       "sizeBytes": 3898
+    },
+    {
+      "path": "references/migration-phase1-baseline.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "7e69bfe68839aa57e26909346b2ff2e29a242aaa9ea18f941182909478b0459d",
+      "sizeBytes": 19992
     },
     {
       "path": "references/openai-build-skills.md",

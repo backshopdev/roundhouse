@@ -11,4 +11,8 @@ reference.
 
 | Title | Description | Status | Date |
 |-------|-------------|--------|------|
-| _No archived plans yet. Use [template.md](template.md) to create one._ |  |  |  |
+| [Phase 1 — freeze and characterize current behavior](PLAN-20261018-01.md) | Implement the Phase 1 baseline fixture tooling, the sync-layer test-gap fill, and the baseline summary per SPEC-20261017-01. | Completed | 2026-10-19 |
+
+## Template
+
+- [Plan template](template.md) — canonical skeleton for new implementation plans.
