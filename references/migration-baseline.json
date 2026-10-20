@@ -54,15 +54,15 @@
       "path": "AGENTIC_WORKFLOW.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "4664f1374a0296bfc6ec37729283986457cf04edb9587dcd82eca2a02b131b79",
-      "sizeBytes": 15766
+      "sha256": "d12635ab1ab491f55a17f64527bf365b45a24a03ff4cd89a16a8cb50257de2bb",
+      "sizeBytes": 16359
     },
     {
       "path": "AGENTS.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "a2f03b941857498355c943ae2350c36102d922bc833e21d0988dd4b6803bbad1",
-      "sizeBytes": 5815
+      "sha256": "d3f27f63f5c52e1126f8fbdd542078852f6859dd12dfe5244d20152fe006b133",
+      "sizeBytes": 5291
     },
     {
       "path": "BUILDING.md",
@@ -89,8 +89,8 @@
       "path": "README.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "d3fe59aae0268c6d158d82616fb1911fe47b6fde9f32fb60dce9e3687ea0861d",
-      "sizeBytes": 12606
+      "sha256": "37c029d3323e02a6f51d9f48006468c3680a4fed5b141eb71a4bb2f2cd3c6b46",
+      "sizeBytes": 13195
     },
     {
       "path": "TESTING.md",
@@ -240,11 +240,11 @@
       "sizeBytes": 15563
     },
     {
-      "path": "docs/plans/PLAN-20261019-04.md",
+      "path": "docs/plans/PLAN-20261019-05.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "0cd099e9992238c3cce70ae853d9600a97ca21f2edd32656b7d266ee501cc943",
-      "sizeBytes": 37498
+      "sha256": "1803f5f3d8bf7e2fd6f29a027f8586bc48e5938e2d8c4afaa75afb315342337e",
+      "sizeBytes": 24995
     },
     {
       "path": "docs/plans/archive/PLAN-20261018-01.md",
@@ -275,11 +275,18 @@
       "sizeBytes": 34544
     },
     {
+      "path": "docs/plans/archive/PLAN-20261019-04.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "f0eaa5cb713bb323f2648f343a56df000e01a6e1133ebf45135c9d7192f1d99e",
+      "sizeBytes": 37502
+    },
+    {
       "path": "docs/plans/archive/index.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "8cadee0c68d8644afb5d29104367282a6d5dad6ca92480ad1fa1309ff23c57bb",
-      "sizeBytes": 1503
+      "sha256": "d6dc80c6c9caca80928836fc54964a7d2037f13ba3dfd30756db55698026fdbe",
+      "sizeBytes": 1863
     },
     {
       "path": "docs/plans/archive/template.md",
@@ -292,8 +299,8 @@
       "path": "docs/plans/index.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "c588d554c49c0f04d7a94677f0dccff34ebf3c231feefe84f9643e00e3ff50c6",
-      "sizeBytes": 1127
+      "sha256": "fd7268a2e1a3e3144e192619ba09c67a7c1cd48030219a6037a7b264e6e05c42",
+      "sizeBytes": 1141
     },
     {
       "path": "docs/plans/template.md",
@@ -334,8 +341,8 @@
       "path": "docs/specs/SPEC-20261016-01.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "78bdf0ded2f4f1c651dceb0898596e27f156f1a4052adf9cd799bfce50f33e53",
-      "sizeBytes": 39537
+      "sha256": "6a63d2f65ab05af860a6d84f6344d4a0a9e54736711da0d37ecc7e21cc4b6a82",
+      "sizeBytes": 39688
     },
     {
       "path": "docs/specs/SPEC-20261017-01.md",
@@ -502,8 +509,8 @@
       "path": "ktlo/KTLO-20261015-01.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "e3cbddcef854b76e03a2c3430f3cc740d2110bcd0f41c33ee2c3ad16e3c38bb5",
-      "sizeBytes": 3599
+      "sha256": "6b97e4d44b2afbbbc38d81d9ff889b930fcb5cc3bc42737560539ff72c9cf652",
+      "sizeBytes": 3713
     },
     {
       "path": "ktlo/KTLO-20261018-01.md",
@@ -679,6 +686,13 @@
       "classification": "root-only-artifact",
       "sha256": "c5003716916c84cccdad491a89065375f79bce6b7c50b7c017c0ae62dc660da7",
       "sizeBytes": 39213
+    },
+    {
+      "path": "packages/roundhouse-cli/test/composition-matrix.test.js",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "d943aaba7aadad7177d610c2757e52d24057fdf0653339fe204291196ae3cbee",
+      "sizeBytes": 16192
     },
     {
       "path": "packages/roundhouse-cli/test/fixtures/agent-path/managed/agents/fixture-agent.md",
@@ -1265,15 +1279,15 @@
       "path": "packages/roundhouse-core/seed/AGENTIC_WORKFLOW.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "0695cd356e57df397b0278d834b3eeaf694107cf18c2b6ee9db728452d29764a",
-      "sizeBytes": 19693
+      "sha256": "ee7f1e9f5db7e51ed71c6a0792a22ebc0c915fe9a2b347bd434baced90dd0222",
+      "sizeBytes": 19793
     },
     {
       "path": "packages/roundhouse-core/seed/AGENTS.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "222940efcc7d959ffa886efa506ce6ce3bca5c8b89ba5e046c11af09e924d5ce",
-      "sizeBytes": 4653
+      "sha256": "fb5adf84b5e183a7c690ebad33e276b846ddf841139c50df3e01704f394210c2",
+      "sizeBytes": 4934
     },
     {
       "path": "packages/roundhouse-core/seed/BUILDING.md",
@@ -2240,6 +2254,13 @@
       "classification": "root-only-artifact",
       "sha256": "7e69bfe68839aa57e26909346b2ff2e29a242aaa9ea18f941182909478b0459d",
       "sizeBytes": 19992
+    },
+    {
+      "path": "references/migration-phase7-comparison.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "2707fe15fc98195cca49aced99e427bad4afb314b89f9b880686ace6585f001c",
+      "sizeBytes": 9225
     },
     {
       "path": "references/openai-build-skills.md",

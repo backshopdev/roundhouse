@@ -30,15 +30,21 @@ These rules apply to all agents in all contexts:
 5. **Prefer deterministic checks over prose-based inspection.** Use tools and
    scripts to validate what can be validated objectively.
 
-## Keeping the template in sync
+## Composing your consumer
 
-Root copies of the workflow docs are deployed from `src/` via the `sync-roundhouse` script. To pick up template updates after editing files under `src/`, run:
+The Roundhouse packages are the workflow's authoritative source; your
+consumer's `.opencode/` is the composer's managed output. After installing or
+updating the packages, compose your consumer with the `roundhouse` CLI:
 
 ```bash
-npm run sync-roundhouse -- --mode sync
+roundhouse init     # first composition: discovers the installed packages, validates them, and creates .opencode/, opencode.json, .roundhouse/manifest.json, and the missing seed files
+roundhouse compose  # thereafter: updates managed content, removes stale managed files by recorded ownership, regenerates opencode.json, and creates newly applicable seeds
 ```
 
-Note: the double-dash (`--`) is required to pass script flags through `npm run`, and the script now requires `--mode` explicitly (use `sync` to deploy or `verify` to check without writing). The sync script (`scripts/sync-roundhouse.js`, relative to the consumer-repo root) is idempotent and platform-independent; see `AGENTIC_WORKFLOW.md` for the full synchronization contract.
+`roundhouse verify` checks your consumer read-only. The seed files (this
+document included) are consumer-owned once created: the composer creates them
+only when missing and never overwrites them — edit them directly. See
+`AGENTIC_WORKFLOW.md` for the full composition contract.
 
 ## Read on Demand
 

@@ -13,7 +13,7 @@ Human + agent collaboration produces a better whole. This workflow pairs human j
 
 Other approaches work well for their use cases. This is a deliberate choice: we believe the dialogue, gates, and review cycles produce better outcomes than autonomous generation — even when the latter is faster. The partnership itself is the value, and the speed bumps are intentional.
 
-The reusable template lives in `src/`. The root of this repository deploys that template and uses it to maintain and evolve itself — the workflow is docs-as-code by construction.
+The workflow's authoritative source is the workspace packages under `packages/` — each package carries its `roundhouse.json` envelope plus its `managed/` content, and the Core package carries the `seed/` scaffolding and the `opencode-template.json`. The root of this repository composes itself from those packages via the composer — the workflow is docs-as-code by construction.
 
 ## Installing the private package
 
@@ -44,10 +44,12 @@ npx @backshopdev/roundhouse update
 The consumer-facing `scratch/` directory is a temporary place where agents may
 save state and artifacts between sessions; it is seeded by `init` and `update`
 and then left consumer-owned.
-`.opencode/` is always package-owned: consumer customization there is
-unsupported, and `update` intentionally overwrites it and removes stale
-managed entries. A file occupying the managed `.opencode` root is rejected
-before any mutation; replace it with a directory before retrying. `opencode.json` is likewise managed. Update creates missing
+`.opencode/` is the composer's managed output: consumer customization there is
+unsupported, and every composition overwrites it from the packages' `managed/`
+trees and removes stale managed files by recorded ownership (files the
+composition record no longer owns; never-recorded consumer files are never
+removed). A file occupying the managed `.opencode` root is rejected
+before any mutation; replace it with a directory before retrying. `opencode.json` is likewise composed. Composition creates missing
 seed files but preserves existing files outside `.opencode/`, such as README,
 AGENTS, BUILDING, TESTING, CONTRIBUTING, AGENTIC_WORKFLOW, `docs/`, and
 `ktlo/`. Future breaking changes may require
@@ -89,11 +91,11 @@ What you get:
 - A structured docs layout (`docs/decisions/`, `docs/specs/`, `docs/plans/`, `docs/architecture/`, `docs/contracts/`, `docs/implementation-maps/`)
 - Markdown validation via `markdownlint-cli2` (config not included; adopters provide their own) and a docs-check script
 
-The `.opencode/` directory and `opencode.json` are the workflow engine — agents, skills, and configuration. Copy them from `src/` when you want to adopt the full workflow, or start with just the docs and add `.opencode/` and `opencode.json` later as your needs mature.
+The `.opencode/` directory and `opencode.json` are the workflow engine — agents, skills, and configuration, composed from the packages' `managed/` trees by the composer. Adopt the full workflow by installing the packages and composing, or start with just the docs and add the composed engine later as your needs mature.
 
 ## Workflow at a Glance
 
-The template workflow in `src/` runs as follows. The orchestration loop:
+The workflow runs as follows. The orchestration loop:
 
 ```text
 @orchestrator (plan + Gate 1) → @document-author (author + checks) → human
@@ -105,7 +107,7 @@ Four agent roles with distinct authority:
 - **Orchestrator** — the human interface; runs Socratic planning, enforces gates, delegates work, composes review perspectives from skills, consolidates findings, and manages commit approval. Never edits files.
 - **Implementor** — implements executable software changes (code, tests, configuration) in isolated context; applies a test-first default for behavioral changes, loads implementation expertise through skills, runs objective checks, and returns a completion packet. Accepted human or reviewer changes return here; the plan stays approved unless the human explicitly reopens it. Investigation of material uncertainty is performed in-session via the `investigation` skill, not by a separate agent.
 - **document-author** — implements the approved plan in isolated context; loads relevant skills, runs objective checks, and returns a completion packet. Accepted human or reviewer changes return here; the plan stays approved unless the human explicitly reopens it.
-- **Reviewer** — independent read-only sessions in parallel, each loading `peer` plus a domain skill (`harness`, `literature-note`, or `opencode-configuration`); `security` joins when changes touch sensitive areas. The orchestrator presents findings to the human, who triages and may dismiss any — findings are inputs, not verdicts.
+- **Reviewer** — independent read-only sessions in parallel, each loading `peer` plus a domain skill (`harness`, `docs-literature-note`, or `opencode-configuration`); `security` joins when changes touch sensitive areas. The orchestrator presents findings to the human, who triages and may dismiss any — findings are inputs, not verdicts.
 
 Two human gates control every changeset:
 
@@ -120,11 +122,9 @@ For full workflow mechanics — role detail, HITL gate enforcement, permission m
 
 ## Repository Structure
 
-- **Root** — deployed instance of the template; uses itself to maintain the template. Contains `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `CONTRIBUTING.md`, `guiding-principles.md`, `opencode.json`, `.markdownlint-cli2.jsonc`, and other files. Root `.opencode/` and `opencode.json` are deployed (gitignored) copies of `src/`.
-- **`src/`** — complete reusable template payload. Its `docs/` and `ktlo/`
-  contain only reusable indexes/templates; root repository-specific durable
-  docs remain outside the package.
-- **`.opencode/`** (root) — deployed (gitignored) copy of `src/.opencode/`; agents (orchestrator, document-author, implementor, reviewer), core skills (planning-structure, commit-convention, peer, security, harness, literature-note, opencode-configuration), and configuration.
+- **Root** — the self-hosting consumer; uses the workflow to maintain the workflow. Contains `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `CONTRIBUTING.md`, `guiding-principles.md`, `opencode.json`, `.markdownlint-cli2.jsonc`, and other files. Root `.opencode/` is the composer's managed output (gitignored); `opencode.json` is the composed render and `.roundhouse/manifest.json` the composition record (both committed).
+- **`packages/`** — the authoritative source: 33 workspace members, each with its `roundhouse.json` envelope and `managed/` content; the Core package additionally carries the `seed/` scaffolding and the `opencode-template.json`.
+- **`.opencode/`** (root) — the composer's managed output (gitignored): agents (orchestrator, document-author, implementor, reviewer), the installed skills, and configuration.
 - **`docs/`** — durable artifacts: decisions, specs, and plans
 - **`ktlo/`** — keep-the-lights-on operational items (domain conventions, coding standards, sync procedures)
 - **`references/`** — literature notes that informed the guiding principles
@@ -147,16 +147,13 @@ See [guiding-principles.md](guiding-principles.md) for the full extraction with 
 
 ## Key Files
 
-### Template (in `src/`)
+### Packages (the authoritative source)
 
-- **AGENTS.md** — concise introduction and entry point; the first file agents and humans read
-- **AGENTIC_WORKFLOW.md** — complete workflow mechanics: roles, gates, checks, permissions, rules
-- **CONTRIBUTING.md** — how changes are made, reviewed, and committed; Conventional Commits standard with examples
-- **BUILDING.md** — build instructions and prerequisites
-- **TESTING.md** — testing procedures and conventions
-- **README.md** — project overview and adoption guide
-- **opencode.json** — agent definitions and permission rules
-- **.opencode/** — agents, skills, and workflow configuration
+- **`packages/roundhouse-core/seed/`** — the consumer scaffolding: `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`, `CONTRIBUTING.md`, `BUILDING.md`, `TESTING.md`, `docs/`, `ktlo/`, `scratch/README.md`
+- **`packages/roundhouse-core/managed/`** — the harness content: the four agent prompts, the Core skills, the workflow docs, and `docs-check.js`
+- **`packages/roundhouse-core/opencode-template.json`** — the Core template the rendered `opencode.json` derives from
+- **`packages/roundhouse-<subject>/managed/skills/<id>/SKILL.md`** — the family packages' skills under their taxonomy IDs
+- **`packages/roundhouse-cli/`** — the composer: the `roundhouse` bin and the library modules (discovery, validation, rendering, materialization, manifest)
 
 ### Root-only development artifacts
 

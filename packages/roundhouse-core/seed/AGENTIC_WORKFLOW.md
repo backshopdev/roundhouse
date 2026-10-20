@@ -126,23 +126,29 @@ assumptions, and Proposed investigation. Findings return upstream for
 reassessment and may reopen or revise the approved plan. Routine exploration
 within approved assumptions does not require the skill.
 
-## Root/Template Synchronization
+## Composing your consumer
 
-Root `.opencode/` and `opencode.json` are deployed instances of `src/.opencode/` and `src/opencode.json`. The source of truth for agents, skills, workflow-docs, `docs-check.js`, and `opencode.json` is `src/`. Root `.opencode/` and root `opencode.json` are gitignored; never edit them directly.
+The Roundhouse packages are the workflow's authoritative source. Each package
+carries its `roundhouse.json` envelope plus its `managed/` content (agents,
+skills, workflow-docs, `docs-check.js`), and the Core package additionally
+carries the `seed/` scaffolding and the `opencode-template.json` the rendered
+`opencode.json` derives from.
 
-After any change to `src/.opencode/` or `src/opencode.json`, sync to root:
+After installing or updating the packages, compose your consumer with the
+`roundhouse` CLI:
 
 ```bash
-npm run sync-roundhouse -- --mode sync
+roundhouse init     # first composition: discovers the installed packages, validates them, and creates .opencode/, opencode.json, .roundhouse/manifest.json, and the missing seed files
+roundhouse compose  # thereafter: updates managed content, removes stale managed files by recorded ownership, regenerates opencode.json, and creates newly applicable seeds
 ```
 
-Note: the double-dash (`--`) is required to pass script flags through `npm run`, and the script now requires `--mode` explicitly (use `sync` to deploy or `verify` to check without writing).
+Your `.opencode/` is the composer's managed output (never edited directly);
+`opencode.json` is the composed render and `.roundhouse/manifest.json` the
+composition record. `roundhouse verify` checks your consumer read-only.
 
-The sync script (`scripts/sync-roundhouse.js`, relative to the consumer-repo root) is idempotent and platform-independent. Top-level files in `src/` (e.g., `AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`) are seeded to root on first install; once root copies exist they are consumer-owned. To re-sync a top-level file, edit root directly or delete the root file before re-running sync.
-
-When a task changes both `src/` and root artifacts, change `src/` first, then
-sync. The document-author must verify synchronization as part of objective
-checks.
+The seed files (`AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`, and the rest
+of the Core seed set) are consumer-owned once created: the composer creates
+them only when missing and never overwrites them — edit them directly.
 
 ## Objective Checks
 
@@ -150,8 +156,8 @@ The document-author runs checks; there is no separate verifier. This is a docs
 and configuration repository: lint touched Markdown with
 `npx --yes markdownlint-cli2@0.23.2`, validate JSON/JSONC and OpenCode schema
 expectations, and check acceptance criteria, links/indexes, frontmatter,
-whitespace, secrets, root/template synchronization, and git status. Code
-lint/test/build is `N/A`.
+whitespace, secrets, consumer composition (the composer's verify), and git
+status. Code lint/test/build is `N/A`.
 
 ## Index and Link Discipline
 
@@ -218,7 +224,7 @@ approved/reviewed content scope and all normal work/review gates.
 ## Permission Model
 
 Agent authority is defined by the
-[autonomy model](src/.opencode/workflow-docs/autonomy/index.md). The autonomy
+[autonomy model](.opencode/workflow-docs/autonomy/index.md). The autonomy
 model provides normative guidance; `opencode.json` provides technical
 enforcement. Both are authoritative; neither substitutes for the other.
 
