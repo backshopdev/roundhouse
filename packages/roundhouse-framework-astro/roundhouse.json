@@ -1,6 +1,10 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "capabilities": [],
-  "requires": []
+  "skills": [],
+  "bash": [],
+  "requires": [
+    "@backshop/roundhouse-core",
+    "@backshop/roundhouse-lang-javascript"
+  ]
 }

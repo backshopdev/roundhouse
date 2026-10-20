@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "Installation tooling: discovers declared Roundhouse packages and runs init, compose, and verify against them.",
+  "bin": {
+    "roundhouse": "bin/roundhouse.js"
+  },
   "engines": {
     "node": ">= 24.0.0"
   }

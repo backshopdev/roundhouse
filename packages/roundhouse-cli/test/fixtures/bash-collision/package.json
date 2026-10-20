@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/bash-collision",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Violation fixture (SCEN-063 row 13): bash pattern fixture-locked colliding with the core template's role-driven deny entry."
+}

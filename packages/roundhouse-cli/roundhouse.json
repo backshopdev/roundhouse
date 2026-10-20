@@ -1,5 +1,6 @@
 {
   "contractVersion": 1,
-  "capabilities": [],
+  "skills": [],
+  "bash": [],
   "requires": []
 }

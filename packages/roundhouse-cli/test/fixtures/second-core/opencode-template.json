@@ -1,0 +1,38 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "orchestrator",
+  "agent": {
+    "build": { "disable": true },
+    "plan": { "disable": true },
+    "general": { "disable": true },
+    "explore": { "disable": true },
+    "orchestrator": {
+      "mode": "primary",
+      "steps": 10,
+      "permission": {
+        "skill": { "*": "deny" }
+      }
+    },
+    "document-author": {
+      "mode": "subagent",
+      "temperature": 0.3,
+      "permission": {
+        "skill": { "*": "deny" }
+      }
+    },
+    "implementor": {
+      "mode": "subagent",
+      "temperature": 0.2,
+      "permission": {
+        "skill": { "*": "deny" }
+      }
+    },
+    "reviewer": {
+      "mode": "subagent",
+      "temperature": 0.1,
+      "permission": {
+        "skill": { "*": "deny" }
+      }
+    }
+  }
+}

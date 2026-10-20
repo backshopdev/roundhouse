@@ -5,11 +5,13 @@
  * test-package.js — workspace-root + lifecycle suite.
  *
  * Asserts the converted root manifest's workspace-shell shape (SCEN-046),
- * the 28 scaffolded workspace members' stub conformance (SCEN-047..049),
- * and the deploy tool's lifecycle behavior against temp consumers (init /
- * update semantics and safety rejections). The legacy publish/tarball
- * assertions were dropped with the root's publish-oriented fields
- * (SPEC-20261019-01); the lifecycle tests are unchanged.
+ * the 28 workspace members' envelope conformance (SCEN-047..049; the
+ * envelopes carry the migrated Phase 3 vocabulary — skills/bash/requires —
+ * per the WP-05 mapping), and the deploy tool's lifecycle behavior against
+ * temp consumers (init / update semantics and safety rejections). The
+ * legacy publish/tarball assertions were dropped with the root's
+ * publish-oriented fields (SPEC-20261019-01); the lifecycle tests are
+ * unchanged.
  */
 
 const assert = require("assert");
@@ -62,6 +64,14 @@ const ownerNames = new Set(
 );
 assert.strictEqual(ownerNames.size, 28, "the committed fixture derives exactly 28 workspace members");
 const memberNames = [...ownerNames].sort();
+// The framework/CMS members whose migrated requires also include the
+// applicable language package (DEC-20261017-02 rules 3 and 4, applied by
+// the WP-05 envelope migration).
+const frameworkCmsMembers = new Set([
+  "roundhouse-framework-astro",
+  "roundhouse-framework-react",
+  "roundhouse-cms-apostrophe",
+]);
 const packagesDir = path.join(root, "packages");
 assert.deepStrictEqual(
   fs.readdirSync(packagesDir).sort(),
@@ -72,10 +82,17 @@ for (const memberName of memberNames) {
   const memberDirName = memberName.slice("@backshop/".length);
   const memberPath = path.join(packagesDir, memberDirName);
   assert(fs.statSync(memberPath).isDirectory(), `member ${memberDirName} is a directory`);
+  // The CLI member gains the Phase 3 composer's tooling directories (bin/,
+  // lib/, test/ — the plan's change map) and the bin member (WP-03); every
+  // other member remains exactly the stub pair. No member carries managed/
+  // or seed/ directories yet (Phase 5 moves content).
+  const isCli = memberDirName === "roundhouse-cli";
   assert.deepStrictEqual(
     fs.readdirSync(memberPath).sort(),
-    ["package.json", "roundhouse.json"],
-    `member ${memberDirName} carries exactly the stub pair (no managed/ or seed/ directories)`
+    isCli ? ["bin", "lib", "package.json", "roundhouse.json", "test"] : ["package.json", "roundhouse.json"],
+    isCli
+      ? "member roundhouse-cli carries the stub pair plus the Phase 3 bin/lib/test tooling (no managed/ or seed/ directories)"
+      : `member ${memberDirName} carries exactly the stub pair (no managed/ or seed/ directories)`
   );
   const stub = JSON.parse(fs.readFileSync(path.join(memberPath, "package.json"), "utf8"));
   assert.strictEqual(stub.name, memberName, `member ${memberDirName} name equals its fixture owner value`);
@@ -88,22 +105,30 @@ for (const memberName of memberNames) {
   assert.deepStrictEqual(stub.engines, { "node": ">= 24.0.0" }, `member ${memberDirName} engines matches the root's`);
   assert.deepStrictEqual(
     Object.keys(stub).sort(),
-    ["description", "engines", "name", "private", "version"],
-    `member ${memberDirName} package.json carries no other members`
+    isCli ? ["bin", "description", "engines", "name", "private", "version"] : ["description", "engines", "name", "private", "version"],
+    isCli
+      ? "member roundhouse-cli package.json carries the five stub members plus bin (WP-03)"
+      : `member ${memberDirName} package.json carries no other members`
   );
   const envelope = JSON.parse(fs.readFileSync(path.join(memberPath, "roundhouse.json"), "utf8"));
   assert.strictEqual(envelope.contractVersion, 1, `member ${memberDirName} contractVersion is 1`);
-  assert.deepStrictEqual(envelope.capabilities, [], `member ${memberDirName} capabilities are empty`);
-  assert.deepStrictEqual(envelope.requires, [], `member ${memberDirName} requires are empty`);
+  assert.deepStrictEqual(envelope.skills, [], `member ${memberDirName} skills are empty`);
+  assert.deepStrictEqual(envelope.bash, [], `member ${memberDirName} bash is empty`);
+  const expectedRequires = memberDirName === "roundhouse-core" || memberDirName === "roundhouse-cli"
+    ? []
+    : frameworkCmsMembers.has(memberDirName)
+      ? ["@backshop/roundhouse-core", "@backshop/roundhouse-lang-javascript"]
+      : ["@backshop/roundhouse-core"];
+  assert.deepStrictEqual(envelope.requires, expectedRequires, `member ${memberDirName} requires match the migrated mapping`);
   if (memberDirName === "roundhouse-core") {
     assert.strictEqual(envelope.kind, "core", `member ${memberDirName} kind is core`);
-    assert.deepStrictEqual(Object.keys(envelope).sort(), ["capabilities", "contractVersion", "kind", "requires"], `member ${memberDirName} roundhouse.json carries no other members`);
+    assert.deepStrictEqual(Object.keys(envelope).sort(), ["bash", "contractVersion", "kind", "requires", "skills"], `member ${memberDirName} roundhouse.json carries no other members`);
   } else if (memberDirName === "roundhouse-cli") {
     assert(!("kind" in envelope), `member ${memberDirName} declares no kind`);
-    assert.deepStrictEqual(Object.keys(envelope).sort(), ["capabilities", "contractVersion", "requires"], `member ${memberDirName} roundhouse.json carries no other members`);
+    assert.deepStrictEqual(Object.keys(envelope).sort(), ["bash", "contractVersion", "requires", "skills"], `member ${memberDirName} roundhouse.json carries no other members`);
   } else {
     assert.strictEqual(envelope.kind, "capability", `member ${memberDirName} kind is capability`);
-    assert.deepStrictEqual(Object.keys(envelope).sort(), ["capabilities", "contractVersion", "kind", "requires"], `member ${memberDirName} roundhouse.json carries no other members`);
+    assert.deepStrictEqual(Object.keys(envelope).sort(), ["bash", "contractVersion", "kind", "requires", "skills"], `member ${memberDirName} roundhouse.json carries no other members`);
   }
 }
 
