@@ -12,6 +12,7 @@ reference.
 | Title | Description | Status | Date |
 |-------|-------------|--------|------|
 | [Phase 1 — freeze and characterize current behavior](PLAN-20261018-01.md) | Implement the Phase 1 baseline fixture tooling, the sync-layer test-gap fill, and the baseline summary per SPEC-20261017-01. | Completed | 2026-10-19 |
+| [Phase 2 — workspace scaffolding](PLAN-20261019-01.md) | Implements SPEC-20261019-01: the root conversion, the 28-package scaffold, the versionless-root smoke check, the test-suite rework, and the same-changeset fixture regeneration in one commit. | Completed | 2026-10-19 |
 
 ## Template
 
