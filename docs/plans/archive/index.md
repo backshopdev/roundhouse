@@ -16,6 +16,7 @@ reference.
 | [Phase 3 — composer](PLAN-20261019-02.md) | Implements SPEC-20261019-02: the 18-fixture inventory, the composer library modules, the CLI surface, the SCEN-052..066 suite, the stub-envelope migration, and the same-changeset fixture regeneration in one commit. | Completed | 2026-10-19 |
 | [Phase 4 — Core decoupling and skill extraction](PLAN-20261019-03.md) | Implements the Phase 4 definition: the socratic-interview and task-planning Core skills, the grep-grounded agent-prompt and routing-table decoupling, the KTLO closure, and the same-changeset fixture regeneration in one commit. | Completed | 2026-10-19 |
 | [Phase 5+6 — atomic cutover](PLAN-20261019-04.md) | Implements SPEC-20261019-03: the template instantiation, the fixture-driven moves with the rename wave, the five new packages, the composer-backed tooling wrappers, the root's self-hosting composition, the suite adaptations, and the exit-1 fixture regeneration in one commit. | Completed | 2026-10-20 |
+| [Phase 9 — publishing infrastructure and CI](PLAN-20261019-06.md) | Implements the Phase 9 definition: Changesets adoption (exactly pinned, nothing published), the DR-03 check catalog as npm scripts with the check-all aggregate, the files allowlists, the thin CI workflow, the retired legacy publish workflow, and the documented deprecation command in one commit. | Completed | 2026-10-20 |
 
 ## Template
 

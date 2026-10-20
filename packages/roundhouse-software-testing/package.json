@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "Software testing practice: scenario-based acceptance review (the Gherkin testability lens) and testing strategy.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
   "engines": {
     "node": ">= 24.0.0"
   }

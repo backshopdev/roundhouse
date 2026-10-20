@@ -53,8 +53,14 @@ assert.deepStrictEqual(
     "test-sync": "node scripts/test-sync.js",
     "test-package": "node scripts/test-package.js",
     "test-commit": "node scripts/test-commit.js",
+    "check-contracts": "node scripts/check-contracts.js",
+    "check-deps": "node scripts/check-deps.js",
+    "check-matrix": "node packages/roundhouse-cli/test/composition-matrix.test.js",
+    "check-drift": "node scripts/sync-roundhouse.js --mode verify",
+    "check-pack": "node scripts/check-pack.js",
+    "check-all": "node scripts/check-all.js",
   },
-  "root scripts stay verbatim"
+  "root scripts: the five lifecycle scripts verbatim plus the six Phase 9 check scripts"
 );
 assert.deepStrictEqual(packageJson.engines, { "node": ">= 24.0.0" }, "root engines stays verbatim");
 for (const droppedField of ["version", "description", "bin", "files", "publishConfig", "license"]) {

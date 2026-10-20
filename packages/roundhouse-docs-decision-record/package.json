@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "Authoring and reviewing decision records: drivers, alternatives, rationale, and reconsider triggers.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
   "engines": {
     "node": ">= 24.0.0"
   }

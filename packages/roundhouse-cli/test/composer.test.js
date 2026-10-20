@@ -414,7 +414,14 @@ test("SCEN-059: workspace members map to the discovery contract for self-hosting
   const result = discovery.discoverPackages(repoRoot);
   assert.deepEqual(result.failures, [], `discovery fails closed on nothing (stderr: ${result.failures.join(" | ")})`);
   assert.equal(result.discovered.length, 33, "the discovered set is exactly the 33 workspace members (SCEN-069's count)");
-  assert.equal(result.skipped.length, 0, "no workspace member is skipped");
+  // Post-Changesets: the root declares @changesets/cli as a devDependency, so
+  // discovery resolves it as a declared dependency and skips it (no
+  // roundhouse.json — the SCEN-058 non-Roundhouse-dep contract). What must
+  // never be skipped is a workspace member.
+  assert(
+    result.skipped.every((skipped) => !skipped.root.startsWith(path.join(repoRoot, "packages"))),
+    "no workspace member is skipped (non-Roundhouse declared dependencies may skip)"
+  );
   const frameworkCms = new Set([
     "@backshop/roundhouse-framework-astro",
     "@backshop/roundhouse-framework-react",

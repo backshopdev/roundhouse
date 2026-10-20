@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "Testability practice: testable design, constructor injection, and legacy-code enablement seams.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
   "engines": {
     "node": ">= 24.0.0"
   }

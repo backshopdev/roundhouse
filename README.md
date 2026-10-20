@@ -15,6 +15,26 @@ Other approaches work well for their use cases. This is a deliberate choice: we 
 
 The workflow's authoritative source is the workspace packages under `packages/` — each package carries its `roundhouse.json` envelope plus its `managed/` content, and the Core package carries the `seed/` scaffolding and the `opencode-template.json`. The root of this repository composes itself from those packages via the composer — the workflow is docs-as-code by construction.
 
+## The package family
+
+Roundhouse distributes as the `@backshop/roundhouse-*` package family. The foundation pair is `@backshop/roundhouse-cli` — the composer, whose `roundhouse` bin provides the `init`, `compose`, and `verify` commands — and `@backshop/roundhouse-core` — the Core machinery: the four agent prompts, the Core skills, the workflow docs, the seed scaffolding, and the `opencode-template.json`. The remaining 31 packages are capability packages per the skill taxonomy — the `docs-*`, `format-*`, `framework-*`, `lang-*`, `protocol-*`, and `software-*` families plus `cms-apostrophe` and `backshopdev-planning` — each contributing its skills from its `managed/` tree.
+
+Install the CLI and Core, plus the capability packages matching the skills you want:
+
+```bash
+npm install -D @backshop/roundhouse-cli @backshop/roundhouse-core ...
+```
+
+Then compose your consumer:
+
+```bash
+npx roundhouse init      # first composition of a fresh consumer
+npx roundhouse compose   # recompute, update managed artifacts, regenerate
+npx roundhouse verify    # report every drift class; writes nothing
+```
+
+`init` and `compose` write the managed `.opencode/` tree, the composed `opencode.json`, and the `.roundhouse/manifest.json` composition record; seed files are created when missing and never overwritten.
+
 ## Installing the private package
 
 This workflow is distributed as the private npm package

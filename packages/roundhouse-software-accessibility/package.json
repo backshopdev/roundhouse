@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "Accessibility practice: inclusive design, WCAG guidelines, and assistive-technology compatibility.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
   "engines": {
     "node": ">= 24.0.0"
   }

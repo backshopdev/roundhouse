@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "ApostropheCMS patterns: widget and module design, templating, and testing approaches.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
   "engines": {
     "node": ">= 24.0.0"
   }
