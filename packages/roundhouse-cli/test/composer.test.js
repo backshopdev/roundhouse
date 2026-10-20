@@ -410,10 +410,10 @@ test("SCEN-058: an undeclared node_modules package is never discovered", () => {
 
 test("SCEN-059: workspace members map to the discovery contract for self-hosting", () => {
   const manifestPath = path.join(repoRoot, ".roundhouse", "manifest.json");
-  assert(!fs.existsSync(manifestPath), "precondition: the real repository has no manifest");
+  assert(fs.existsSync(manifestPath), "precondition: the real repository carries its committed composition manifest");
   const result = discovery.discoverPackages(repoRoot);
   assert.deepEqual(result.failures, [], `discovery fails closed on nothing (stderr: ${result.failures.join(" | ")})`);
-  assert.equal(result.discovered.length, 28, "the discovered set is exactly the 28 workspace members");
+  assert.equal(result.discovered.length, 33, "the discovered set is exactly the 33 workspace members (SCEN-069's count)");
   assert.equal(result.skipped.length, 0, "no workspace member is skipped");
   const frameworkCms = new Set([
     "@backshop/roundhouse-framework-astro",
@@ -428,13 +428,31 @@ test("SCEN-059: workspace members map to the discovery contract for self-hosting
         ? ["@backshop/roundhouse-core", "@backshop/roundhouse-lang-javascript"]
         : ["@backshop/roundhouse-core"];
     assert.deepEqual(found.envelope.requires, expectedRequires, `${found.name} carries the expected requires`);
-    assert.deepEqual(found.envelope.skills, [], `${found.name} declares no skills yet (Phase 3: no content moved)`);
-    assert.deepEqual(found.envelope.bash, [], `${found.name} declares no bash patterns yet`);
+    assert.deepEqual(found.envelope.bash, [], `${found.name} declares no bash patterns (the role-driven posture lives in the template)`);
+    // The declared skills equal the package's managed/skills/ tree exactly
+    // (derived read-only from the real tree — the post-cutover form of the
+    // SCEN-047..049 coverage that transferred here with the cutover).
+    const skillsDir = path.join(found.root, "managed", "skills");
+    const treeSkills = fs.existsSync(skillsDir)
+      ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort()
+      : [];
+    assert.deepEqual(found.envelope.skills, treeSkills, `${found.name} declares exactly its managed/skills/ tree`);
   }
   const byName = new Map(result.discovered.map((found) => [found.name, found]));
   assert.equal(byName.get("@backshop/roundhouse-core").envelope.kind, "core", "the core member is core-kind");
   assert(!("kind" in byName.get("@backshop/roundhouse-cli").envelope), "the kind-less CLI member is discovered with empty contributions");
-  assert(!fs.existsSync(manifestPath), "no manifest is created in the real repo");
+  const newPackages = new Map([
+    ["@backshop/roundhouse-software-security", ["software-security"]],
+    ["@backshop/roundhouse-software-privacy", ["software-privacy"]],
+    ["@backshop/roundhouse-lang-gherkin", ["lang-gherkin"]],
+    ["@backshop/roundhouse-software-testing", ["software-testing-gherkin"]],
+    ["@backshop/roundhouse-backshopdev-planning", ["backshopdev-planning"]],
+  ]);
+  for (const [name, skills] of newPackages) {
+    const found = byName.get(name);
+    assert(found !== undefined, `the new package ${name} is discovered`);
+    assert.deepEqual(found.envelope.skills, skills, `${name} declares its taxonomy skill ID`);
+  }
 
   function match(name) {
     return /^@backshop\/roundhouse-[a-z0-9-]+$/.test(name);

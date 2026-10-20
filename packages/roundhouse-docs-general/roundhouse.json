@@ -1,7 +1,11 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "docs-general",
+    "docs-general-accuracy",
+    "docs-general-traceability"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core"

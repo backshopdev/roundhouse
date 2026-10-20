@@ -7,16 +7,21 @@
  * Asserts the SCEN-026..045 acceptance contracts from SPEC-20261017-01 for
  * the Phase 1 migration baseline fixture tooling:
  *
- *   @unit        SCEN-032 (structural validation), SCEN-034 (annotation
- *                carry-forward), SCEN-035 (pending marker), SCEN-038 (schema
- *                conformance, all ten Examples rows), SCEN-040
+ *   @unit        SCEN-032 (structural validation), SCEN-034 (the post-cutover
+ *                fixture carries zero managed annotations — the manifest owns
+ *                composition state), SCEN-035 (pending marker), SCEN-038
+ *                (schema conformance, all ten Examples rows), SCEN-040
  *                (platform-agnostic bytes), SCEN-042 (canonical
  *                serialization) — exercised against the generator's exported
  *                pure pipeline steps.
  *
- *   @integration SCEN-026 (byte-identical regeneration), SCEN-027/028/029
- *                (classification), SCEN-030 (scratch paths), SCEN-031
- *                (derived-state absence), SCEN-033 (validation failure
+ *   @integration SCEN-026 (byte-identical regeneration), SCEN-027/028
+ *                (the post-cutover classification: the src scope is empty,
+ *                zero managed and seed entries — the surfaces transferred
+ *                to the composer), SCEN-029 (the post-cutover root-only
+ *                inventory), SCEN-030 (scratch paths), SCEN-031 (the
+ *                composed opencode.json inventoried; untracked derived
+ *                state absent), SCEN-033 (validation failure
  *                writes nothing, via injected defects), SCEN-036 (stale
  *                annotation loud drop), SCEN-037 (invalid input fails
  *                closed), SCEN-039 (encoding), SCEN-041 (untracked warn),
@@ -209,66 +214,53 @@ test("SCEN-026: regeneration is byte-identical and completes within 5 seconds", 
   }
 });
 
-// ─── SCEN-027: Managed classification mirrors Mode 1 (@integration) ─────────
+// ─── SCEN-027: The post-cutover managed classification (@integration) ───────
 
-test("SCEN-027: managed entries match the overwrite surface with accurate hashes", () => {
+test("SCEN-027: the src scope is empty — the fixture carries zero managed entries", () => {
   assert(fs.existsSync(fixturePath), "precondition: working-tree fixture exists");
   const entries = readRealFixtureEntries();
-  const tracked = generator.listTrackedPaths(repoRoot);
-  const expectedManaged = tracked
-    .filter((t) => t.path.startsWith("src/.opencode/") || t.path === "src/opencode.json")
-    .map((t) => t.path)
-    .sort();
-  const managedEntries = entries.filter((entry) => entry.classification === "managed");
-
+  // Post-cutover: src/ is empty of tracked paths, so the fixture's managed
+  // surface is zero. The managed-overwrite contract the classification once
+  // mirrored now lives with the composer — the committed
+  // .roundhouse/manifest.json owns composition state, and the composer and
+  // sync suites carry the materialization coverage (the coverage transfer
+  // per the Phase 5+6 close).
   assert.deepEqual(
-    managedEntries.map((entry) => entry.path),
-    expectedManaged,
-    "managed entries are exactly the tracked src/.opencode/ paths plus src/opencode.json"
+    entries.filter((entry) => entry.classification === "managed"),
+    [],
+    "zero managed entries in the post-cutover fixture"
   );
-  for (const entry of managedEntries) {
-    assert.equal(entry.base, "src", `managed entry ${entry.path} has base "src"`);
-    const actual = hashFileBytes(path.join(repoRoot, ...entry.path.split("/")));
-    assert.equal(entry.sha256, actual.sha256, `managed entry ${entry.path} sha256 matches file content`);
-    assert.equal(entry.sizeBytes, actual.sizeBytes, `managed entry ${entry.path} sizeBytes matches file content`);
-  }
+  assert.deepEqual(
+    entries.filter((entry) => entry.path.startsWith("src/")),
+    [],
+    "no src/ entries remain in the fixture"
+  );
 });
 
-// ─── SCEN-028: Seed classification mirrors Mode 2 (@integration) ────────────
+// ─── SCEN-028: The post-cutover seed classification (@integration) ──────────
 
-test("SCEN-028: seed entries match the create-if-missing surface with accurate hashes", () => {
+test("SCEN-028: the src scope is empty — the fixture carries zero seed entries", () => {
   assert(fs.existsSync(fixturePath), "precondition: working-tree fixture exists");
   const entries = readRealFixtureEntries();
-  const tracked = generator.listTrackedPaths(repoRoot);
-  const managedPaths = new Set(
-    tracked.filter((t) => t.path.startsWith("src/.opencode/") || t.path === "src/opencode.json").map((t) => t.path)
-  );
-  const expectedSeed = tracked
-    .filter((t) => t.path.startsWith("src/") && !managedPaths.has(t.path))
-    .map((t) => t.path)
-    .sort();
-  const seedEntries = entries.filter((entry) => entry.classification === "seed");
-
+  // Post-cutover: the Core seed set lives in packages/roundhouse-core/seed/
+  // and its create-if-missing contract is the composer's (verified by the
+  // composer and sync suites) — the classification's seed surface
+  // transferred with the cutover.
   assert.deepEqual(
-    seedEntries.map((entry) => entry.path),
-    expectedSeed,
-    "seed entries are exactly the tracked src/ paths outside the managed surface"
+    entries.filter((entry) => entry.classification === "seed"),
+    [],
+    "zero seed entries in the post-cutover fixture"
   );
-  assert(
-    expectedSeed.includes("src/scratch/README.md"),
-    "src/scratch/README.md is among the seed entries"
+  assert.deepEqual(
+    entries.filter((entry) => entry.path.startsWith("src/")),
+    [],
+    "no src/ entries remain in the fixture"
   );
-  for (const entry of seedEntries) {
-    assert.equal(entry.base, "src", `seed entry ${entry.path} has base "src"`);
-    const actual = hashFileBytes(path.join(repoRoot, ...entry.path.split("/")));
-    assert.equal(entry.sha256, actual.sha256, `seed entry ${entry.path} sha256 matches file content`);
-    assert.equal(entry.sizeBytes, actual.sizeBytes, `seed entry ${entry.path} sizeBytes matches file content`);
-  }
 });
 
-// ─── SCEN-029: Root-only-artifact detection (@integration) ──────────────────
+// ─── SCEN-029: The post-cutover root-only inventory (@integration) ──────────
 
-test("SCEN-029: root entries are the leave-alone surface and the fixture excludes itself", () => {
+test("SCEN-029: root entries are the post-cutover inventory; the former seed instances are root-only artifacts", () => {
   assert(fs.existsSync(fixturePath), "precondition: working-tree fixture exists");
   const entries = readRealFixtureEntries();
   const tracked = generator.listTrackedPaths(repoRoot);
@@ -318,10 +310,17 @@ test("SCEN-029: root entries are the leave-alone surface and the fixture exclude
     "a tracked root file without an exact src/ counterpart is a root-only artifact despite the src/docs tree existing"
   );
 
+  // Post-cutover: the former root seed instances' src/ counterparts moved
+  // into packages/roundhouse-core/seed/, so the instances classify as
+  // root-only artifacts and ARE inventoried (the pre-cutover
+  // seed-instance exclusion retired with the src tree).
   for (const seedInstance of ["AGENTS.md", "README.md", "docs/index.md", "ktlo/index.md"]) {
     assert(trackedSet.has(seedInstance), `${seedInstance} is tracked at root`);
-    assert(trackedSet.has(`src/${seedInstance}`), `src/${seedInstance} is tracked (counterpart exists)`);
-    assert(!entries.some((entry) => entry.path === seedInstance), `${seedInstance} is a seed instance and absent from the fixture`);
+    assert(!trackedSet.has(`src/${seedInstance}`), `the src/ counterpart of ${seedInstance} moved away with the cutover`);
+    assert(
+      expectedRootOnly.includes(seedInstance),
+      `${seedInstance} is a root-only artifact in the post-cutover fixture`
+    );
   }
 });
 
@@ -331,15 +330,18 @@ test("SCEN-030: tracked files inside ignored directories are inventoried; derive
   assert(fs.existsSync(fixturePath), "precondition: working-tree fixture exists");
   const entries = readRealFixtureEntries();
   const scratchEntries = entries.filter((entry) => entry.path.includes("scratch/"));
+  // Post-cutover: the src/scratch seed template moved to
+  // packages/roundhouse-core/seed/, so the root scratch/README.md lost its
+  // src counterpart; both scratch paths inventory as root-only artifacts.
   assert.deepEqual(
-    scratchEntries.map((entry) => entry.path),
-    ["src/scratch/README.md"],
-    "src/scratch/README.md is the only scratch path in the fixture"
+    scratchEntries.map((entry) => entry.path).sort(),
+    ["packages/roundhouse-core/seed/scratch/README.md", "scratch/README.md"],
+    "the moved seed template and the root instance are the only scratch paths in the fixture"
   );
-  const srcScratch = scratchEntries[0];
-  assert.equal(srcScratch.base, "src");
-  assert.equal(srcScratch.classification, "seed");
-  assert(!entries.some((entry) => entry.path === "scratch/README.md"), "root scratch/README.md is absent from the fixture");
+  for (const entry of scratchEntries) {
+    assert.equal(entry.base, "root", `scratch entry ${entry.path} has base "root" (post-cutover: no src scope)`);
+    assert.equal(entry.classification, "root-only-artifact", `scratch entry ${entry.path} is a root-only artifact`);
+  }
 
   // Controlled-state part: in a temp repo where BOTH copies are tracked, the
   // root copy is a tracked seed instance and still absent from the fixture.
@@ -381,18 +383,27 @@ test("SCEN-030: tracked files inside ignored directories are inventoried; derive
 
 // ─── SCEN-031: Deployment outputs are not inventoried (@integration) ────────
 
-test("SCEN-031: derived root state is absent from the fixture", () => {
+test("SCEN-031: the committed composed opencode.json is inventoried; untracked derived root state is absent", () => {
   assert(fs.existsSync(fixturePath), "precondition: working-tree fixture exists");
   const entries = readRealFixtureEntries();
+  // Post-cutover: the root opencode.json is the committed composed artifact
+  // and IS inventoried (root-only-artifact); the root .opencode/ remains
+  // gitignored deployed state and is absent. The scenario's original rule —
+  // untracked derived root state never enters the fixture — is kept by the
+  // temp-repo part below.
+  const rootOpenCode = entries.find((entry) => entry.path === "opencode.json");
+  assert(rootOpenCode !== undefined, "the committed composed opencode.json is inventoried");
+  assert.equal(rootOpenCode.base, "root", "the composed opencode.json has base \"root\"");
+  assert.equal(rootOpenCode.classification, "root-only-artifact", "the composed opencode.json is a root-only artifact");
   assert(
-    !entries.some((entry) => entry.path === "opencode.json" || entry.path.startsWith(".opencode/")),
-    "no entry for root opencode.json or root .opencode/ paths"
+    !entries.some((entry) => entry.path.startsWith(".opencode/")),
+    "no root .opencode/ entry (gitignored deployed state)"
   );
   const trackedSet = new Set(generator.listTrackedPaths(repoRoot).map((t) => t.path));
   for (const entry of entries) {
     assert(
       !trackedSet.has(`src/${entry.path}`),
-      `no root seed instance in the fixture: ${entry.path}`
+      `no src/ counterpart remains for ${entry.path} (the src tree moved with the cutover)`
     );
   }
 
@@ -479,39 +490,25 @@ test("SCEN-033: an injected validation failure produces no write", () => {
   assert.deepEqual(readFixtureBytes(dir), before, "existing fixture unchanged after injected classification failure");
 });
 
-// ─── SCEN-034: Annotation carry-forward (@unit) ─────────────────────────────
+// ─── SCEN-034: The post-cutover annotation state (@unit) ────────────────────
 
-test("SCEN-034: human-authored annotations survive regeneration verbatim", () => {
+test("SCEN-034: the post-cutover fixture carries zero managed annotations", () => {
   assert(fs.existsSync(fixturePath), "precondition: working-tree fixture exists (provenance for this scenario)");
   const existing = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
-  const annotations = new Map(
-    existing.entries
-      .filter((entry) => entry.intendedPhase5Owner !== undefined)
-      .map((entry) => [entry.path, entry.intendedPhase5Owner])
+  // The annotation-carry-forward contract was the PRE-cutover fixture's
+  // purpose: the human-authored intendedPhase5Owner values were the move
+  // map's data, and the cutover realized their purpose by moving the
+  // content. The loud-drop flow retired the annotations (SCEN-036 covers
+  // the drop mechanics; SCEN-037 the invalid-input rejection). Post-cutover
+  // the committed .roundhouse/manifest.json owns composition state and the
+  // fixture is the plain inventory.
+  const annotated = existing.entries.filter((entry) => entry.intendedPhase5Owner !== undefined);
+  assert.deepEqual(annotated, [], "zero managed annotations in the post-cutover fixture");
+  assert.deepEqual(
+    existing.entries.filter((entry) => entry.classification === "managed"),
+    [],
+    "zero managed entries (no annotation carrier exists)"
   );
-  assert(annotations.size > 0, "the working-tree fixture carries managed annotations");
-
-  const freshInventory = existing.entries
-    .filter((entry) => entry.classification === "managed")
-    .map((entry) => ({
-      path: entry.path,
-      base: "src",
-      classification: "managed",
-      sha256: HEX64_B,
-      sizeBytes: 0,
-    }));
-  assert.equal(freshInventory.length, annotations.size, "fresh inventory contains the same managed paths");
-
-  const { entries: merged, dropped } = generator.mergeAnnotations(freshInventory, annotations);
-  assert.deepEqual(dropped, [], "no annotation is dropped when every annotated path remains managed");
-  assert.equal(merged.length, freshInventory.length, "merge preserves the inventory");
-  for (const entry of merged) {
-    assert.equal(
-      entry.intendedPhase5Owner,
-      annotations.get(entry.path),
-      `annotation for ${entry.path} is carried forward verbatim`
-    );
-  }
 });
 
 // ─── SCEN-035: New managed path is never guessed (@unit) ────────────────────

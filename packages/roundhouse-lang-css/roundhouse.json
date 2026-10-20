@@ -1,7 +1,10 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "lang-css",
+    "lang-css-sass"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core"

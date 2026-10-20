@@ -1,7 +1,9 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "framework-astro"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core",

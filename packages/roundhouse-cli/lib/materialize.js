@@ -90,6 +90,63 @@ function collectOwnedManagedPaths(models) {
   return [...paths].sort(comparePaths);
 }
 
+// ─── Ancestor type-compatibility (the SCEN-072 repair/skip contracts) ───────
+
+/**
+ * Walk the destination's ancestor chain (within the consumer root) and
+ * return the first existing entry that is neither a directory nor a
+ * symlink, as its consumer-root-relative POSIX path — a consumer file at a
+ * directory path the composition needs. Symlinks are NOT type conflicts:
+ * they are left for the confinement primitives' rejection. Returns null
+ * when every ancestor is a directory or absent.
+ */
+function findAncestorTypeConflict(consumerRoot, destination) {
+  const root = path.resolve(consumerRoot);
+  const absolute = path.resolve(destination);
+  const relative = path.relative(root, absolute);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`destination escapes consumer cwd: ${destination}`);
+  }
+  const segments = relative.split(path.sep).slice(0, -1); // ancestors only
+  let current = root;
+  for (const segment of segments) {
+    current = path.join(current, segment);
+    const stat = lstatIfPresent(current);
+    if (stat && !stat.isDirectory() && !stat.isSymbolicLink()) {
+      return path.relative(root, current).split(path.sep).join("/");
+    }
+  }
+  return null;
+}
+
+/**
+ * Repair the ancestor chain for a managed write (the managed-update repair
+ * semantics): a consumer file at a managed directory path is removed —
+ * revalidated immediately before removal — so the directory can be created
+ * and repopulated from the package source. Every removal is logged; a
+ * symlinked ancestor is never repaired (the confinement primitives reject
+ * it).
+ */
+function repairAncestorDirectories(consumerRoot, destination, label, log) {
+  const root = path.resolve(consumerRoot);
+  const absolute = path.resolve(destination);
+  const relative = path.relative(root, absolute);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`${label} escapes consumer cwd: ${destination}`);
+  }
+  const segments = relative.split(path.sep).slice(0, -1);
+  let current = root;
+  for (const segment of segments) {
+    current = path.join(current, segment);
+    const stat = lstatIfPresent(current);
+    if (stat && !stat.isDirectory() && !stat.isSymbolicLink()) {
+      revalidateMutationPath(root, current, label, false);
+      fs.rmSync(current, { recursive: true, force: true });
+      log(`Removed incompatible existing: ${path.relative(root, current).split(path.sep).join("/")}`);
+    }
+  }
+}
+
 // ─── I/O operations ─────────────────────────────────────────────────────────
 
 function requireLog(log) {
@@ -118,6 +175,7 @@ function copyManaged({ consumerRoot, models, log }) {
         ensureType(destination, sourceStat, "update", log, false, root);
         if (lstatIfPresent(destination) === null) log(`Removed incompatible existing: ${file.consumerPath}`);
       }
+      repairAncestorDirectories(root, destination, "managed destination", log);
       mkdirSafe(root, path.dirname(destination), "managed destination");
       copyFileSafe(root, source, destination, "managed destination");
       log(`${existing && existing.isFile() ? "Updated" : "Created"} managed file: ${file.consumerPath} (${model.name})`);
@@ -161,6 +219,16 @@ function createMissingSeeds({ consumerRoot, models, log }) {
       const stat = revalidateMutationPath(root, destination, "seed destination");
       if (stat) {
         log(`Seed already present, skipped: ${seed.consumerPath}`);
+        continue;
+      }
+      // The seed create-if-missing contract: a consumer file at a seed
+      // parent-directory path means the seed cannot be created — skip with
+      // a report, preserving the never-overwrite rule (the consumer file is
+      // never removed). A symlinked ancestor is not a type conflict; it
+      // falls through to the confinement primitives' rejection.
+      const ancestorConflict = findAncestorTypeConflict(root, destination);
+      if (ancestorConflict !== null) {
+        log(`Skipped incompatible existing: ${ancestorConflict} (seed not created: ${seed.consumerPath})`);
         continue;
       }
       mkdirSafe(root, path.dirname(destination), "seed destination");

@@ -1,7 +1,9 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "docs-implementation-map"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core"

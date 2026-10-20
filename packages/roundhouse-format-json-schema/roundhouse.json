@@ -1,7 +1,9 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "format-json-schema"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core"

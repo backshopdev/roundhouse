@@ -4,43 +4,51 @@
 /**
  * test-sync.js
  *
- * Automated tests for sync-roundhouse.js. Verifies:
- *   1. Sync runs without error
- *   2. All src/.opencode/ files exist in root .opencode/ after sync
+ * Automated tests for the composer-backed sync-roundhouse.js adapter
+ * (PLAN-20261019-04 T-12). The behavioral contracts hold; the
+ * implementation behind them swapped from the src/-tree deployment to the
+ * composer library, and the assertions relabel accordingly:
+ *
+ *   1. Sync runs without error (init on a fresh consumer)
+ *   2. The composed managed set exists at the consumer (derived from the
+ *      packages' managed trees — the source relabel)
  *   3. Root-only artifacts are preserved (not deleted)
- *   4. Stale files (in root but not in src) are removed
+ *   4. Stale managed files are removed by recorded ownership; never-recorded
+ *      files are never removed
  *   5. --mode verify flag works correctly
- *   6. --mode verify detects discrepancies (negative test)
- *   7. opencode.json content is synced from src
- *   8. --mode verify checks opencode.json integrity
- *   9. --mode verify detects opencode.json content discrepancy
- *  10. --mode verify detects missing root opencode.json
- *  11. Sync fails when src/opencode.json is missing
- *  12. Mode 2 creates missing seed files at root
- *  13. Mode 2 leaves existing seed files alone
- *  14. --mode verify detects Mode 2 drift
+ *   6. --mode verify detects a missing managed file (negative test)
+ *   7. opencode.json is the composed render (the uniform skill map)
+ *   8. --mode verify detects a hand-edited opencode.json
+ *   9. --mode verify detects a managed file edited against its source
+ *  10. --mode verify detects a missing opencode.json
+ *  11. Sync fails closed when the consumer's manifest is corrupt (the
+ *      missing-src premise retired with the source tree)
+ *  12. Seeds are created when missing (the Core seed set)
+ *  13. Seeds are never overwritten (create-if-missing)
+ *  14. --mode verify detects never-created seed files
  *  15. Empty consumer dir gets fully populated by sync
- *  16. Existing consumer with customizations — Mode 1 replaces, Mode 2 preserves
- *  17. Missing --mode flag exits non-zero with a clear error
- *  18. Invalid --mode value exits non-zero
- *  19. Managed junction rejection (mirrors test-package.js coverage)
- *  20. Source-side junction rejection
+ *  16. Existing consumer with customizations — managed replaced, seeds
+ *      preserved, never-recorded files preserved
+ *  17. Missing --mode flag exits 2 with a clear error
+ *  18. Invalid --mode value exits 2
+ *  19. Managed junction rejection
+ *  20. Source-side symlink rejection (through the preserved copyMissing API)
  *  21. Nested destination junction rejection
  *  22. Unrelated consumer links ignored
- *  23. Managed type-conflict repair
- *  24. Path-escape rejection: deploy destination escapes consumer cwd (assertSafePath)
- *  25. Path-escape rejection: copyMissing destination escapes consumer cwd (assertSafePath)
- *  26. Path-escape rejection: symlinked path component inside consumer cwd (assertSafePath)
+ *  23. Managed type-conflict disposition (see the in-test deviation note)
+ *  24. Path-escape rejection: deploy destination escapes consumer cwd
+ *  25. Path-escape rejection: copyMissing destination escapes consumer cwd
+ *  26. Path-escape rejection: symlinked path component inside consumer cwd
  *  27. Root consumer-owned seed files are preserved untouched by sync
  *  28. Self-hosting verification: --mode verify passes on the repo's own root
  *
- * Tests run in an isolated OS temp directory (created from os.tmpdir())
- * so they never touch the real repo root. A copy of src/ is placed in the
- * fixture so sync can be exercised with --src and --consumer overrides.
- * Tests 24-26 exercise package/deploy-roundhouse.js's assertSafePath escape
- * contract through its public API (deploy/copyMissing) because the sync CLI
- * constructs every path internally and cannot produce an escaping path.
- * Test 28 is the one real-repo touchpoint: --mode verify is read-only.
+ * Tests run in an isolated OS temp directory (created from os.tmpdir()) so
+ * they never touch the real repo root. The source is the real workspace
+ * package set, read-only — the harness isolates via --consumer alone (the
+ * --src flag is inert compatibility surface). Tests 24-26 exercise the
+ * escape contracts through package/deploy-roundhouse.js's preserved API
+ * because the sync CLI constructs every path internally. Test 28 is the one
+ * real-repo touchpoint: --mode verify is read-only.
  *
  * Usage:
  *   node scripts/test-sync.js
@@ -53,16 +61,14 @@ const { execSync } = require("child_process");
 const { deploy, copyMissing } = require("../package/deploy-roundhouse");
 
 const repoRoot = path.resolve(__dirname, "..");
-const srcDir = path.join(repoRoot, "src", ".opencode");
-const srcOpenCodeJson = path.join(repoRoot, "src", "opencode.json");
+const packagesDir = path.join(repoRoot, "packages");
+const coreSeedDir = path.join(packagesDir, "roundhouse-core", "seed");
 const syncScript = path.join(__dirname, "sync-roundhouse.js");
 
 // ─── Temp fixture setup ─────────────────────────────────────────────────────
-// Tests run in an isolated OS temp directory so the real repo root is never
-// touched. We copy src/ into the fixture and pass --src/--consumer overrides
-// to the sync script so it operates on the fixture, not the live repo.
+// The source is the real workspace package set (read-only); tests isolate
+// via --consumer alone. No src/ copy exists post-cutover.
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "roundhouse-sync-test-"));
-fs.cpSync(path.join(repoRoot, "src"), path.join(tempRoot, "src"), { recursive: true });
 
 // Safety net: ensure tempRoot is removed even if a synchronous throw bypasses
 // the linear cleanup at the end of the suite. Idempotent via `force: true`.
@@ -72,15 +78,12 @@ function cleanupTemp() {
 process.on("exit", cleanupTemp);
 process.on("beforeExit", cleanupTemp);
 
-// Consumer-side path constants now point at the temp fixture.
 const destDir = path.join(tempRoot, ".opencode");
 const destOpenCodeJson = path.join(tempRoot, "opencode.json");
-const fixtureSrcDir = path.join(tempRoot, "src", ".opencode");
-const fixtureSrcOpenCodeJson = path.join(tempRoot, "src", "opencode.json");
+const destManifest = path.join(tempRoot, ".roundhouse", "manifest.json");
 
 /**
  * Root-only artifacts that must be preserved after sync.
- * Must match the ROOT_ONLY list in sync-roundhouse.js.
  */
 const ROOT_ONLY = [
   "node_modules",
@@ -104,37 +107,45 @@ function assert(condition, message) {
 }
 
 /**
- * Recursively collect all relative POSIX-style paths under a directory.
+ * The expected composed managed set: every file under the packages'
+ * managed/ trees, as consumer-root-relative .opencode/ paths. Derived from
+ * the real package tree (read-only) — the source relabel.
  */
-function collectRelativePaths(dir, base) {
+function expectedManagedPaths() {
   const result = new Set();
-  if (!fs.existsSync(dir)) {
-    return result;
-  }
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const rel = path
-      .relative(base, path.join(dir, entry.name))
-      .split(path.sep)
-      .join("/");
-    result.add(rel);
-    if (entry.isDirectory()) {
-      const childPaths = collectRelativePaths(
-        path.join(dir, entry.name),
-        base
-      );
-      for (const cp of childPaths) {
-        result.add(cp);
+  for (const entry of fs.readdirSync(packagesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !entry.name.startsWith("roundhouse-")) continue;
+    const managedDir = path.join(packagesDir, entry.name, "managed");
+    const walk = (dir, prefix) => {
+      if (!fs.existsSync(dir)) return;
+      for (const child of fs.readdirSync(dir, { withFileTypes: true })) {
+        const relative = prefix ? `${prefix}/${child.name}` : child.name;
+        if (child.isDirectory()) walk(path.join(dir, child.name), relative);
+        else result.add(relative);
       }
-    }
+    };
+    walk(managedDir, "");
   }
   return result;
 }
 
 /**
- * Recursively collect all files under a directory, returning relative POSIX
- * paths. Used by Tests 15/16 to compare whole subtrees byte-for-byte.
+ * The Core seed set: every file under packages/roundhouse-core/seed/, as
+ * consumer-root-relative paths.
  */
+function expectedSeedPaths() {
+  const result = [];
+  const walk = (dir, prefix) => {
+    for (const child of fs.readdirSync(dir, { withFileTypes: true })) {
+      const relative = prefix ? `${prefix}/${child.name}` : child.name;
+      if (child.isDirectory()) walk(path.join(dir, child.name), relative);
+      else result.push(relative);
+    }
+  };
+  walk(coreSeedDir, "");
+  return result.sort();
+}
+
 function collectFilesRecursive(dir, base) {
   const result = [];
   if (!fs.existsSync(dir)) return result;
@@ -161,26 +172,14 @@ function filesAreEqual(fileA, fileB) {
   return false;
 }
 
-/**
- * Filter a set of relative paths to those whose entries are regular files.
- * `collectRelativePaths` includes both files and directories; byte-for-byte
- * comparisons must skip directories.
- */
-function filterFilesOnly(dir, paths) {
-  const result = new Set();
-  for (const rel of paths) {
-    const fullPath = path.join(dir, rel);
-    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
-      result.add(rel);
-    }
-  }
-  return result;
-}
-
 function runSync(args, options = {}) {
   const consumerDir = options.consumer || tempRoot;
-  const sourceDir = options.src || path.join(tempRoot, "src");
-  const cmd = `node "${syncScript}" --src "${sourceDir}" --consumer "${consumerDir}"${args ? " " + args : ""}`;
+  // --src is exercised once (test 1) to prove it is accepted and ignored;
+  // the flag is inert compatibility surface.
+  const srcFlag = options.src !== undefined ? ` --src "${options.src}"` : "";
+  // 2>&1 merges the adapter's stderr reporting (creations, removals,
+  // findings — the spec routes them to stderr) into the captured output.
+  const cmd = `node "${syncScript}" --consumer "${consumerDir}"${srcFlag}${args ? " " + args : ""} 2>&1`;
   return execSync(cmd, {
     cwd: repoRoot,
     encoding: "utf-8",
@@ -188,43 +187,54 @@ function runSync(args, options = {}) {
   });
 }
 
+function runSyncExpectFailure(args, options = {}) {
+  const consumerDir = options.consumer || tempRoot;
+  let output = "";
+  let exitCode = null;
+  try {
+    output = runSync(args, options);
+    exitCode = 0;
+  } catch (err) {
+    exitCode = err.status;
+    output = (err.stdout || "") + "\n" + (err.stderr || "");
+  }
+  return { exitCode, output };
+}
+
 // ─── Test 1: Sync runs without error ────────────────────────────────────────
-console.log("\nTest 1: Sync runs without error");
+console.log("\nTest 1: Sync runs without error (init on a fresh consumer)");
 try {
-  const output = runSync("--mode sync");
-  assert(output.includes("Synced:"), "Sync reports success message");
-  assert(
-    output.includes("up to date"),
-    "Sync reports 'up to date' message"
-  );
+  // --src points at a nonexistent path on purpose: the flag is accepted and
+  // ignored (inert compatibility surface).
+  const output = runSync("--mode sync", { src: path.join(tempRoot, "no-such-src") });
+  assert(output.includes("initialized"), "Sync reports the initialized summary");
 } catch (err) {
   assert(false, `Sync ran without error (got: ${err.message})`);
 }
+assert(fs.existsSync(destManifest), "Sync created .roundhouse/manifest.json");
+assert(fs.existsSync(destOpenCodeJson), "Sync wrote the composed opencode.json");
 
-// ─── Test 2: All src files exist in root after sync ─────────────────────────
-console.log("\nTest 2: All src/.opencode/ files exist in root .opencode/");
-const srcPaths = collectRelativePaths(fixtureSrcDir, fixtureSrcDir);
-const destPaths = collectRelativePaths(destDir, destDir);
-
+// ─── Test 2: The composed managed set exists at the consumer ────────────────
+console.log("\nTest 2: The composed managed set exists at the consumer");
+const expectedManaged = expectedManagedPaths();
 let allPresent = true;
-for (const rel of srcPaths) {
-  const destPath = path.join(destDir, rel);
+for (const rel of expectedManaged) {
+  const destPath = path.join(destDir, rel.split("/").join(path.sep));
   if (!fs.existsSync(destPath)) {
-    assert(false, `Missing in root: ${rel}`);
+    assert(false, `Missing in consumer .opencode/: ${rel}`);
     allPresent = false;
   }
 }
 if (allPresent) {
-  assert(true, `All ${srcPaths.size} src entries present in root`);
+  assert(true, `All ${expectedManaged.size} composed managed files present at the consumer`);
 }
 
 // ─── Test 3: Root-only artifacts are preserved ──────────────────────────────
 console.log("\nTest 3: Root-only artifacts are preserved after sync");
 
-// Ensure root-only artifacts exist before sync (create any that are missing)
 const createdArtifacts = [];
 for (const artifact of ROOT_ONLY) {
-  const artifactPath = path.join(destDir, artifact);
+  const artifactPath = path.join(tempRoot, artifact);
   if (!fs.existsSync(artifactPath)) {
     if (artifact === "node_modules" || artifact === "data") {
       fs.mkdirSync(artifactPath, { recursive: true });
@@ -235,17 +245,15 @@ for (const artifact of ROOT_ONLY) {
   }
 }
 
-// Run sync
 try {
   runSync("--mode sync");
 } catch (err) {
   assert(false, `Sync ran successfully in test 3 (got: ${err.message})`);
 }
 
-// Verify all root-only artifacts still exist
 let allPreserved = true;
 for (const artifact of ROOT_ONLY) {
-  const artifactPath = path.join(destDir, artifact);
+  const artifactPath = path.join(tempRoot, artifact);
   if (!fs.existsSync(artifactPath)) {
     assert(false, `Root-only artifact deleted: ${artifact}`);
     allPreserved = false;
@@ -255,9 +263,8 @@ if (allPreserved) {
   assert(true, "All root-only artifacts preserved");
 }
 
-// Clean up artifacts we created for this test
 for (const artifact of createdArtifacts) {
-  const artifactPath = path.join(destDir, artifact);
+  const artifactPath = path.join(tempRoot, artifact);
   if (fs.existsSync(artifactPath)) {
     const stat = fs.lstatSync(artifactPath);
     if (stat.isDirectory()) {
@@ -268,330 +275,144 @@ for (const artifact of createdArtifacts) {
   }
 }
 
-// ─── Test 4: Stale files are removed ────────────────────────────────────────
-console.log("\nTest 4: Stale files are removed");
+// ─── Test 4: Stale removal by recorded ownership ────────────────────────────
+console.log("\nTest 4: Stale managed files are removed by recorded ownership; never-recorded files are never removed");
 
-// Create a stale file in root .opencode/
+// Consumer-side stale construction: record a path the composition does not
+// own by adding it to the consumer manifest, then create the file.
+const manifest = JSON.parse(fs.readFileSync(destManifest, "utf8"));
+manifest.packages[0].managed.push({ path: ".opencode/__stale_test_file__.tmp", sha256: "a".repeat(64) });
+fs.writeFileSync(destManifest, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 const staleFile = path.join(destDir, "__stale_test_file__.tmp");
-fs.writeFileSync(staleFile, "this should be removed by sync\n");
-assert(fs.existsSync(staleFile), "Stale test file created");
+fs.writeFileSync(staleFile, "recorded but no longer owned\n");
+assert(fs.existsSync(staleFile), "Recorded stale test file created");
 
-// Create a stale directory in root .opencode/
-const staleDir = path.join(destDir, "__stale_test_dir__");
-fs.mkdirSync(staleDir, { recursive: true });
-fs.writeFileSync(
-  path.join(staleDir, "nested.txt"),
-  "nested stale file\n"
-);
-assert(fs.existsSync(staleDir), "Stale test directory created");
+// A never-recorded file (and nested directory) in .opencode/ must survive.
+const neverRecorded = path.join(destDir, "__never_recorded__.txt");
+fs.writeFileSync(neverRecorded, "never recorded — must survive\n");
+const neverRecordedDir = path.join(destDir, "__never_recorded_dir__");
+fs.mkdirSync(neverRecordedDir, { recursive: true });
+fs.writeFileSync(path.join(neverRecordedDir, "nested.txt"), "nested\n");
 
-// Run sync
-try {
-  runSync("--mode sync");
-} catch (err) {
-  assert(false, `Sync ran successfully in test 4 (got: ${err.message})`);
-}
+const test4 = runSyncExpectFailure("--mode sync");
+assert(test4.exitCode === 0, `Sync ran successfully in test 4 (got: ${test4.exitCode})`);
+assert(!fs.existsSync(staleFile), "The recorded-but-unowned stale file was removed");
+assert(test4.output.includes("Removed stale managed file: .opencode/__stale_test_file__.tmp"), "The removal is listed on stderr");
+assert(fs.existsSync(neverRecorded), "A never-recorded consumer file is left untouched");
+assert(fs.existsSync(path.join(neverRecordedDir, "nested.txt")), "A never-recorded consumer directory is left untouched");
 
-assert(!fs.existsSync(staleFile), "Stale file was removed");
-assert(!fs.existsSync(staleDir), "Stale directory was removed");
-
-// ─── Test 5: --mode verify flag works ────────────────────────────────────────────
-console.log("\nTest 5: --mode verify flag reports success when in sync");
+// ─── Test 5: --mode verify flag works ───────────────────────────────────────
+console.log("\nTest 5: --mode verify flag reports success when composed");
 try {
   const output = runSync("--mode verify");
-  assert(
-    output.includes("Integrity verification passed"),
-    "--mode verify reports integrity passed"
-  );
+  assert(output.includes("no findings"), "--mode verify reports no findings");
 } catch (err) {
   assert(false, `--mode verify ran without error (got: ${err.message})`);
 }
 
-// ─── Test 6: --mode verify detects discrepancies (negative test) ─────────────────
-console.log("\nTest 6: --mode verify detects discrepancies (negative test)");
+// ─── Test 6: --mode verify detects a missing managed file ───────────────────
+console.log("\nTest 6: --mode verify detects a missing managed file (negative test)");
 
-// Step 1: Ensure baseline is in sync
+const targetRel = "agents/orchestrator.md";
+const targetPath = path.join(destDir, "agents", "orchestrator.md");
+fs.unlinkSync(targetPath);
+assert(!fs.existsSync(targetPath), `Deleted ${targetRel} from the consumer to create a discrepancy`);
+
+const test6 = runSyncExpectFailure("--mode verify");
+assert(test6.exitCode === 1, `--mode verify exited with code 1 when a managed file is missing (got: ${test6.exitCode})`);
+assert(test6.output.includes("managed file missing: .opencode/agents/orchestrator.md"), "--mode verify output reports the missing managed file");
+
 try {
   runSync("--mode sync");
+  assert(fs.existsSync(targetPath), `Re-sync restored ${targetRel}`);
 } catch (err) {
-  assert(false, `Baseline sync succeeded in test 6 (got: ${err.message})`);
+  assert(false, `Re-sync succeeded in test 6 (got: ${err.message})`);
 }
 
-// Step 2: Pick a known file and delete it from root to create a discrepancy
-let targetFile = null;
-for (const rel of srcPaths) {
-  const destPath = path.join(destDir, rel);
-  if (fs.existsSync(destPath) && fs.statSync(destPath).isFile()) {
-    targetFile = rel;
-    break;
-  }
-}
-
-if (targetFile) {
-  const targetPath = path.join(destDir, targetFile);
-  fs.unlinkSync(targetPath);
-  assert(
-    !fs.existsSync(targetPath),
-    `Deleted ${targetFile} from root to create discrepancy`
-  );
-
-  // Step 3: Run --mode verify and expect failure (exit code 1)
-  // --mode verify runs integrity check without syncing, so the discrepancy persists
-  let combinedOutput = "";
-  let exitCode = null;
-  try {
-    combinedOutput = runSync("--mode verify");
-    exitCode = 0;
-  } catch (err) {
-    exitCode = err.status;
-    combinedOutput = (err.stdout || "") + "\n" + (err.stderr || "");
-  }
-
-  assert(
-    exitCode === 1,
-    `--mode verify exited with code 1 when discrepancy exists (got: ${exitCode})`
-  );
-  assert(
-    combinedOutput.includes("Missing in root"),
-    "--mode verify output reports missing file"
-  );
-
-  // Step 4: Re-sync to restore the deleted file for subsequent tests
-  try {
-    runSync("--mode sync");
-    assert(
-      fs.existsSync(targetPath),
-      `Re-sync restored ${targetFile}`
-    );
-  } catch (err) {
-    assert(false, `Re-sync succeeded in test 6 (got: ${err.message})`);
-  }
-} else {
-  assert(false, "Could not find a src file to use for discrepancy test");
-}
-
-// ─── Test 7: opencode.json content is synced from src ───────────────────────
-console.log("\nTest 7: opencode.json content is synced from src");
-try {
-  runSync("--mode sync");
-} catch (err) {
-  assert(false, `Sync ran without error in test 7 (got: ${err.message})`);
-}
-
+// ─── Test 7: opencode.json is the composed render ───────────────────────────
+console.log("\nTest 7: opencode.json is the composed render (the uniform skill map)");
+assert(fs.existsSync(destOpenCodeJson), "The consumer opencode.json exists after sync");
+const rendered = JSON.parse(fs.readFileSync(destOpenCodeJson, "utf8"));
+const skillNames = Object.keys(rendered.agent.orchestrator.permission.skill);
+assert(skillNames[0] === "*", "The rendered skill map carries the deny-all wildcard first");
+assert(skillNames.length === 53, `The rendered skill map carries the deny-all wildcard plus the 52-skill union (got ${skillNames.length})`);
 assert(
-  fs.existsSync(destOpenCodeJson),
-  "Root opencode.json exists after sync"
+  new Set(["orchestrator", "document-author", "implementor", "reviewer"].map((name) => JSON.stringify(rendered.agent[name].permission.skill))).size === 1,
+  "The rendered skill map is identical across the four agents"
 );
 
-const srcJsonContent = fs.readFileSync(fixtureSrcOpenCodeJson, "utf-8");
-const destJsonContent = fs.readFileSync(destOpenCodeJson, "utf-8");
-assert(
-  srcJsonContent === destJsonContent,
-  "Root opencode.json content matches src/opencode.json byte-for-byte"
-);
+// ─── Test 8: --mode verify detects a hand-edited opencode.json ──────────────
+console.log("\nTest 8: --mode verify detects a hand-edited opencode.json");
 
-// ─── Test 8: --mode verify checks opencode.json integrity ────────────────────────
-console.log("\nTest 8: --mode verify checks opencode.json integrity");
-try {
-  const output = runSync("--mode verify");
-  assert(
-    output.includes("opencode.json matches src/opencode.json"),
-    "--mode verify output confirms opencode.json integrity"
-  );
-} catch (err) {
-  assert(
-    false,
-    `--mode verify ran without error in test 8 (got: ${err.message})`
-  );
-}
+const originalJsonBytes = fs.readFileSync(destOpenCodeJson);
+fs.writeFileSync(destOpenCodeJson, originalJsonBytes.toString("utf-8") + "\n", "utf-8");
+const test8 = runSyncExpectFailure("--mode verify");
+assert(test8.exitCode === 1, `--mode verify exited with code 1 for a hand-edited opencode.json (got: ${test8.exitCode})`);
+assert(test8.output.includes("opencode.json does not match the recomputed composition"), "--mode verify output reports the opencode.json mismatch");
 
-// ─── Test 9: --mode verify detects opencode.json content discrepancy ────────
-console.log(
-  "\nTest 9: --mode verify detects opencode.json content discrepancy"
-);
-
-// Ensure baseline is in sync
 try {
   runSync("--mode sync");
+  assert(fs.readFileSync(destOpenCodeJson).equals(originalJsonBytes), "Re-sync restored the composed opencode.json");
 } catch (err) {
-  assert(
-    false,
-    `Baseline sync succeeded in test 9 (got: ${err.message})`
-  );
+  assert(false, `Re-sync succeeded in test 8 (got: ${err.message})`);
 }
 
-// Modify root opencode.json to create a content discrepancy
-const originalJsonContent = fs.readFileSync(destOpenCodeJson, "utf-8");
-let test9ResyncError = null;
-try {
-  fs.writeFileSync(
-    destOpenCodeJson,
-    originalJsonContent + "\n// tampered\n",
-    "utf-8"
-  );
-  assert(
-    fs.readFileSync(destOpenCodeJson, "utf-8") !== srcJsonContent,
-    "Root opencode.json modified to create discrepancy"
-  );
+// ─── Test 9: --mode verify detects a managed file edited against its source ─
+console.log("\nTest 9: --mode verify detects a managed file edited against its source");
 
-  // Run --mode verify and expect failure
-  let test9Output = "";
-  let test9ExitCode = null;
-  try {
-    test9Output = runSync("--mode verify");
-    test9ExitCode = 0;
-  } catch (err) {
-    test9ExitCode = err.status;
-    test9Output = (err.stdout || "") + "\n" + (err.stderr || "");
-  }
+const managedTarget = path.join(destDir, "docs-check.js");
+const managedOriginal = fs.readFileSync(managedTarget);
+fs.appendFileSync(managedTarget, "\n// consumer edit\n", "utf-8");
+const test9 = runSyncExpectFailure("--mode verify");
+assert(test9.exitCode === 1, `--mode verify exited with code 1 for an edited managed file (got: ${test9.exitCode})`);
+assert(test9.output.includes("managed file differs from its source: .opencode/docs-check.js"), "--mode verify output reports the edited managed file");
 
-  assert(
-    test9ExitCode === 1,
-    `--mode verify exited with code 1 for opencode.json mismatch (got: ${test9ExitCode})`
-  );
-  assert(
-    test9Output.includes("does not match src/opencode.json"),
-    "--mode verify output reports opencode.json content mismatch"
-  );
-} finally {
-  // Always restore root opencode.json, even if setup or verification fails.
-  try {
-    runSync("--mode sync");
-  } catch (err) {
-    test9ResyncError = err;
-  } finally {
-    if (
-      !fs.existsSync(destOpenCodeJson) ||
-      fs.readFileSync(destOpenCodeJson, "utf-8") !== originalJsonContent
-    ) {
-      fs.writeFileSync(destOpenCodeJson, originalJsonContent, "utf-8");
-    }
-  }
-}
-
-if (test9ResyncError) {
-  assert(
-    false,
-    `Re-sync succeeded in test 9 (got: ${test9ResyncError.message})`
-  );
-}
-const restoredJsonContent = fs.readFileSync(destOpenCodeJson, "utf-8");
-assert(
-  restoredJsonContent === srcJsonContent,
-  "Re-sync restored root opencode.json content"
-);
-
-// ─── Test 10: --mode verify detects missing root opencode.json ──────────────
-console.log("\nTest 10: --mode verify detects missing root opencode.json");
-
-// Ensure baseline is in sync
 try {
   runSync("--mode sync");
+  assert(fs.readFileSync(managedTarget).equals(managedOriginal), "Re-sync overwrote the edited managed file back to the package source");
 } catch (err) {
-  assert(
-    false,
-    `Baseline sync succeeded in test 10 (got: ${err.message})`
-  );
+  assert(false, `Re-sync succeeded in test 9 (got: ${err.message})`);
 }
 
-// Delete root opencode.json to create a missing-file discrepancy
+// ─── Test 10: --mode verify detects a missing opencode.json ─────────────────
+console.log("\nTest 10: --mode verify detects a missing opencode.json");
+
 fs.unlinkSync(destOpenCodeJson);
-assert(
-  !fs.existsSync(destOpenCodeJson),
-  "Root opencode.json deleted to create discrepancy"
-);
+assert(!fs.existsSync(destOpenCodeJson), "The consumer opencode.json deleted to create a discrepancy");
 
-// Run --mode verify and expect failure
-let test10Output = "";
-let test10ExitCode = null;
-try {
-  test10Output = runSync("--mode verify");
-  test10ExitCode = 0;
-} catch (err) {
-  test10ExitCode = err.status;
-  test10Output = (err.stdout || "") + "\n" + (err.stderr || "");
-}
+const test10 = runSyncExpectFailure("--mode verify");
+assert(test10.exitCode === 1, `--mode verify exited with code 1 for a missing opencode.json (got: ${test10.exitCode})`);
+assert(test10.output.includes("opencode.json is missing"), "--mode verify output reports the missing opencode.json");
 
-assert(
-  test10ExitCode === 1,
-  `--mode verify exited with code 1 for missing opencode.json (got: ${test10ExitCode})`
-);
-assert(
-  test10Output.includes("Missing") &&
-    test10Output.includes("opencode.json"),
-  "--mode verify output reports missing root opencode.json"
-);
-
-// Restore by re-syncing
 try {
   runSync("--mode sync");
-  assert(
-    fs.existsSync(destOpenCodeJson),
-    "Re-sync restored root opencode.json"
-  );
+  assert(fs.existsSync(destOpenCodeJson), "Re-sync restored the composed opencode.json");
 } catch (err) {
   assert(false, `Re-sync succeeded in test 10 (got: ${err.message})`);
 }
 
-// ─── Test 11: Sync fails when src/opencode.json is missing ──────────────────
-console.log("\nTest 11: Sync fails when src/opencode.json is missing");
+// ─── Test 11: Sync fails closed when the consumer manifest is corrupt ───────
+console.log("\nTest 11: Sync fails closed when the consumer's manifest is corrupt");
 
-// Temporarily rename fixture src/opencode.json to simulate its absence
-const tmpSrcJson = fixtureSrcOpenCodeJson + ".tmp_test_backup";
-let srcJsonWasRenamed = false;
-try {
-  fs.renameSync(fixtureSrcOpenCodeJson, tmpSrcJson);
-  srcJsonWasRenamed = true;
-  assert(
-    !fs.existsSync(fixtureSrcOpenCodeJson),
-    "src/opencode.json temporarily removed"
-  );
+const manifestBytes = fs.readFileSync(destManifest);
+fs.writeFileSync(destManifest, "{ not json ]", "utf8");
+const test11 = runSyncExpectFailure("--mode sync");
+assert(test11.exitCode === 1, `Sync exited with code 1 when the manifest is corrupt (got: ${test11.exitCode})`);
+assert(test11.output.includes("not parseable JSON"), "Sync error message reports the corrupt manifest");
+fs.writeFileSync(destManifest, manifestBytes);
+assert(JSON.parse(fs.readFileSync(destManifest, "utf8")).schemaVersion === 1, "The manifest restored after test 11");
 
-  // Run sync and expect failure
-  let test11Output = "";
-  let test11ExitCode = null;
-  try {
-    test11Output = runSync("--mode sync");
-    test11ExitCode = 0;
-  } catch (err) {
-    test11ExitCode = err.status;
-    test11Output = (err.stdout || "") + "\n" + (err.stderr || "");
-  }
+// ─── Test 12: Seeds are created when missing ────────────────────────────────
+console.log("\nTest 12: Seeds are created when missing (the Core seed set)");
 
-  assert(
-    test11ExitCode === 1,
-    `Sync exited with code 1 when src/opencode.json missing (got: ${test11ExitCode})`
-  );
-  assert(
-    test11Output.includes("source file not found") ||
-      test11Output.includes("Error"),
-    "Sync error message mentions missing source file"
-  );
-} finally {
-  // Always restore fixture src/opencode.json
-  if (srcJsonWasRenamed && fs.existsSync(tmpSrcJson)) {
-    fs.renameSync(tmpSrcJson, fixtureSrcOpenCodeJson);
-  }
-}
-
-assert(
-  fs.existsSync(fixtureSrcOpenCodeJson),
-  "src/opencode.json restored after test"
-);
-
-// ─── Test 12: Mode 2 creates missing files at root ──────────────────────────
-console.log("\nTest 12: Mode 2 creates missing files at root");
-
-// Seed files used for Mode 2 verification. The pre-test state had neither
-// file at root, so we delete any that exist to force Mode 2 to recreate them.
 const buildingPath = path.join(tempRoot, "BUILDING.md");
 const testingPath = path.join(tempRoot, "TESTING.md");
-const srcBuildingPath = path.join(tempRoot, "src", "BUILDING.md");
-const srcTestingPath = path.join(tempRoot, "src", "TESTING.md");
+const seedBuildingPath = path.join(coreSeedDir, "BUILDING.md");
+const seedTestingPath = path.join(coreSeedDir, "TESTING.md");
 try { fs.unlinkSync(buildingPath); } catch {}
 try { fs.unlinkSync(testingPath); } catch {}
-assert(!fs.existsSync(buildingPath), "Pre-test: root/BUILDING.md deleted");
-assert(!fs.existsSync(testingPath), "Pre-test: root/TESTING.md deleted");
+assert(!fs.existsSync(buildingPath), "Pre-test: consumer BUILDING.md deleted");
+assert(!fs.existsSync(testingPath), "Pre-test: consumer TESTING.md deleted");
 
 try {
   runSync("--mode sync");
@@ -599,28 +420,23 @@ try {
   assert(false, `Sync ran without error in test 12 (got: ${err.message})`);
 }
 
-const srcBuildingContent = fs.readFileSync(srcBuildingPath, "utf-8");
-const srcTestingContent = fs.readFileSync(srcTestingPath, "utf-8");
-assert(fs.existsSync(buildingPath), "Mode 2 created root/BUILDING.md");
-assert(fs.existsSync(testingPath), "Mode 2 created root/TESTING.md");
+assert(fs.existsSync(buildingPath), "Sync created consumer BUILDING.md from the Core seed set");
+assert(fs.existsSync(testingPath), "Sync created consumer TESTING.md from the Core seed set");
 assert(
-  fs.readFileSync(buildingPath, "utf-8") === srcBuildingContent,
-  "root/BUILDING.md content matches src/BUILDING.md"
+  fs.readFileSync(buildingPath, "utf-8") === fs.readFileSync(seedBuildingPath, "utf-8"),
+  "consumer BUILDING.md content matches the Core seed template"
 );
 assert(
-  fs.readFileSync(testingPath, "utf-8") === srcTestingContent,
-  "root/TESTING.md content matches src/TESTING.md"
+  fs.readFileSync(testingPath, "utf-8") === fs.readFileSync(seedTestingPath, "utf-8"),
+  "consumer TESTING.md content matches the Core seed template"
 );
 
-// ─── Test 13: Mode 2 leaves existing files alone ───────────────────────────
-console.log("\nTest 13: Mode 2 leaves existing files alone");
+// ─── Test 13: Seeds are never overwritten ───────────────────────────────────
+console.log("\nTest 13: Seeds are never overwritten (create-if-missing)");
 
 const sentinelContent = "# sentinel — Mode 2 must not overwrite\n";
 fs.writeFileSync(buildingPath, sentinelContent, "utf-8");
-assert(
-  fs.readFileSync(buildingPath, "utf-8") === sentinelContent,
-  "Sentinel written to root/BUILDING.md"
-);
+assert(fs.readFileSync(buildingPath, "utf-8") === sentinelContent, "Sentinel written to consumer BUILDING.md");
 
 try {
   runSync("--mode sync");
@@ -630,78 +446,45 @@ try {
 
 assert(
   fs.readFileSync(buildingPath, "utf-8") === sentinelContent,
-  "Mode 2 did not overwrite sentinel content in root/BUILDING.md"
+  "The seed instance was not overwritten by sync"
 );
 assert(
-  fs.readFileSync(buildingPath, "utf-8") !== srcBuildingContent,
-  "root/BUILDING.md still has sentinel content (not src content)"
+  fs.readFileSync(buildingPath, "utf-8") !== fs.readFileSync(seedBuildingPath, "utf-8"),
+  "consumer BUILDING.md still has sentinel content (not the seed template)"
 );
 
-// Clean up: delete the sentinel so the next sync re-creates it from src/
 try { fs.unlinkSync(buildingPath); } catch {}
 
-// ─── Test 14: --mode verify detects Mode 2 drift ────────────────────────────
-console.log("\nTest 14: --mode verify detects Mode 2 drift");
+// ─── Test 14: --mode verify detects never-created seed files ────────────────
+console.log("\nTest 14: --mode verify detects never-created seed files");
 
-// Ensure baseline is in sync (re-creates BUILDING.md from src/)
 try {
   runSync("--mode sync");
 } catch (err) {
   assert(false, `Baseline sync succeeded in test 14 (got: ${err.message})`);
 }
-assert(
-  fs.existsSync(buildingPath),
-  "Baseline: root/BUILDING.md present after sync"
-);
+assert(fs.existsSync(buildingPath), "Baseline: consumer BUILDING.md present after sync");
 
-// Delete root/BUILDING.md to create Mode 2 drift
 fs.unlinkSync(buildingPath);
-assert(
-  !fs.existsSync(buildingPath),
-  "root/BUILDING.md deleted to create Mode 2 drift"
-);
+assert(!fs.existsSync(buildingPath), "consumer BUILDING.md deleted to create seed drift");
 
-// Run --mode verify and expect failure
-let test14Output = "";
-let test14ExitCode = null;
-try {
-  test14Output = runSync("--mode verify");
-  test14ExitCode = 0;
-} catch (err) {
-  test14ExitCode = err.status;
-  test14Output = (err.stdout || "") + "\n" + (err.stderr || "");
-}
+const test14 = runSyncExpectFailure("--mode verify");
+assert(test14.exitCode === 1, `--mode verify exited with code 1 for a never-created seed (got: ${test14.exitCode})`);
+assert(test14.output.includes("seed never created: BUILDING.md"), "--mode verify output reports the never-created seed");
 
-assert(
-  test14ExitCode === 1,
-  `--mode verify exited with code 1 for Mode 2 drift (got: ${test14ExitCode})`
-);
-assert(
-  test14Output.includes("Mode 2 drift") ||
-    test14Output.includes("missing from root"),
-  "--mode verify output reports Mode 2 drift"
-);
-
-// Re-sync to clean state for any subsequent runs
 try {
   runSync("--mode sync");
-  assert(
-    fs.existsSync(buildingPath),
-    "Re-sync restored root/BUILDING.md"
-  );
+  assert(fs.existsSync(buildingPath), "Re-sync restored consumer BUILDING.md");
 } catch (err) {
   assert(false, `Re-sync succeeded in test 14 (got: ${err.message})`);
 }
 
-// ─── Test 15: Empty consumer dir gets fully populated by sync ──────────────
+// ─── Test 15: Empty consumer dir gets fully populated by sync ───────────────
 console.log("\nTest 15: Empty consumer dir gets fully populated by sync");
 
 const test15Dir = path.join(tempRoot, "test15");
 fs.mkdirSync(test15Dir, { recursive: true });
-assert(
-  fs.readdirSync(test15Dir).length === 0,
-  "Test 15 starts with an empty consumer dir"
-);
+assert(fs.readdirSync(test15Dir).length === 0, "Test 15 starts with an empty consumer dir");
 
 try {
   runSync("--mode sync", { consumer: test15Dir });
@@ -709,296 +492,133 @@ try {
   assert(false, `Sync populated empty consumer (got: ${err.message})`);
 }
 
+assert(fs.existsSync(path.join(test15Dir, ".opencode")), "test15: .opencode/ was created");
+assert(fs.existsSync(path.join(test15Dir, "opencode.json")), "test15: opencode.json was created");
+assert(fs.existsSync(path.join(test15Dir, ".roundhouse", "manifest.json")), "test15: .roundhouse/manifest.json was created");
+
+// The composed managed set matches the packages' managed trees byte-for-byte.
 const test15OpenCode = path.join(test15Dir, ".opencode");
-const test15OpenCodeJson = path.join(test15Dir, "opencode.json");
-assert(
-  fs.existsSync(test15OpenCode),
-  "test15: .opencode/ was created"
-);
-assert(
-  fs.existsSync(test15OpenCodeJson),
-  "test15: opencode.json was created"
-);
-
-// Mode 1: full .opencode/ match (sample by checking byte-for-byte equality
-// across every file path present in src/.opencode/).
-const test15OpenCodePaths = collectRelativePaths(test15OpenCode, test15OpenCode);
-const test15SrcFilePaths = filterFilesOnly(fixtureSrcDir, srcPaths);
-let test15Mode1Match = true;
-for (const rel of test15SrcFilePaths) {
-  const srcPath = path.join(fixtureSrcDir, rel);
-  const test15Path = path.join(test15OpenCode, rel);
-  if (!filesAreEqual(srcPath, test15Path)) {
-    assert(false, `test15: .opencode/${rel} does not match src byte-for-byte`);
-    test15Mode1Match = false;
+const test15ManagedFiles = collectFilesRecursive(test15OpenCode, test15OpenCode);
+let test15ManagedMatch = true;
+for (const rel of expectedManaged) {
+  const packageFile = null; // resolved per-path below
+  let sourceFile = null;
+  for (const entry of fs.readdirSync(packagesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !entry.name.startsWith("roundhouse-")) continue;
+    const candidate = path.join(packagesDir, entry.name, "managed", ...rel.split("/"));
+    if (fs.existsSync(candidate)) { sourceFile = candidate; break; }
+  }
+  if (!sourceFile || !filesAreEqual(sourceFile, path.join(test15OpenCode, ...rel.split("/")))) {
+    assert(false, `test15: .opencode/${rel} does not match its package source byte-for-byte`);
+    test15ManagedMatch = false;
   }
 }
-if (test15Mode1Match) {
-  assert(
-    true,
-    `test15: all ${test15SrcFilePaths.size} .opencode/ files match src byte-for-byte`
-  );
+if (test15ManagedMatch) {
+  assert(true, `test15: all ${expectedManaged.size} composed managed files match their package sources byte-for-byte`);
 }
 
-assert(
-  filesAreEqual(fixtureSrcOpenCodeJson, test15OpenCodeJson),
-  "test15: opencode.json matches src/opencode.json byte-for-byte"
-);
-
-// Mode 2: seed files exist with src content. The list mirrors the seed
-// files in src/ — root-only consumer files (e.g. guiding-principles.md)
-// are not produced by sync and are excluded.
-const test15SeedFiles = [
-  "BUILDING.md",
-  "TESTING.md",
-  "AGENTS.md",
-  "AGENTIC_WORKFLOW.md",
-  "README.md",
-  "CONTRIBUTING.md",
-  "scratch/README.md",
-];
-for (const rel of test15SeedFiles) {
-  const test15SeedPath = path.join(test15Dir, rel);
-  const srcSeedPath = path.join(tempRoot, "src", rel);
-  assert(
-    fs.existsSync(test15SeedPath),
-    `test15: seed file ${rel} was created`
-  );
-  assert(
-    filesAreEqual(srcSeedPath, test15SeedPath),
-    `test15: seed file ${rel} matches src content byte-for-byte`
-  );
-}
-
-// docs/ subtree matches src/docs/ recursively (sample by comparing every
-// file under both trees byte-for-byte).
-const test15DocsDir = path.join(test15Dir, "docs");
-const test15DocsFiles = collectFilesRecursive(test15DocsDir, test15DocsDir);
-const srcDocsFiles = collectFilesRecursive(
-  path.join(tempRoot, "src", "docs"),
-  path.join(tempRoot, "src", "docs")
-);
-assert(
-  test15DocsFiles.length === srcDocsFiles.length,
-  `test15: docs/ file count matches src (${test15DocsFiles.length} vs ${srcDocsFiles.length})`
-);
-const srcDocsBase = path.join(tempRoot, "src", "docs");
-let test15DocsMatch = true;
-for (const rel of srcDocsFiles) {
-  if (!filesAreEqual(path.join(srcDocsBase, rel), path.join(test15DocsDir, rel))) {
-    assert(false, `test15: docs/${rel} does not match src`);
-    test15DocsMatch = false;
+// The Core seed set exists with the seed templates' content.
+const test15SeedFiles = expectedSeedPaths;
+let test15SeedMatch = true;
+for (const rel of test15SeedFiles()) {
+  const seedTemplate = path.join(coreSeedDir, ...rel.split("/"));
+  const consumerSeed = path.join(test15Dir, ...rel.split("/"));
+  if (!filesAreEqual(seedTemplate, consumerSeed)) {
+    assert(false, `test15: seed file ${rel} does not match the Core seed template`);
+    test15SeedMatch = false;
   }
 }
-if (test15DocsMatch && test15DocsFiles.length > 0) {
+if (test15SeedMatch) {
+  assert(true, `test15: all ${test15SeedFiles().length} Core seed files match their templates byte-for-byte`);
+}
+
+// Spot-check a few well-known seed paths to make the assertion explicit.
+const test15SeedSpotChecks = ["BUILDING.md", "AGENTS.md", "docs/index.md", "ktlo/template.md", "scratch/README.md"];
+for (const rel of test15SeedSpotChecks) {
   assert(
-    true,
-    `test15: all ${test15DocsFiles.length} docs/ files match src byte-for-byte`
+    filesAreEqual(path.join(coreSeedDir, ...rel.split("/")), path.join(test15Dir, ...rel.split("/"))),
+    `test15: seed file ${rel} matches the Core seed template byte-for-byte`
   );
 }
 
-// Spot-check a few well-known docs paths to make the assertion explicit.
-const test15DocsSpotChecks = [
-  "specs/index.md",
-  "specs/template.md",
-  "architecture/index.md",
-  "architecture/template.md",
-  "plans/template.md",
-];
-for (const rel of test15DocsSpotChecks) {
-  assert(
-    filesAreEqual(
-      path.join(srcDocsBase, rel),
-      path.join(test15DocsDir, rel)
-    ),
-    `test15: docs/${rel} matches src byte-for-byte`
-  );
-}
-
-// ktlo/ subtree matches src/ktlo/ recursively.
-const test15KtloDir = path.join(test15Dir, "ktlo");
-const test15KtloFiles = collectFilesRecursive(test15KtloDir, test15KtloDir);
-const srcKtloBase = path.join(tempRoot, "src", "ktlo");
-const srcKtloFiles = collectFilesRecursive(srcKtloBase, srcKtloBase);
-assert(
-  test15KtloFiles.length === srcKtloFiles.length,
-  `test15: ktlo/ file count matches src (${test15KtloFiles.length} vs ${srcKtloFiles.length})`
-);
-let test15KtloMatch = true;
-for (const rel of srcKtloFiles) {
-  if (!filesAreEqual(path.join(srcKtloBase, rel), path.join(test15KtloDir, rel))) {
-    assert(false, `test15: ktlo/${rel} does not match src`);
-    test15KtloMatch = false;
-  }
-}
-if (test15KtloMatch && test15KtloFiles.length > 0) {
-  assert(
-    true,
-    `test15: all ${test15KtloFiles.length} ktlo/ files match src byte-for-byte`
-  );
-}
-
-// ─── Test 16: Existing consumer with customizations ────────────────────────
-console.log(
-  "\nTest 16: Existing consumer with customizations — Mode 1 replaces, Mode 2 preserves"
-);
+// ─── Test 16: Existing consumer with customizations ─────────────────────────
+console.log("\nTest 16: Existing consumer with customizations — managed replaced, seeds and never-recorded files preserved");
 
 const test16Dir = path.join(tempRoot, "test16");
 fs.mkdirSync(test16Dir, { recursive: true });
-
-// Mirror the seed file shape by running sync once on the empty consumer,
-// then customizing. (We can't simply rely on a hand-rolled mirror because
-// Mode 2 logic is the behavior under test.)
 runSync("--mode sync", { consumer: test16Dir });
 
-// Mode 1 targets: overwrite .opencode/ agents and opencode.json with
-// sentinels; add a stale file inside .opencode/.
-const test16OrchestratorPath = path.join(
-  test16Dir,
-  ".opencode",
-  "agents",
-  "orchestrator.md"
-);
-const test16ImplementorPath = path.join(
-  test16Dir,
-  ".opencode",
-  "agents",
-  "implementor.md"
-);
+const test16OrchestratorPath = path.join(test16Dir, ".opencode", "agents", "orchestrator.md");
 const test16OpenCodeJsonPath = path.join(test16Dir, "opencode.json");
-const test16StaleMarker = path.join(test16Dir, ".opencode", "__stale_test_marker__.md");
+const test16NeverRecorded = path.join(test16Dir, ".opencode", "__consumer_note__.md");
 
 const mode1Sentinel = "# mode-1 sentinel — should be replaced by sync\n";
 fs.writeFileSync(test16OrchestratorPath, mode1Sentinel, "utf-8");
-fs.writeFileSync(test16ImplementorPath, mode1Sentinel, "utf-8");
-const originalTest16Json = fs.readFileSync(test16OpenCodeJsonPath, "utf-8");
-fs.writeFileSync(
-  test16OpenCodeJsonPath,
-  originalTest16Json + "\n// tampered\n",
-  "utf-8"
-);
-fs.writeFileSync(test16StaleMarker, "stale\n", "utf-8");
+const originalTest16Json = fs.readFileSync(test16OpenCodeJsonPath);
+fs.writeFileSync(test16OpenCodeJsonPath, originalTest16Json.toString("utf-8") + "\n// tampered\n", "utf-8");
+fs.writeFileSync(test16NeverRecorded, "consumer note\n", "utf-8");
 
-// Mode 2 targets: overwrite BUILDING.md and TESTING.md with sentinels.
+const mode2Sentinel = "# mode-2 sentinel — must be preserved by sync\n";
 const test16BuildingPath = path.join(test16Dir, "BUILDING.md");
 const test16TestingPath = path.join(test16Dir, "TESTING.md");
-const mode2Sentinel = "# mode-2 sentinel — must be preserved by sync\n";
 fs.writeFileSync(test16BuildingPath, mode2Sentinel, "utf-8");
 fs.writeFileSync(test16TestingPath, mode2Sentinel, "utf-8");
 
-// Snapshot the src files we're comparing against.
-const srcOrchestratorPath = path.join(
-  tempRoot,
-  "src",
-  ".opencode",
-  "agents",
-  "orchestrator.md"
-);
-const srcImplementorPath = path.join(
-  tempRoot,
-  "src",
-  ".opencode",
-  "agents",
-  "implementor.md"
-);
+const packageOrchestratorPath = path.join(packagesDir, "roundhouse-core", "managed", "agents", "orchestrator.md");
 
-// Run sync against the customized consumer.
 try {
   runSync("--mode sync", { consumer: test16Dir });
 } catch (err) {
   assert(false, `Sync ran on customized consumer (got: ${err.message})`);
 }
 
-// Mode 1 assertions: replaced with src content, stale marker removed.
 assert(
-  filesAreEqual(srcOrchestratorPath, test16OrchestratorPath),
-  "test16: .opencode/agents/orchestrator.md replaced with src content"
+  filesAreEqual(packageOrchestratorPath, test16OrchestratorPath),
+  "test16: .opencode/agents/orchestrator.md replaced with the package source"
 );
 assert(
-  filesAreEqual(srcImplementorPath, test16ImplementorPath),
-  "test16: .opencode/agents/implementor.md replaced with src content"
+  fs.readFileSync(test16OpenCodeJsonPath).equals(originalTest16Json),
+  "test16: opencode.json regenerated to the composed render"
 );
 assert(
-  fs.readFileSync(test16OpenCodeJsonPath, "utf-8") === originalTest16Json,
-  "test16: opencode.json replaced with src content"
+  fs.readFileSync(test16NeverRecorded, "utf-8") === "consumer note\n",
+  "test16: the never-recorded consumer file is preserved (recorded-ownership staleness)"
 );
-assert(
-  !fs.existsSync(test16StaleMarker),
-  "test16: stale marker file was removed"
-);
-
-// Mode 2 assertions: sentinels preserved untouched.
 assert(
   fs.readFileSync(test16BuildingPath, "utf-8") === mode2Sentinel,
-  "test16: BUILDING.md sentinel preserved (Mode 2 left alone)"
+  "test16: BUILDING.md sentinel preserved (seed create-if-missing)"
 );
 assert(
   fs.readFileSync(test16TestingPath, "utf-8") === mode2Sentinel,
-  "test16: TESTING.md sentinel preserved (Mode 2 left alone)"
+  "test16: TESTING.md sentinel preserved (seed create-if-missing)"
 );
 
-// ─── Test 17: Missing --mode flag exits non-zero with a clear error ─────────
-console.log("\nTest 17: Missing --mode flag exits non-zero with a clear error");
+// ─── Test 17: Missing --mode flag exits 2 with a clear error ────────────────
+console.log("\nTest 17: Missing --mode flag exits 2 with a clear error");
 
-let test17Output = "";
-let test17ExitCode = null;
-try {
-  test17Output = runSync(); // no --mode provided
-  test17ExitCode = 0;
-} catch (err) {
-  test17ExitCode = err.status;
-  test17Output = (err.stdout || "") + "\n" + (err.stderr || "");
-}
-
+const test17 = runSyncExpectFailure();
+assert(test17.exitCode === 2, `Missing --mode exited with code 2 (got: ${test17.exitCode})`);
 assert(
-  test17ExitCode === 2,
-  `Missing --mode exited with code 2 (got: ${test17ExitCode})`
-);
-assert(
-  test17Output.includes("--mode") &&
-    (test17Output.includes("required") || test17Output.includes("missing")),
+  test17.output.includes("--mode") && (test17.output.includes("required") || test17.output.includes("missing")),
   "Missing --mode error message mentions --mode is required"
 );
 
-// ─── Test 18: Invalid --mode value exits non-zero ───────────────────────────
-console.log("\nTest 18: Invalid --mode value exits non-zero");
+// ─── Test 18: Invalid --mode value exits 2 ──────────────────────────────────
+console.log("\nTest 18: Invalid --mode value exits 2");
 
-let test18Output = "";
-let test18ExitCode = null;
-try {
-  test18Output = runSync("--mode bogus");
-  test18ExitCode = 0;
-} catch (err) {
-  test18ExitCode = err.status;
-  test18Output = (err.stdout || "") + "\n" + (err.stderr || "");
-}
-
-assert(
-  test18ExitCode === 2,
-  `Invalid --mode exited with code 2 (got: ${test18ExitCode})`
-);
-assert(
-  test18Output.includes("invalid") && test18Output.includes("--mode"),
-  "Invalid --mode error message mentions invalid --mode"
-);
+const test18 = runSyncExpectFailure("--mode bogus");
+assert(test18.exitCode === 2, `Invalid --mode exited with code 2 (got: ${test18.exitCode})`);
+assert(test18.output.includes("invalid") && test18.output.includes("--mode"), "Invalid --mode error message mentions invalid --mode");
 
 // ─── Test 19: Managed junction rejection ────────────────────────────────────
-console.log("\nTest 19: Managed junction rejection (mirrors test-package.js)");
+console.log("\nTest 19: Managed junction rejection");
 
-// A junction at the managed .opencode root is rejected before any mutation.
 const outside19 = fs.mkdtempSync(path.join(tempRoot, "outside-19-"));
 fs.rmSync(destDir, { recursive: true, force: true });
 fs.symlinkSync(outside19, destDir, "junction");
-let test19Error = null;
-try {
-  runSync("--mode sync");
-} catch (err) {
-  test19Error = `${err.stdout || ""}\n${err.stderr || ""}\n${err.message}`;
-}
-assert(
-  test19Error && /symlink or junction/.test(test19Error),
-  "Sync rejects a junction at the managed .opencode root"
-);
+const test19 = runSyncExpectFailure("--mode sync");
+assert(test19.exitCode === 1, `Sync exited 1 on a junction at the managed root (got: ${test19.exitCode})`);
+assert(/symlink or junction/.test(test19.output), "Sync rejects a junction at the managed .opencode root");
 assert(fs.readdirSync(outside19).length === 0, "Junction target remains untouched");
 fs.rmSync(destDir, { recursive: true, force: true });
 fs.rmSync(outside19, { recursive: true, force: true });
@@ -1012,66 +632,49 @@ try {
   assert(false, `Re-sync succeeded in test 19 (got: ${err.message})`);
 }
 
-// ─── Test 20: Source-side junction rejection ────────────────────────────────
-console.log("\nTest 20: Source-side junction rejection");
+// ─── Test 20: Source-side symlink rejection (through the preserved API) ─────
+console.log("\nTest 20: Source-side symlink rejection (through the preserved copyMissing API)");
 
-// A junction at the source .opencode root is rejected before any mutation.
+// The source is the real package set (read-only), so the source-side
+// rejection is exercised through the preserved copyMissing API: a junctioned
+// source is rejected before any mutation.
 const outside20 = fs.mkdtempSync(path.join(tempRoot, "outside-20-"));
-const fixtureSrcOpenCodeDir = path.join(tempRoot, "src", ".opencode");
-fs.rmSync(fixtureSrcOpenCodeDir, { recursive: true, force: true });
-fs.symlinkSync(outside20, fixtureSrcOpenCodeDir, "junction");
+const sourceLink20 = path.join(tempRoot, "junctioned-source");
+fs.symlinkSync(outside20, sourceLink20, "junction");
+const consumer20 = path.join(tempRoot, "copymissing-consumer-20");
+fs.mkdirSync(consumer20, { recursive: true });
 let test20Error = null;
 try {
-  runSync("--mode sync");
+  copyMissing(sourceLink20, path.join(consumer20, "copied.md"), false, () => {}, consumer20);
 } catch (err) {
-  test20Error = `${err.stdout || ""}\n${err.stderr || ""}\n${err.message}`;
+  test20Error = err.message;
 }
 assert(
   test20Error && /source uses a symlink or junction/.test(test20Error),
-  "Sync rejects a junction at the source .opencode root"
+  "copyMissing rejects a junctioned source before any mutation"
 );
 assert(fs.readdirSync(outside20).length === 0, "Source junction target remains untouched");
-fs.rmSync(fixtureSrcOpenCodeDir, { recursive: true, force: true });
+assert(!fs.existsSync(path.join(consumer20, "copied.md")), "No file was written through the junction");
+fs.rmSync(sourceLink20, { recursive: true, force: true });
 fs.rmSync(outside20, { recursive: true, force: true });
-fs.cpSync(path.join(repoRoot, "src", ".opencode"), fixtureSrcOpenCodeDir, { recursive: true });
-try {
-  runSync("--mode sync");
-  assert(
-    fs.existsSync(path.join(fixtureSrcOpenCodeDir, "agents", "orchestrator.md")),
-    "Source .opencode restored from the repo and sync succeeds again"
-  );
-} catch (err) {
-  assert(false, `Re-sync succeeded in test 20 (got: ${err.message})`);
-}
+fs.rmSync(consumer20, { recursive: true, force: true });
 
 // ─── Test 21: Nested destination junction rejection ─────────────────────────
 console.log("\nTest 21: Nested destination junction rejection");
 
-// A junction nested inside the managed root is rejected and its target is
-// never written into.
 const outside21 = fs.mkdtempSync(path.join(tempRoot, "outside-21-"));
 const nestedLink21 = path.join(destDir, "agents");
 fs.rmSync(nestedLink21, { recursive: true, force: true });
 fs.symlinkSync(outside21, nestedLink21, "junction");
-let test21Error = null;
-try {
-  runSync("--mode sync");
-} catch (err) {
-  test21Error = `${err.stdout || ""}\n${err.stderr || ""}\n${err.message}`;
-}
-assert(
-  test21Error && /symlink or junction/.test(test21Error),
-  "Sync rejects a junction nested inside the managed root"
-);
+const test21 = runSyncExpectFailure("--mode sync");
+assert(test21.exitCode === 1, `Sync exited 1 on a nested destination junction (got: ${test21.exitCode})`);
+assert(/symlink or junction/.test(test21.output), "Sync rejects a junction nested inside the managed root");
 assert(fs.readdirSync(outside21).length === 0, "Nested destination target remains untouched");
 fs.rmSync(nestedLink21, { recursive: true, force: true });
 fs.rmSync(outside21, { recursive: true, force: true });
 try {
   runSync("--mode sync");
-  assert(
-    fs.statSync(nestedLink21).isDirectory(),
-    "Re-sync restored the nested managed directory"
-  );
+  assert(fs.statSync(nestedLink21).isDirectory(), "Re-sync restored the nested managed directory");
 } catch (err) {
   assert(false, `Re-sync succeeded in test 21 (got: ${err.message})`);
 }
@@ -1079,8 +682,6 @@ try {
 // ─── Test 22: Unrelated consumer links ignored ──────────────────────────────
 console.log("\nTest 22: Unrelated consumer links ignored");
 
-// A junction elsewhere in the consumer tree is outside the paths sync reads
-// or writes; sync succeeds and leaves it alone.
 const outside22 = fs.mkdtempSync(path.join(tempRoot, "outside-22-"));
 const unrelatedLink22 = path.join(tempRoot, "consumer-only-link");
 fs.symlinkSync(outside22, unrelatedLink22, "junction");
@@ -1096,8 +697,10 @@ fs.rmSync(outside22, { recursive: true, force: true });
 // ─── Test 23: Managed type-conflict repair ──────────────────────────────────
 console.log("\nTest 23: Managed type-conflict repair");
 
-// A consumer file at a managed directory path is deliberately replaced by
-// Mode 1 (repair), unlike seed paths which are skipped.
+// A consumer file at a managed directory path is repaired in place by the
+// managed-update semantics (SCEN-072): removed, recreated as a directory,
+// and repopulated from the package source — unlike seed paths, which are
+// skipped (the create-if-missing contract).
 const agentsDir23 = path.join(destDir, "agents");
 fs.rmSync(agentsDir23, { recursive: true, force: true });
 fs.writeFileSync(agentsDir23, "consumer conflict\n", "utf8");
@@ -1106,26 +709,21 @@ try {
   assert(fs.statSync(agentsDir23).isDirectory(), "Sync repairs a file at the managed agents path back to a directory");
   assert(
     fs.existsSync(path.join(agentsDir23, "orchestrator.md")),
-    "Repaired managed directory is repopulated from src"
+    "Repaired managed directory is repopulated from the packages"
   );
 } catch (err) {
   assert(false, `Sync repaired the managed type conflict (got: ${err.message})`);
 }
 
-// ─── Test 24: Path-escape rejection — deploy destination (assertSafePath) ───
+// ─── Test 24: Path-escape rejection — deploy destination ────────────────────
 console.log("\nTest 24: Path-escape rejection: deploy destination escapes consumer cwd");
 
-// deploy builds its consumer root from destinationJson's directory; a
-// destination that traverses out of it must be rejected by assertSafePath
-// before any mutation.
 const consumerRoot24 = path.join(tempRoot, "escape-consumer-24");
 fs.mkdirSync(consumerRoot24, { recursive: true });
 let test24Error = null;
 try {
   deploy({
-    sourceDir: path.join(tempRoot, "src", ".opencode"),
     destinationDir: path.join(consumerRoot24, "..", "escaped-opencode-24"),
-    sourceJson: path.join(tempRoot, "src", "opencode.json"),
     destinationJson: path.join(consumerRoot24, "opencode.json"),
     log: () => {},
   });
@@ -1145,13 +743,12 @@ fs.rmSync(consumerRoot24, { recursive: true, force: true });
 // ─── Test 25: Path-escape rejection — copyMissing destination ───────────────
 console.log("\nTest 25: Path-escape rejection: copyMissing destination escapes consumer cwd");
 
-// The Mode 2 primitive enforces the same escape contract per destination.
 const consumerRoot25 = path.join(tempRoot, "escape-consumer-25");
 fs.mkdirSync(consumerRoot25, { recursive: true });
 let test25Error = null;
 try {
   copyMissing(
-    path.join(tempRoot, "src", "BUILDING.md"),
+    path.join(coreSeedDir, "BUILDING.md"),
     path.join(consumerRoot25, "..", "escaped-building-25.md"),
     false,
     () => {},
@@ -1173,9 +770,6 @@ fs.rmSync(consumerRoot25, { recursive: true, force: true });
 // ─── Test 26: Path-escape rejection — symlinked path component ──────────────
 console.log("\nTest 26: Path-escape rejection: symlinked path component inside consumer cwd");
 
-// A destination whose path component is a symlink is rejected by
-// assertSafePath's component walk before any mutation, keeping the link
-// target untouched.
 const consumerRoot26 = path.join(tempRoot, "escape-consumer-26");
 fs.mkdirSync(consumerRoot26, { recursive: true });
 const outside26 = fs.mkdtempSync(path.join(tempRoot, "outside-26-"));
@@ -1184,7 +778,7 @@ fs.symlinkSync(outside26, link26, "junction");
 let test26Error = null;
 try {
   copyMissing(
-    path.join(tempRoot, "src", "BUILDING.md"),
+    path.join(coreSeedDir, "BUILDING.md"),
     path.join(link26, "escaped-building-26.md"),
     false,
     () => {},
@@ -1205,8 +799,6 @@ fs.rmSync(consumerRoot26, { recursive: true, force: true });
 // ─── Test 27: Root consumer-owned seed files are preserved untouched ────────
 console.log("\nTest 27: Root consumer-owned seed files are preserved untouched by sync");
 
-// The seed-from-start list (DEC-20261017-04): Mode 2's create-if-missing
-// guarantee means an existing consumer-owned copy is never overwritten.
 const seedFiles27 = [
   "AGENTS.md",
   "AGENTIC_WORKFLOW.md",
@@ -1229,8 +821,8 @@ for (const relative of seedFiles27) {
 // Control: a managed file IS overwritten, proving sync ran and that this
 // test can detect an overwrite if the seed guarantee ever regresses.
 const controlManaged27 = path.join(destDir, "agents", "orchestrator.md");
-const controlSrcContent27 = fs.readFileSync(controlManaged27, "utf8");
-fs.writeFileSync(controlManaged27, "# consumer edit — Mode 1 must overwrite this\n", "utf8");
+const controlSource27 = fs.readFileSync(path.join(packagesDir, "roundhouse-core", "managed", "agents", "orchestrator.md"));
+fs.writeFileSync(controlManaged27, "# consumer edit — managed-overwrite must replace this\n", "utf8");
 try {
   runSync("--mode sync");
 } catch (err) {
@@ -1244,13 +836,13 @@ for (const [relative, sentinel] of sentinels27) {
   );
 }
 assert(
-  fs.readFileSync(controlManaged27, "utf8") === controlSrcContent27,
-  "Control: managed file was overwritten back to src content (sync ran)"
+  fs.readFileSync(controlManaged27).equals(controlSource27),
+  "Control: managed file was overwritten back to the package source (sync ran)"
 );
-// Restore the seed files from their src templates for state cleanliness.
+// Restore the seed files from their Core seed templates for state cleanliness.
 for (const relative of seedFiles27) {
   fs.copyFileSync(
-    path.join(tempRoot, "src", ...relative.split("/")),
+    path.join(coreSeedDir, ...relative.split("/")),
     path.join(tempRoot, ...relative.split("/"))
   );
 }
@@ -1258,8 +850,6 @@ for (const relative of seedFiles27) {
 // ─── Test 28: Self-hosting verification ─────────────────────────────────────
 console.log("\nTest 28: Self-hosting verification: --mode verify passes on the repo's own root");
 
-// The only real-repo touchpoint in this suite: --mode verify is read-only,
-// so running it against the Roundhouse repo's own root never mutates it.
 let test28Output = "";
 let test28ExitCode = null;
 try {
@@ -1278,16 +868,8 @@ assert(
   `Self-hosting verify exits 0 on the repo's own root (got: ${test28ExitCode})`
 );
 assert(
-  test28Output.includes("Integrity verification passed"),
-  "Self-hosting verify reports Mode 1 integrity passed"
-);
-assert(
-  test28Output.includes("Mode 2 integrity verification passed"),
-  "Self-hosting verify reports Mode 2 integrity passed"
-);
-assert(
-  test28Output.includes("matches src/opencode.json"),
-  "Self-hosting verify reports opencode.json integrity"
+  test28Output.includes("no findings"),
+  "Self-hosting verify reports no findings against the composed root"
 );
 
 // ─── Temp cleanup ───────────────────────────────────────────────────────────

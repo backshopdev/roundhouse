@@ -1,7 +1,9 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "docs-publish"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core"

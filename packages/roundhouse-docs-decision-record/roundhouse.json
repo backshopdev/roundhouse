@@ -1,7 +1,9 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "docs-decision-record"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core"

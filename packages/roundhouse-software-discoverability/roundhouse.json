@@ -1,7 +1,9 @@
 {
   "kind": "capability",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "software-discoverability-seo"
+  ],
   "bash": [],
   "requires": [
     "@backshop/roundhouse-core"

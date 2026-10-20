@@ -1,7 +1,23 @@
 {
   "kind": "core",
   "contractVersion": 1,
-  "skills": [],
+  "skills": [
+    "architectural-coherence",
+    "behavioral-completeness",
+    "commit-convention",
+    "contract-completeness",
+    "decision-quality",
+    "docs-check",
+    "git-commit",
+    "harness",
+    "investigation",
+    "opencode-configuration",
+    "peer",
+    "review-findings",
+    "security",
+    "socratic-interview",
+    "task-planning"
+  ],
   "bash": [],
   "requires": []
 }
