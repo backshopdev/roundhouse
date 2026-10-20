@@ -36,8 +36,7 @@ changes, and returns a completion packet. It cannot delegate tasks. See
 The reviewer agent provides independent, read-only review. Every review launches
 one or more independent review sessions in parallel, one session per meaningful
 perspective. Every session loads mandatory `peer` plus at least one relevant
-domain skill (for example, `harness`, `literature-note`, or
-`opencode-configuration`). Add `security` to that session if any listed change
+domain skill (for example, `harness` or `opencode-configuration`). Add `security` to that session if any listed change
 affects permissions, secrets, auth, MCP, plugins, executable tools/commands,
 network access, external directories, trust boundaries, or equivalent sensitive
 configuration, regardless of the session's perspective. If no domain skill
@@ -166,16 +165,16 @@ Load the relevant resource based on your task:
 
 | When | Load | Purpose |
 | --- | --- | --- |
-| Authoring or reviewing document structure, lifecycles, IDs, indexes, links, archives, specification behavior, or contracts | `repository-documentation` skill | Document structure and lifecycle rules |
+| Authoring or reviewing document structure, lifecycles, IDs, indexes, links, archives, specification behavior, or contracts | the installed documentation-practice skill (discover via the skill listing) | Document structure and lifecycle rules |
 | Running or interpreting documentation validation | `docs-check` skill | Validation script usage and checks |
-| Publishing documentation to external surfaces | `docs-publish` skill | Publication workflow boundary |
+| Publishing documentation to external surfaces | the installed documentation-publishing skill (discover via the skill listing) | Publication workflow boundary |
 | Drafting or reviewing a commit message | `commit-convention` skill | Commit grammar and approval |
-| Decomposing work into a plan | `planning-structure` skill | Plan structure and acceptance criteria |
+| Decomposing work into a plan | the installed planning skill (discover via the skill listing; Core default `task-planning`) | Plan structure and acceptance criteria |
 | Authoring or reviewing harness, agents, skills, or workflow | `harness` skill | Harness architecture and skill catalog |
 | Authoring or reviewing OpenCode configuration | `opencode-configuration` skill | Configuration judgment and permission model |
 | Conducting a review | `peer` skill (+ domain skill) | Peer review lens and heuristics |
 | Changes affect permissions, secrets, or auth | `security` skill | Security review threat model |
-| Authoring or reviewing literature notes | `literature-note` skill | Source note evidence judgment |
+| Authoring or reviewing literature notes | the installed source-note skill (discover via the skill listing) | Source note evidence judgment |
 
 ## HITL Gates
 

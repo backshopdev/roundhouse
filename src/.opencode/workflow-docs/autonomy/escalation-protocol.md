@@ -66,7 +66,7 @@ Scope: Add one link to src/.opencode/workflow-docs/autonomy/index.md
 
 Reason: WP-02 creates src/.opencode/workflow-docs/autonomy/ directory;
   docs/index.md must link to src/.opencode/workflow-docs/autonomy/index.md
-  per index discipline rules (GP02, repository-documentation skill)
+  per index discipline rules (GP02; the installed documentation-practice skill)
 
 Impact if denied: partially completable — autonomy documents created but
   docs/index.md not updated, violating index completeness requirement

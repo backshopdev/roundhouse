@@ -68,10 +68,12 @@ Key principles for this role:
   source ref, and destination ref. Do not infer any of these from upstream.
 
 Use `harness` for agent playbooks, prompts, skills, workflow structure, or
-other AI-harness artifacts; `literature-note` for source notes; and
-`opencode-configuration` for OpenCode configuration, agents, skills, plugins,
-MCP, or permissions. Multiple domain skills may apply. Load
-`planning-structure` or `commit-convention` only when their process is needed.
+other AI-harness artifacts; `opencode-configuration` for OpenCode
+configuration, agents, skills, plugins, MCP, or permissions. Multiple domain
+skills may apply — discover the installed skills matching the artifact types
+your task touches (source notes, planning structure, documentation practice)
+via the skill listing, and load each before authoring. Load
+`commit-convention` only when its process is needed.
 
 ## Responsibilities
 

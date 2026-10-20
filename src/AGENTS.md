@@ -54,9 +54,8 @@ files by default.
 | Changing OpenCode configuration | `opencode-configuration` skill | Apply configuration-specific guidance and validation |
 | Conducting a review | `peer` skill (+ domain skill) | Apply the peer review lens and domain expertise |
 | Changes affect permissions, secrets, or auth | `security` skill | Apply the security review threat model |
-| Decomposing work into a plan | `planning-structure` skill | Apply planning structure requirements and acceptance criteria |
-| Working with testability, constructor injection, or characterization tests | `design-for-testability` skill | Load foundational testability guidance |
-| Enabling tests on legacy code where current structure blocks normal testing | `test-enablement` skill | Load legacy-code enablement techniques (Feathers-style seams) |
+| Decomposing work into a plan | the installed planning skill (discover via the skill listing; Core default `task-planning`) | Apply planning structure requirements and acceptance criteria |
+| Working with testability — designing for test (constructor injection, characterization tests) or enabling tests on legacy code where current structure blocks normal testing | the installed testability skill (discover via the skill listing) | Load testability guidance: foundational testable-design techniques and legacy-code enablement (Feathers-style seams) |
 | Material uncertainty could change plan or spec assumptions | `investigation` skill | Apply the read-only investigation procedure for material uncertainty |
 | Executing a commit, amend, or push | `git-commit` skill | Apply the canonical commit/amend/push procedure and exact-command contracts |
 | Consolidating reviewer output into the final report | `review-findings` skill | Format consolidated review output using the mandatory template |

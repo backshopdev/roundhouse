@@ -114,11 +114,11 @@
       "sizeBytes": 15563
     },
     {
-      "path": "docs/plans/PLAN-20261019-02.md",
+      "path": "docs/plans/PLAN-20261019-03.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "925146ac216b73f26988b86d84eea5c00f512f9be541ff23e538b763672f007f",
-      "sizeBytes": 41247
+      "sha256": "8c6cdfe8f7b23aad402b132a1317f1cf7ca1ce2c3ef5324b808ad89ef1851bdd",
+      "sizeBytes": 34015
     },
     {
       "path": "docs/plans/archive/PLAN-20261018-01.md",
@@ -133,6 +133,13 @@
       "classification": "root-only-artifact",
       "sha256": "aa612f85b93f129a1b96764feb98f4323158b69e7a6124304d7be482d91d496e",
       "sizeBytes": 29379
+    },
+    {
+      "path": "docs/plans/archive/PLAN-20261019-02.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "38cecc2467e0094be6af64be0c1ca9cd4b0d643a91251488f3d70e480ffcef3a",
+      "sizeBytes": 41251
     },
     {
       "path": "docs/releases/index.md",
@@ -306,8 +313,8 @@
       "path": "ktlo/KTLO-20261018-01.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "9c24a61b8df7a4f4978f54719ed390c1412ff99f4527727d017d3284252be6ee",
-      "sizeBytes": 4612
+      "sha256": "71ab11a91f3c1e6d23a185493b460147db79763e3e7ad3df3e57fc155636741c",
+      "sizeBytes": 5028
     },
     {
       "path": "package.json",
@@ -1370,8 +1377,8 @@
       "path": "src/.opencode/agents/document-author.md",
       "base": "src",
       "classification": "managed",
-      "sha256": "3356e1e0795b05161d8c47ff8cd7a5d5e1ab27e335d60402e1df0708689d64b1",
-      "sizeBytes": 14932,
+      "sha256": "59d1498cac9a5bc13ee5274270703f6345da3f09173c92144ae4747d146d8a3b",
+      "sizeBytes": 15061,
       "intendedPhase5Owner": "@backshop/roundhouse-core"
     },
     {
@@ -1386,8 +1393,8 @@
       "path": "src/.opencode/agents/orchestrator.md",
       "base": "src",
       "classification": "managed",
-      "sha256": "353ffe80d59e03553058e69088441e965706bbe0afd6a8aba560a469c827099a",
-      "sizeBytes": 17176,
+      "sha256": "dce698328970ff14fe6766706c7639e91d713be981ad14dd5ff8bbf81009b7b8",
+      "sizeBytes": 16116,
       "intendedPhase5Owner": "@backshop/roundhouse-core"
     },
     {
@@ -1743,6 +1750,14 @@
       "intendedPhase5Owner": "@backshop/roundhouse-software-discoverability"
     },
     {
+      "path": "src/.opencode/skills/socratic-interview/SKILL.md",
+      "base": "src",
+      "classification": "managed",
+      "sha256": "1a17cd5df15b0803a3228fa8de4a6a1ffef39b40e96aefc68ee2a9b9d530a599",
+      "sizeBytes": 5065,
+      "intendedPhase5Owner": "@backshop/roundhouse-core"
+    },
+    {
       "path": "src/.opencode/skills/software-architecture/SKILL.md",
       "base": "src",
       "classification": "managed",
@@ -1765,6 +1780,14 @@
       "sha256": "fa8afae341cdcb4396a1cd9485689beba31efc82ad354a5678de7c44e25c8153",
       "sizeBytes": 3448,
       "intendedPhase5Owner": "@backshop/roundhouse-docs-spec"
+    },
+    {
+      "path": "src/.opencode/skills/task-planning/SKILL.md",
+      "base": "src",
+      "classification": "managed",
+      "sha256": "475ad690605ef0908b5052cb9815e2308dd4201d8a2f6d08290324861220a1be",
+      "sizeBytes": 2557,
+      "intendedPhase5Owner": "@backshop/roundhouse-core"
     },
     {
       "path": "src/.opencode/skills/test-enablement/SKILL.md",
@@ -1802,8 +1825,8 @@
       "path": "src/.opencode/workflow-docs/autonomy/escalation-protocol.md",
       "base": "src",
       "classification": "managed",
-      "sha256": "856516083029a93db2d43f0ea400871f8c7794c5fdcaecd1e66cc7338b023f88",
-      "sizeBytes": 9598,
+      "sha256": "bb573d7ba70dc251a541c8a6cf2da72768842cb288cb186e5fa1d64b652409cf",
+      "sizeBytes": 9610,
       "intendedPhase5Owner": "@backshop/roundhouse-core"
     },
     {
@@ -1834,15 +1857,15 @@
       "path": "src/AGENTIC_WORKFLOW.md",
       "base": "src",
       "classification": "seed",
-      "sha256": "f02e75f973f09081b40dec6d9569bd2d23f6fc65dd4e3dc2ec64a48371164f6b",
-      "sizeBytes": 19508
+      "sha256": "0695cd356e57df397b0278d834b3eeaf694107cf18c2b6ee9db728452d29764a",
+      "sizeBytes": 19693
     },
     {
       "path": "src/AGENTS.md",
       "base": "src",
       "classification": "seed",
-      "sha256": "c93baada61fa165cbc293693602c82a3fa29c91233d11aa465d9d78c0b046a7e",
-      "sizeBytes": 4547
+      "sha256": "222940efcc7d959ffa886efa506ce6ce3bca5c8b89ba5e046c11af09e924d5ce",
+      "sizeBytes": 4653
     },
     {
       "path": "src/BUILDING.md",

@@ -36,40 +36,10 @@ Key principles for this role:
 
 ## Socratic Interview Protocol
 
-When interacting with the human collaborator, open with purpose and ask targeted
-questions to surface assumptions:
-
-### Opening
-
-"I'd like to walk through the workflow with you. To make sure we capture
-everything important, I'd like to ask a few questions about your objectives and
-constraints."
-
-### Core Questions (present one at a time — hard rule)
-
-Present questions **one at a time**. Do not batch multiple questions in a
-single turn; a volley of questions overwhelms the human collaborator.
-The list below is a candidate pool — draw from it one question per turn,
-in order, adapting to prior answers.
-
-1. "What is the primary goal you're trying to achieve with this work?"
-2. "What would constitute successful completion from your perspective?"
-3. "Are there any constraints, edge cases, or use cases I should be aware of
-   before proceeding?"
-4. "What assumptions am I at risk of making that you know are not valid for your
-   project?"
-
-### Synthesis
-
-After human responds: "Thank you. I've noted these objectives/constraints. I'll
-keep them in mind as we move through the workflow stages. Let me know if
-anything changes."
-
-### When User Asks "What do you think about X?"
-
-Open dialog, don't just state opinion: "I have some thoughts, but I want to make
-sure I understand your perspective first. Could you tell me: what's your main
-concern about X, and what outcome would you like to see?"
+Load the `socratic-interview` skill and follow it for all interview conduct
+with the human collaborator — the skill carries the protocol (opening, the
+one-at-a-time question pool, synthesis, the opinion-probe stance) and the
+seven style properties that govern how the interview runs.
 
 ## Question-vs-Command Protocol (hard rule)
 
@@ -125,9 +95,10 @@ The human collaborator may also choose to abandon work at any point and restart 
 
 ## Orchestration Loop (full flow)
 
-1. **Plan + Gate 1** — elicit intent (Socratic), draft the plan (use
-   planning-structure), get explicit human sign-off. Skip drafting if executing
-   an already-approved plan file.
+1. **Plan + Gate 1** — elicit intent (load `socratic-interview`), draft the
+   plan (discover the installed planning skill via the skill listing; Core
+   default `task-planning`), get explicit human sign-off. Skip drafting if
+   executing an already-approved plan file.
 2. Select relevant domain skills and hand the approved plan, acceptance
    criteria, scope, and skill assignment to `@document-author` or
    `@implementor` based on the change type, in isolated context.
