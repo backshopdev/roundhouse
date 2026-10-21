@@ -317,11 +317,18 @@
       "sizeBytes": 42252
     },
     {
+      "path": "docs/plans/archive/PLAN-20261021-02.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "e328a5564265ca5bdaeb068c28fc9ab088ddc46662dd2ba1c06e03dcd7dd049a",
+      "sizeBytes": 26018
+    },
+    {
       "path": "docs/plans/archive/index.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "d79ab0928db56875c68b40f8e0196bfc2e48cd8c3fafafb49b8d47fede939011",
-      "sizeBytes": 2779
+      "sha256": "f0facbf1eb7c61a03494290b94db7edfa5c31333156e88cd6d3b93e78012ce19",
+      "sizeBytes": 3261
     },
     {
       "path": "docs/plans/archive/template.md",
@@ -558,8 +565,8 @@
       "path": "ktlo/KTLO-20261019-01.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "313b5772c890380c78c88e80d709b9237bba8b8d8d8e541fc0fea80b96ceea33",
-      "sizeBytes": 3641
+      "sha256": "8e54aa9b992d3c1f19df8304235911b3eaba6dc5578ce7e6ca4c339db0eff22a",
+      "sizeBytes": 7223
     },
     {
       "path": "ktlo/KTLO-20261021-01.md",
@@ -572,8 +579,8 @@
       "path": "ktlo/index.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "48b3604b45a46f147016f4717569d1bea8bbfa0f04e3e4332c6902856c5fe04c",
-      "sizeBytes": 5659
+      "sha256": "27789b44e29ee5b559b4bc469a234942cc2b72dafc20ff3d060485d9be0f5dfe",
+      "sizeBytes": 5897
     },
     {
       "path": "ktlo/template.md",
@@ -2385,8 +2392,8 @@
       "path": "scripts/test-commit.js",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "7815cafc26b55129e47c4c6829cdfa38f3a5f8020c060401671854ea3331e2a8",
-      "sizeBytes": 15957
+      "sha256": "a58f4e64222c88f3b56941c956d25e70d25ba97909e03bbd4dd43b81fe8c1a41",
+      "sizeBytes": 20941
     },
     {
       "path": "scripts/test-migration-baseline.js",
