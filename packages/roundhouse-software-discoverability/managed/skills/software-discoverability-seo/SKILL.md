@@ -1,5 +1,5 @@
 ---
-name: seo-structured-data
+name: software-discoverability-seo
 description: Use when a task involves search engine optimization or structured data. Provides foundational guidance on SEO best practices, meta tags, structured data, and sitemaps.
 ---
 

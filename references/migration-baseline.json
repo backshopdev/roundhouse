@@ -16,6 +16,13 @@
       "sizeBytes": 200
     },
     {
+      "path": ".changeset/fix-skill-frontmatter-identity.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "35d7c92c4eb402d52b765be310740db504bbf375e4ae8d81458d8ff3e7d5305d",
+      "sizeBytes": 1494
+    },
+    {
       "path": ".gitattributes",
       "base": "root",
       "classification": "root-only-artifact",
@@ -26,8 +33,8 @@
       "path": ".github/workflows/ci.yml",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "72e2d55c13594a535cb0e1614d18be7170a2ee6c838c4c9f3d8f89724d793cab",
-      "sizeBytes": 635
+      "sha256": "1d0f46dfe7106cadf6cb9b4af491bd97b017a72c1a890e164aaff2bb532c2525",
+      "sizeBytes": 732
     },
     {
       "path": ".github/workflows/opencode.yml",
@@ -47,8 +54,8 @@
       "path": ".markdownlint-cli2.jsonc",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "b624d6b67a7f0e9d09c9968d7ae363842c8e147c78de6e5e4b8ed4f8621a5bd5",
-      "sizeBytes": 1971
+      "sha256": "216dacf71ccb7436e46cb38c9a3ebc74153bf7bf7e9c9ad376040eef9358bec0",
+      "sizeBytes": 2096
     },
     {
       "path": ".npmignore",
@@ -61,15 +68,15 @@
       "path": ".roundhouse/manifest.json",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "873cec9c4684691e0817759486a43fb2b16d5182414f06be497f0a6aa3cf01b4",
+      "sha256": "eddd147aced596d3455b80a1c93784890d620f39a6c755f4eeff993df88ea145",
       "sizeBytes": 19910
     },
     {
       "path": "AGENTIC_WORKFLOW.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "d12635ab1ab491f55a17f64527bf365b45a24a03ff4cd89a16a8cb50257de2bb",
-      "sizeBytes": 16359
+      "sha256": "744f9829e2041495e1ef2fb3625385fe6a7c1845b9e800cfcd76eb16c9e7b914",
+      "sizeBytes": 17096
     },
     {
       "path": "AGENTS.md",
@@ -82,8 +89,8 @@
       "path": "BUILDING.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "06700bacb44e8bd8ac6f54c9c2b68d1825023355e902606706de92c78b4d1f86",
-      "sizeBytes": 2423
+      "sha256": "2ad84cd792021a053c264aee5ceb28c1a11a17fd1067e6ed880d595c78e8e705",
+      "sizeBytes": 2570
     },
     {
       "path": "CONTRIBUTING.md",
@@ -303,11 +310,18 @@
       "sizeBytes": 28574
     },
     {
+      "path": "docs/plans/archive/PLAN-20261021-01.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "b4bfb878e52ce312185457cc7903538aa19ee9437e20d7fd9cce46b8212a47ee",
+      "sizeBytes": 42252
+    },
+    {
       "path": "docs/plans/archive/index.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "081d97f0adc947b2a20a3edc85137f0bbff649e619423aee3f20e7f0380564c2",
-      "sizeBytes": 2259
+      "sha256": "d79ab0928db56875c68b40f8e0196bfc2e48cd8c3fafafb49b8d47fede939011",
+      "sizeBytes": 2779
     },
     {
       "path": "docs/plans/archive/template.md",
@@ -383,8 +397,8 @@
       "path": "docs/specs/SPEC-20261019-02.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "f192aa00f2781a59f29bf0155839e5d5d6ade1cbf5c0d8319e93d79d0c55f59d",
-      "sizeBytes": 35136
+      "sha256": "5db8e13f39aae704457af2697ac9e6d9ad649d5e14b9e730d9c3ea7afc882944",
+      "sizeBytes": 36846
     },
     {
       "path": "docs/specs/SPEC-20261019-03.md",
@@ -548,11 +562,18 @@
       "sizeBytes": 3641
     },
     {
+      "path": "ktlo/KTLO-20261021-01.md",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "3e946ab5b5e3f8277438b74305b6c1f60d935c616ebd1ec4cfb9f88dc72be459",
+      "sizeBytes": 6566
+    },
+    {
       "path": "ktlo/index.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "9bdba0a3e56a5dcbf6c3d7d93a8f82eee2e1e547dd8ca32d3ffbe59f8b73e653",
-      "sizeBytes": 5317
+      "sha256": "48b3604b45a46f147016f4717569d1bea8bbfa0f04e3e4332c6902856c5fe04c",
+      "sizeBytes": 5659
     },
     {
       "path": "ktlo/template.md",
@@ -572,8 +593,8 @@
       "path": "package.json",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "820c68f42b58a1d106eb0e155111a7ed8d6fe00102b980772f5ccd9b0badaf25",
-      "sizeBytes": 805
+      "sha256": "45f149a7a28aa2e215972ebd4eac2ab71224282cef8c6c4900193ede47fac500",
+      "sizeBytes": 857
     },
     {
       "path": "package/deploy-roundhouse.js",
@@ -593,8 +614,8 @@
       "path": "packages/roundhouse-backshopdev-planning/managed/skills/backshopdev-planning/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "b9522037227c79005dace527e9cd6ded76561692cbab05d403eccf0704e9deb1",
-      "sizeBytes": 1067
+      "sha256": "3cf9f2430237bba120dd0ced6ec9a078360396a6b793e436e7e9e295541a9bff",
+      "sizeBytes": 1069
     },
     {
       "path": "packages/roundhouse-backshopdev-planning/package.json",
@@ -656,8 +677,8 @@
       "path": "packages/roundhouse-cli/lib/model.js",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "f9d69cac45fbbccde9295034d40213f628afb29516b44a8cb2c9f387b3e3da10",
-      "sizeBytes": 8900
+      "sha256": "3a46e1a91001c39919ada4e237b859f4eb8ea26f4eb800fdcd0726addaed4625",
+      "sizeBytes": 11820
     },
     {
       "path": "packages/roundhouse-cli/lib/render.js",
@@ -705,8 +726,8 @@
       "path": "packages/roundhouse-cli/test/composer.test.js",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "ba88a18f155c44ae628380e595cd9f8790d2d2e0109e2d0a9dcad90c8d9ee7f3",
-      "sizeBytes": 39606
+      "sha256": "749a94204daa9d75304764bc587a4d6d7704b26cafb62b491481dda6aecbe995",
+      "sizeBytes": 42984
     },
     {
       "path": "packages/roundhouse-cli/test/composition-matrix.test.js",
@@ -1083,7 +1104,7 @@
       "path": "packages/roundhouse-cms-apostrophe/managed/skills/cms-apostrophe/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "a137fe16ed60f420bd668ca4ce241f1e15f6bc9f8a0b3c158b3a04b80ef6afcd",
+      "sha256": "30e3afb72171f987d7922d7412e95eeaa6df140f49de92765f5be86e33bfdc32",
       "sizeBytes": 2101
     },
     {
@@ -1174,8 +1195,8 @@
       "path": "packages/roundhouse-core/managed/skills/docs-check/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "7897bbd26895c1b2a3099ce1da7fe22b0484c38c4014c4cd4a2ba1e9c7f9edae",
-      "sizeBytes": 3048
+      "sha256": "15e6e46ae6b9860da44f798f7f465508a9613fd69eee8e61e470683191fb5347",
+      "sizeBytes": 3039
     },
     {
       "path": "packages/roundhouse-core/managed/skills/git-commit/SKILL.md",
@@ -1188,8 +1209,8 @@
       "path": "packages/roundhouse-core/managed/skills/harness/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "9e46e1a0f5b2b36a22b5f43ff518192e202050a5847d19e286de1a0137a251fa",
-      "sizeBytes": 13048
+      "sha256": "e9a60a4022ae05aea6b7890442ccbc34df92adeb0d65ea2e2b9908f62361beb4",
+      "sizeBytes": 13110
     },
     {
       "path": "packages/roundhouse-core/managed/skills/investigation/SKILL.md",
@@ -1258,15 +1279,15 @@
       "path": "packages/roundhouse-core/managed/workflow-docs/autonomy/index.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "c82597c1258f2e526a3c7eab3540fca41ec3a3bf121ba98c0ef7bf324aaec114",
-      "sizeBytes": 1915
+      "sha256": "10a1dc236cfc216abf5dd5117fce33b3f5778d61e7e9fc8a9d3676e8f5ac862c",
+      "sizeBytes": 1912
     },
     {
       "path": "packages/roundhouse-core/managed/workflow-docs/autonomy/principles.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "e0d291b381c1851517b98df9c8df63bf3165372d7b675b50ad96d49ff270dc2f",
-      "sizeBytes": 5730
+      "sha256": "955494fc8bdb54ce7cbc441d98b0b28e7f725ce97f31bce569d2dc7419106403",
+      "sizeBytes": 5727
     },
     {
       "path": "packages/roundhouse-core/managed/workflow-docs/autonomy/session-lifetime.md",
@@ -1300,8 +1321,8 @@
       "path": "packages/roundhouse-core/seed/AGENTIC_WORKFLOW.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "ee7f1e9f5db7e51ed71c6a0792a22ebc0c915fe9a2b347bd434baced90dd0222",
-      "sizeBytes": 19793
+      "sha256": "ff2f6e55911715574900dd9c30145ef1ad65e4658f7100d00cdf406274703ed5",
+      "sizeBytes": 20476
     },
     {
       "path": "packages/roundhouse-core/seed/AGENTS.md",
@@ -1314,8 +1335,8 @@
       "path": "packages/roundhouse-core/seed/BUILDING.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "06700bacb44e8bd8ac6f54c9c2b68d1825023355e902606706de92c78b4d1f86",
-      "sizeBytes": 2423
+      "sha256": "2ad84cd792021a053c264aee5ceb28c1a11a17fd1067e6ed880d595c78e8e705",
+      "sizeBytes": 2570
     },
     {
       "path": "packages/roundhouse-core/seed/CONTRIBUTING.md",
@@ -1496,8 +1517,8 @@
       "path": "packages/roundhouse-docs-architecture/managed/skills/docs-architecture/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "c6b6120554dfe0bb9b2aadfe77d5841174b8a9785a5e1c52b494e5161aca57cc",
-      "sizeBytes": 3309
+      "sha256": "d94690ddc9d686e935c87e260090e293f20fbf0323917b86b4d21a0258710279",
+      "sizeBytes": 3305
     },
     {
       "path": "packages/roundhouse-docs-architecture/package.json",
@@ -1517,8 +1538,8 @@
       "path": "packages/roundhouse-docs-decision-record/managed/skills/docs-decision-record/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "65fffbacc455d542eb892fc781946ff883717cd19abae6f20c4a2e9a960c7e92",
-      "sizeBytes": 3019
+      "sha256": "5b1f2ab504d770821d553de757caeaa4a6e3a4a65368cd9e5da0fa937b9469d6",
+      "sizeBytes": 3024
     },
     {
       "path": "packages/roundhouse-docs-decision-record/package.json",
@@ -1538,14 +1559,14 @@
       "path": "packages/roundhouse-docs-general/managed/skills/docs-general-accuracy/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "8799f0a0442e59bcbe13c3a727692ab2b1e9d762655cb15fd7b3fcc9d1730eef",
-      "sizeBytes": 2207
+      "sha256": "0f26c0a764f7a90356bc4dddc0cc6c1e977572c86c9f06935eb6b50f022e14e9",
+      "sizeBytes": 2209
     },
     {
       "path": "packages/roundhouse-docs-general/managed/skills/docs-general-traceability/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "19ca24da8321f7d3cf775119bd9eb81dd553c3df7641894ad0785f9b73c92d43",
+      "sha256": "f932fbb0d46fed5c5e6147861aa5493920d9d92502dab10c183aa0db0dd8b79d",
       "sizeBytes": 1954
     },
     {
@@ -1573,8 +1594,8 @@
       "path": "packages/roundhouse-docs-implementation-map/managed/skills/docs-implementation-map/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "418347d00b8519fd14cc22343f0eeb8b80a83920d421c1eea51fb3982296c702",
-      "sizeBytes": 3142
+      "sha256": "569db70d01603dbcbd76c13f5c82900167e2041968bc88860936f14103e67081",
+      "sizeBytes": 3147
     },
     {
       "path": "packages/roundhouse-docs-implementation-map/package.json",
@@ -1594,8 +1615,8 @@
       "path": "packages/roundhouse-docs-implementation-plan/managed/skills/docs-implementation-plan/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "1a9b5ce0292727304ced5a90ca5fbc88cef7200db4c8768f3f0444ab3be4828f",
-      "sizeBytes": 4053
+      "sha256": "b5e50c11c620786cd0f7c4732dc43ec31bdb994197f8c03ba3a4512bace82634",
+      "sizeBytes": 4058
     },
     {
       "path": "packages/roundhouse-docs-implementation-plan/package.json",
@@ -1615,8 +1636,8 @@
       "path": "packages/roundhouse-docs-literature-note/managed/skills/docs-literature-note/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "54712302b494b7766faf85fda3d21288acd22052438dac71b157599fa26ce253",
-      "sizeBytes": 6139
+      "sha256": "84bff5905b292df384ae734d761ead3ec7cbb461f85fbdaa2474a9b83b2ba3d2",
+      "sizeBytes": 6144
     },
     {
       "path": "packages/roundhouse-docs-literature-note/package.json",
@@ -1678,8 +1699,8 @@
       "path": "packages/roundhouse-docs-spec/managed/skills/docs-spec/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "fa8afae341cdcb4396a1cd9485689beba31efc82ad354a5678de7c44e25c8153",
-      "sizeBytes": 3448
+      "sha256": "7126ff73ad754f0293e3f376f5fe134a1e4c84688b05059c1de50952976f6765",
+      "sizeBytes": 3444
     },
     {
       "path": "packages/roundhouse-docs-spec/package.json",
@@ -1699,8 +1720,8 @@
       "path": "packages/roundhouse-format-html/managed/skills/format-html-semantic/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "ca5513d2d2f21aa68174344f65f07d7518c63ac75d04477786f510d723db463d",
-      "sizeBytes": 2570
+      "sha256": "7abb8c465d05ca9dcef6d4cc8127726c4ae34b08c6ac2d0bc4bdbeb8bdb4ba6c",
+      "sizeBytes": 2577
     },
     {
       "path": "packages/roundhouse-format-html/package.json",
@@ -1720,8 +1741,8 @@
       "path": "packages/roundhouse-format-json-schema/managed/skills/format-json-schema/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "8049a89f46146c5284fe66a5e698f467966e816a48fb53852c25c11e92d01dd1",
-      "sizeBytes": 2978
+      "sha256": "24744f3234bf9706fc1d38ae99cd78fd1825a1d6b72e1c00be4880f6fae50bfe",
+      "sizeBytes": 2985
     },
     {
       "path": "packages/roundhouse-format-json-schema/package.json",
@@ -1741,8 +1762,8 @@
       "path": "packages/roundhouse-framework-astro/managed/skills/framework-astro/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "cb2435a40a6eb42905322583535a331ca2e34c3c25c6f4e143c8d99b5873b138",
-      "sizeBytes": 2130
+      "sha256": "e9c5ac5812f108a456530370e3c867293a5bd1eac75022ffabaf1e03e78ec0df",
+      "sizeBytes": 2140
     },
     {
       "path": "packages/roundhouse-framework-astro/package.json",
@@ -1762,8 +1783,8 @@
       "path": "packages/roundhouse-framework-react/managed/skills/framework-react/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "b49aa552036d52ac56c72e0f13d103f085351924dbf2fa5af6db398fd4ab6aed",
-      "sizeBytes": 2547
+      "sha256": "47cbe6b3080eb941d0858894b7e99c9503da62e13189d853bc2cc25a151c0375",
+      "sizeBytes": 2557
     },
     {
       "path": "packages/roundhouse-framework-react/package.json",
@@ -1853,8 +1874,8 @@
       "path": "packages/roundhouse-protocol-openapi/managed/skills/protocol-openapi/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "533384fd4326e10353152fec9f86b446d14c239ef174af999880266856e763e3",
-      "sizeBytes": 2614
+      "sha256": "ad0c957308317619627579d8c8807992d81d8bdffccac597f6c1515e5770b649",
+      "sizeBytes": 2623
     },
     {
       "path": "packages/roundhouse-protocol-openapi/package.json",
@@ -1923,8 +1944,8 @@
       "path": "packages/roundhouse-software-compatibility/managed/skills/software-compatibility/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "f39bd3c1346e691ad069a608be6a9ca813baac9c8d7a82a602751b38044aab09",
-      "sizeBytes": 3421
+      "sha256": "9de986fdcf2a66449a2ae5899c42dbce4d53d270540aed5b9a27bfee2e943087",
+      "sizeBytes": 3426
     },
     {
       "path": "packages/roundhouse-software-compatibility/package.json",
@@ -1944,8 +1965,8 @@
       "path": "packages/roundhouse-software-contracts/managed/skills/software-contracts/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "ae9cb0a4710fcc4ab4a6e48ba5616ac1291bf3a3f93d7883a768eca34ecdd427",
-      "sizeBytes": 2980
+      "sha256": "58712e3ecb264be6467d4dccadc3bfd949682ca0a828f1ea4a0e61a1e35a61e6",
+      "sizeBytes": 2983
     },
     {
       "path": "packages/roundhouse-software-contracts/package.json",
@@ -1986,8 +2007,8 @@
       "path": "packages/roundhouse-software-discoverability/managed/skills/software-discoverability-seo/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "d292cdc4bfef6db0b8cf813701e6ad13304098c96338927852fa606fb517764d",
-      "sizeBytes": 2890
+      "sha256": "0b1b7d1400d365b77e4c5d1e3cf00a5660cb01b6601fc7ac725fda06d9299555",
+      "sizeBytes": 2899
     },
     {
       "path": "packages/roundhouse-software-discoverability/package.json",
@@ -2056,8 +2077,8 @@
       "path": "packages/roundhouse-software-quality/managed/skills/software-quality/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "fce0134babde04e21624263ff43b10959f57167656356448660b372649bfcc51",
-      "sizeBytes": 3889
+      "sha256": "4a09f1188670699c1304f40fa2bd565b09767417e338b1cc6f06ba7a7872c19d",
+      "sizeBytes": 3887
     },
     {
       "path": "packages/roundhouse-software-quality/package.json",
@@ -2098,15 +2119,15 @@
       "path": "packages/roundhouse-software-testability/managed/skills/software-testability-legacy-enablement/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "12316b35a208d17062e7835c3dd009860c44bc1aa44f3d7cad7440831bbb4034",
-      "sizeBytes": 3854
+      "sha256": "81d0a31250e85472581b689064701c809eeb6394e57a93945c992eb73ceac249",
+      "sizeBytes": 3904
     },
     {
       "path": "packages/roundhouse-software-testability/managed/skills/software-testability/SKILL.md",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "1f907990df16d33d1b1db30a92ea88bc590ac2138ab0f64c68b5f168793cab97",
-      "sizeBytes": 4352
+      "sha256": "c94fd78b16506584af08c45ae89ce01bec9c45fb76137ff4281fa3ae5c601d06",
+      "sizeBytes": 4373
     },
     {
       "path": "packages/roundhouse-software-testability/package.json",
@@ -2333,6 +2354,13 @@
       "sizeBytes": 4540
     },
     {
+      "path": "scripts/check-render.js",
+      "base": "root",
+      "classification": "root-only-artifact",
+      "sha256": "c83c7f43dc564808e6c6978a1219b7c0cb96842979e8449e19372e344a8f8f7e",
+      "sizeBytes": 3286
+    },
+    {
       "path": "scripts/commit.js",
       "base": "root",
       "classification": "root-only-artifact",
@@ -2371,8 +2399,8 @@
       "path": "scripts/test-package.js",
       "base": "root",
       "classification": "root-only-artifact",
-      "sha256": "1a983d434585947afb3a1ab30e5014f145960ad4d9161e611f1c743451d6f72f",
-      "sizeBytes": 15322
+      "sha256": "a2eb1a7b001ab69a22a243f51e57d610e5bcbbded10324dde2b4155717467d84",
+      "sizeBytes": 15393
     },
     {
       "path": "scripts/test-sync.js",

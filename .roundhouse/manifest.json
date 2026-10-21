@@ -12,7 +12,7 @@
       "managed": [
         {
           "path": ".opencode/skills/backshopdev-planning/SKILL.md",
-          "sha256": "b9522037227c79005dace527e9cd6ded76561692cbab05d403eccf0704e9deb1"
+          "sha256": "3cf9f2430237bba120dd0ced6ec9a078360396a6b793e436e7e9e295541a9bff"
         }
       ],
       "seeds": []
@@ -35,7 +35,7 @@
       "managed": [
         {
           "path": ".opencode/skills/cms-apostrophe/SKILL.md",
-          "sha256": "a137fe16ed60f420bd668ca4ce241f1e15f6bc9f8a0b3c158b3a04b80ef6afcd"
+          "sha256": "30e3afb72171f987d7922d7412e95eeaa6df140f49de92765f5be86e33bfdc32"
         }
       ],
       "seeds": []
@@ -104,7 +104,7 @@
         },
         {
           "path": ".opencode/skills/docs-check/SKILL.md",
-          "sha256": "7897bbd26895c1b2a3099ce1da7fe22b0484c38c4014c4cd4a2ba1e9c7f9edae"
+          "sha256": "15e6e46ae6b9860da44f798f7f465508a9613fd69eee8e61e470683191fb5347"
         },
         {
           "path": ".opencode/skills/git-commit/SKILL.md",
@@ -112,7 +112,7 @@
         },
         {
           "path": ".opencode/skills/harness/SKILL.md",
-          "sha256": "9e46e1a0f5b2b36a22b5f43ff518192e202050a5847d19e286de1a0137a251fa"
+          "sha256": "e9a60a4022ae05aea6b7890442ccbc34df92adeb0d65ea2e2b9908f62361beb4"
         },
         {
           "path": ".opencode/skills/investigation/SKILL.md",
@@ -152,11 +152,11 @@
         },
         {
           "path": ".opencode/workflow-docs/autonomy/index.md",
-          "sha256": "c82597c1258f2e526a3c7eab3540fca41ec3a3bf121ba98c0ef7bf324aaec114"
+          "sha256": "10a1dc236cfc216abf5dd5117fce33b3f5778d61e7e9fc8a9d3676e8f5ac862c"
         },
         {
           "path": ".opencode/workflow-docs/autonomy/principles.md",
-          "sha256": "e0d291b381c1851517b98df9c8df63bf3165372d7b675b50ad96d49ff270dc2f"
+          "sha256": "955494fc8bdb54ce7cbc441d98b0b28e7f725ce97f31bce569d2dc7419106403"
         },
         {
           "path": ".opencode/workflow-docs/autonomy/session-lifetime.md",
@@ -204,7 +204,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-architecture/SKILL.md",
-          "sha256": "c6b6120554dfe0bb9b2aadfe77d5841174b8a9785a5e1c52b494e5161aca57cc"
+          "sha256": "d94690ddc9d686e935c87e260090e293f20fbf0323917b86b4d21a0258710279"
         }
       ],
       "seeds": []
@@ -219,7 +219,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-decision-record/SKILL.md",
-          "sha256": "65fffbacc455d542eb892fc781946ff883717cd19abae6f20c4a2e9a960c7e92"
+          "sha256": "5b1f2ab504d770821d553de757caeaa4a6e3a4a65368cd9e5da0fa937b9469d6"
         }
       ],
       "seeds": []
@@ -236,11 +236,11 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-general-accuracy/SKILL.md",
-          "sha256": "8799f0a0442e59bcbe13c3a727692ab2b1e9d762655cb15fd7b3fcc9d1730eef"
+          "sha256": "0f26c0a764f7a90356bc4dddc0cc6c1e977572c86c9f06935eb6b50f022e14e9"
         },
         {
           "path": ".opencode/skills/docs-general-traceability/SKILL.md",
-          "sha256": "19ca24da8321f7d3cf775119bd9eb81dd553c3df7641894ad0785f9b73c92d43"
+          "sha256": "f932fbb0d46fed5c5e6147861aa5493920d9d92502dab10c183aa0db0dd8b79d"
         },
         {
           "path": ".opencode/skills/docs-general/SKILL.md",
@@ -259,7 +259,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-implementation-map/SKILL.md",
-          "sha256": "418347d00b8519fd14cc22343f0eeb8b80a83920d421c1eea51fb3982296c702"
+          "sha256": "569db70d01603dbcbd76c13f5c82900167e2041968bc88860936f14103e67081"
         }
       ],
       "seeds": []
@@ -274,7 +274,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-implementation-plan/SKILL.md",
-          "sha256": "1a9b5ce0292727304ced5a90ca5fbc88cef7200db4c8768f3f0444ab3be4828f"
+          "sha256": "b5e50c11c620786cd0f7c4732dc43ec31bdb994197f8c03ba3a4512bace82634"
         }
       ],
       "seeds": []
@@ -289,7 +289,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-literature-note/SKILL.md",
-          "sha256": "54712302b494b7766faf85fda3d21288acd22052438dac71b157599fa26ce253"
+          "sha256": "84bff5905b292df384ae734d761ead3ec7cbb461f85fbdaa2474a9b83b2ba3d2"
         }
       ],
       "seeds": []
@@ -334,7 +334,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-spec/SKILL.md",
-          "sha256": "fa8afae341cdcb4396a1cd9485689beba31efc82ad354a5678de7c44e25c8153"
+          "sha256": "7126ff73ad754f0293e3f376f5fe134a1e4c84688b05059c1de50952976f6765"
         }
       ],
       "seeds": []
@@ -349,7 +349,7 @@
       "managed": [
         {
           "path": ".opencode/skills/format-html-semantic/SKILL.md",
-          "sha256": "ca5513d2d2f21aa68174344f65f07d7518c63ac75d04477786f510d723db463d"
+          "sha256": "7abb8c465d05ca9dcef6d4cc8127726c4ae34b08c6ac2d0bc4bdbeb8bdb4ba6c"
         }
       ],
       "seeds": []
@@ -364,7 +364,7 @@
       "managed": [
         {
           "path": ".opencode/skills/format-json-schema/SKILL.md",
-          "sha256": "8049a89f46146c5284fe66a5e698f467966e816a48fb53852c25c11e92d01dd1"
+          "sha256": "24744f3234bf9706fc1d38ae99cd78fd1825a1d6b72e1c00be4880f6fae50bfe"
         }
       ],
       "seeds": []
@@ -379,7 +379,7 @@
       "managed": [
         {
           "path": ".opencode/skills/framework-astro/SKILL.md",
-          "sha256": "cb2435a40a6eb42905322583535a331ca2e34c3c25c6f4e143c8d99b5873b138"
+          "sha256": "e9c5ac5812f108a456530370e3c867293a5bd1eac75022ffabaf1e03e78ec0df"
         }
       ],
       "seeds": []
@@ -394,7 +394,7 @@
       "managed": [
         {
           "path": ".opencode/skills/framework-react/SKILL.md",
-          "sha256": "b49aa552036d52ac56c72e0f13d103f085351924dbf2fa5af6db398fd4ab6aed"
+          "sha256": "47cbe6b3080eb941d0858894b7e99c9503da62e13189d853bc2cc25a151c0375"
         }
       ],
       "seeds": []
@@ -459,7 +459,7 @@
       "managed": [
         {
           "path": ".opencode/skills/protocol-openapi/SKILL.md",
-          "sha256": "533384fd4326e10353152fec9f86b446d14c239ef174af999880266856e763e3"
+          "sha256": "ad0c957308317619627579d8c8807992d81d8bdffccac597f6c1515e5770b649"
         }
       ],
       "seeds": []
@@ -509,7 +509,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-compatibility/SKILL.md",
-          "sha256": "f39bd3c1346e691ad069a608be6a9ca813baac9c8d7a82a602751b38044aab09"
+          "sha256": "9de986fdcf2a66449a2ae5899c42dbce4d53d270540aed5b9a27bfee2e943087"
         }
       ],
       "seeds": []
@@ -524,7 +524,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-contracts/SKILL.md",
-          "sha256": "ae9cb0a4710fcc4ab4a6e48ba5616ac1291bf3a3f93d7883a768eca34ecdd427"
+          "sha256": "58712e3ecb264be6467d4dccadc3bfd949682ca0a828f1ea4a0e61a1e35a61e6"
         }
       ],
       "seeds": []
@@ -554,7 +554,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-discoverability-seo/SKILL.md",
-          "sha256": "d292cdc4bfef6db0b8cf813701e6ad13304098c96338927852fa606fb517764d"
+          "sha256": "0b1b7d1400d365b77e4c5d1e3cf00a5660cb01b6601fc7ac725fda06d9299555"
         }
       ],
       "seeds": []
@@ -604,7 +604,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-quality/SKILL.md",
-          "sha256": "fce0134babde04e21624263ff43b10959f57167656356448660b372649bfcc51"
+          "sha256": "4a09f1188670699c1304f40fa2bd565b09767417e338b1cc6f06ba7a7872c19d"
         }
       ],
       "seeds": []
@@ -635,11 +635,11 @@
       "managed": [
         {
           "path": ".opencode/skills/software-testability-legacy-enablement/SKILL.md",
-          "sha256": "12316b35a208d17062e7835c3dd009860c44bc1aa44f3d7cad7440831bbb4034"
+          "sha256": "81d0a31250e85472581b689064701c809eeb6394e57a93945c992eb73ceac249"
         },
         {
           "path": ".opencode/skills/software-testability/SKILL.md",
-          "sha256": "1f907990df16d33d1b1db30a92ea88bc590ac2138ab0f64c68b5f168793cab97"
+          "sha256": "c94fd78b16506584af08c45ae89ce01bec9c45fb76137ff4281fa3ae5c601d06"
         }
       ],
       "seeds": []

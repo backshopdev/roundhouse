@@ -1,5 +1,5 @@
 ---
-name: planning-structure
+name: backshopdev-planning
 description: Use when decomposing work into an implementation plan, acceptance criteria, dependencies, readiness, and explicit human plan approval.
 ---
 

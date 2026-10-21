@@ -1,11 +1,11 @@
 ---
-name: test-enablement
-description: Use when normal testing techniques are blocked by current code structure and legacy-code enablement is required. Specializes design-for-testability for Feathers-style seams.
+name: software-testability-legacy-enablement
+description: Use when normal testing techniques are blocked by current code structure and legacy-code enablement is required. Specializes software-testability for Feathers-style seams.
 ---
 
 # Test Enablement
 
-A specialization of `design-for-testability` for legacy-code enablement. Use
+A specialization of `software-testability` for legacy-code enablement. Use
 when current code structure prevents normal testing techniques. Distinct from
 greenfield testability guidance: this skill covers the gap between "code was
 designed for testability" and "code must be made testable before further
@@ -27,8 +27,8 @@ changes."
 
 1. **Use ordinary modern/idiomatic testing techniques where possible** —
    constructor injection, replaceable collaborators, pure functions,
-   deterministic behavior. These are covered by `design-for-testability`.
-2. **Use Feathers-style legacy-code test-enablement techniques only when
+   deterministic behavior. These are covered by `software-testability`.
+2. **Use Feathers-style legacy-code enablement techniques only when
    current structure prevents normal testing** — characterization tests,
    dependency breaking, sprout and wrap. These are the focus of this skill.
 3. **Escalate if adequate enablement would require broader restructuring than
@@ -58,15 +58,15 @@ Sprout: add new, testable code alongside legacy code. Call the new code from
 the legacy code. Wrap: create a testable wrapper around legacy code. Call the
 wrapper instead of the legacy code directly.
 
-## Boundary with design-for-testability
+## Boundary with software-testability
 
-- `design-for-testability` covers testability as a design property for
+- `software-testability` covers testability as a design property for
   greenfield and well-structured code.
-- `test-enablement` (this skill) covers legacy-code enablement when current
+- `software-testability-legacy-enablement` (this skill) covers legacy-code enablement when current
   structure blocks normal testing.
-- Load `design-for-testability` first; load `test-enablement` only when the
+- Load `software-testability` first; load `software-testability-legacy-enablement` only when the
   former is insufficient.
-- Do not duplicate content from `design-for-testability`; reference it
+- Do not duplicate content from `software-testability`; reference it
   instead.
 
 ## Warning signs

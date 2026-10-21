@@ -1,5 +1,5 @@
 ---
-name: design-for-testability
+name: software-testability
 description: Use when a task involves testable design, constructor injection, replaceable collaborators, or characterization tests for legacy code. Provides foundational testability guidance.
 ---
 
@@ -145,4 +145,4 @@ tests.
 
 ## Specialization
 
-For legacy-code enablement scenarios where current structure blocks normal testing techniques, see the `test-enablement` skill. It specializes this skill's guidance for Feathers-style seams (characterization tests, dependency breaking, sprout and wrap) and is loaded only when normal testing techniques are insufficient.
+For legacy-code enablement scenarios where current structure blocks normal testing techniques, see the `software-testability-legacy-enablement` skill. It specializes this skill's guidance for Feathers-style seams (characterization tests, dependency breaking, sprout and wrap) and is loaded only when normal testing techniques are insufficient.

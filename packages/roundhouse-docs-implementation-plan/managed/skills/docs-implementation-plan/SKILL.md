@@ -1,5 +1,5 @@
 ---
-name: implementation-plan
+name: docs-implementation-plan
 description: Use when authoring or reviewing an implementation plan. Covers objective, related specs and decisions, current-state findings, intended shape, work packages, dependencies, parallelism, change map, prescriptiveness levels, scenario traceability, documentation stubs, and verification criteria.
 ---
 

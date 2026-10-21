@@ -1,5 +1,5 @@
 ---
-name: contract-design
+name: software-contracts
 description: Use when making decisions about contract design. Covers general contract design principles, decision-making, when to use contracts, and contract location and authority.
 ---
 

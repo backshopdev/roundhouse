@@ -1,5 +1,5 @@
 ---
-name: semantic-html
+name: format-html-semantic
 description: Use when a task involves HTML structure. Provides foundational guidance on semantic HTML, document outline, ARIA, and accessibility.
 ---
 

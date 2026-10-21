@@ -58,9 +58,10 @@ assert.deepStrictEqual(
     "check-matrix": "node packages/roundhouse-cli/test/composition-matrix.test.js",
     "check-drift": "node scripts/sync-roundhouse.js --mode verify",
     "check-pack": "node scripts/check-pack.js",
+    "check-render": "node scripts/check-render.js",
     "check-all": "node scripts/check-all.js",
   },
-  "root scripts: the five lifecycle scripts verbatim plus the six Phase 9 check scripts"
+  "root scripts: the five lifecycle scripts verbatim plus the seven check scripts (six checks + check-all)"
 );
 assert.deepStrictEqual(packageJson.engines, { "node": ">= 24.0.0" }, "root engines stays verbatim");
 for (const droppedField of ["version", "description", "bin", "files", "publishConfig", "license"]) {

@@ -1,5 +1,5 @@
 ---
-name: repository-accuracy
+name: docs-general-accuracy
 description: Review lens for implementation maps. Assesses implementation map accuracy, code-to-document alignment, and stale references.
 ---
 

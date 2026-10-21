@@ -23,5 +23,7 @@ jobs:
         run: npm install
       - name: Compose the managed tree from the packages
         run: npm run sync-roundhouse -- --mode sync
+      - name: Check the committed composed artifacts for drift
+        run: npm run check-render
       - name: Run all checks
         run: npm run check-all

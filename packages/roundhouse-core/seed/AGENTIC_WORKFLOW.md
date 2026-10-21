@@ -146,6 +146,17 @@ Your `.opencode/` is the composer's managed output (never edited directly);
 `opencode.json` is the composed render and `.roundhouse/manifest.json` the
 composition record. `roundhouse verify` checks your consumer read-only.
 
+What state each check sees at execution time: verify catches working-tree
+drift locally and also catches committed-artifact staleness in a developer's
+normal pre-commit flow — a meaningful local catch. In CI, though, the
+workflow composes before running the checks, so post-compose verify sees a
+freshly rendered, self-consistent tree and is vacuous there. CI therefore
+composes, then diffs the committed composed artifacts (`git diff
+--exit-code -- opencode.json .roundhouse/manifest.json`) — valid in CI
+because the post-checkout tree is clean, so any diff isolates exactly the
+compose-induced changes; noisy on a dirty local tree, so the check is
+CI-invoked only.
+
 The seed files (`AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`, and the rest
 of the Core seed set) are consumer-owned once created: the composer creates
 them only when missing and never overwrites them — edit them directly.

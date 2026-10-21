@@ -1,5 +1,5 @@
 ---
-name: apostrophe-cms
+name: cms-apostrophe
 description: Use when a task involves ApostropheCMS. Provides foundational guidance on ApostropheCMS patterns, widget and module design, templating, and testing approaches.
 ---
 

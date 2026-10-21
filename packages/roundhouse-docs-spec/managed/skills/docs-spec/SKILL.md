@@ -1,5 +1,5 @@
 ---
-name: specification
+name: docs-spec
 description: Use when authoring or reviewing a specification. Covers purpose, scope, terminology, constraints, quality attributes, public contracts, Gherkin scenarios with tags and stable IDs, open questions, and branch truth rules.
 ---
 

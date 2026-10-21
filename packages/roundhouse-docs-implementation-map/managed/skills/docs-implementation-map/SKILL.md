@@ -1,5 +1,5 @@
 ---
-name: implementation-map
+name: docs-implementation-map
 description: Use when authoring or reviewing an implementation map. Covers purpose, capability-to-code navigation, entry points, key files and symbols, responsibilities, test locations, extension points, hazards, and Mermaid diagrams.
 ---
 

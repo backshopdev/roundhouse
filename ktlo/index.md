@@ -19,6 +19,7 @@ Operational "keep the lights on" items. Links are relative, same-directory only 
 - [Assess deferred Git inspection allowances](./KTLO-20261015-01.md) — Records the confirmed `ls-files` gap, separate unresolved staging denial, and deferred inspection candidates requiring later human approval. — `[project]` — 2026-10-15
 - [Socratic interview skill: encode the free-form interview style demonstrated in the 2026-10-17/18 taxonomy interview](./KTLO-20261018-01.md) — Resolved: the Phase 4 `socratic-interview` skill encodes all seven style properties as normative sections and carries the orchestrator's extracted interview protocol; the review against this item's list passed and the item closes. — `[project]` — 2026-10-18
 - [test-commit.js npm-mode-a can perform a real commit without approval](./KTLO-20261019-01.md) — Tracks the harness hazard where the npm-mode-a test's shell-transported multi-line arguments defeat `--dry-run`, letting a test run commit a non-empty index without approval; demonstrated 2026-10-19 (commit 7f26922, remediated by human-ruled amend). — `[project]` — 2026-10-19
+- [Trace what state each check sees at execution time](./KTLO-20261021-01.md) — Captures the PR #4 review lessons: state-regenerating pipeline steps can mask drift (the compose-then-verify CI masking), and docs-check's link validation does not reach package `managed/` sources from their composed locations. — `[project]` — 2026-10-21
 
 ## Templates
 

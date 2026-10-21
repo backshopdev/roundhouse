@@ -58,7 +58,7 @@ When a newer instruction conflicts with an older one, and the newer instruction
 is valid (issued by an authorized source within scope), the newer instruction
 takes precedence. This prevents stale rules from blocking legitimate work.
 
-**Enforcement:** Workflow reset after each commit (see [AGENTS.md](../../../../AGENTS.md)).
+**Enforcement:** Workflow reset after each commit (see [AGENTS.md](../../../AGENTS.md)).
 Plan approval supersedes prior assumptions. Human override supersedes agent
 interpretation.
 

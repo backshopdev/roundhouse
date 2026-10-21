@@ -1,5 +1,5 @@
 ---
-name: json-schema
+name: format-json-schema
 description: Use when authoring or reviewing JSON Schema definitions. Covers JSON Schema structure, validation, examples, and best practices.
 ---
 

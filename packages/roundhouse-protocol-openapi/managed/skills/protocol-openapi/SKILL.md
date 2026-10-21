@@ -1,5 +1,5 @@
 ---
-name: openapi
+name: protocol-openapi
 description: Use when authoring or reviewing OpenAPI specifications. Covers OpenAPI 3.x structure, validation, examples, and best practices.
 ---
 

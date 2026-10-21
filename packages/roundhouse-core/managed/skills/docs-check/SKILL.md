@@ -23,7 +23,7 @@ Run `docs-check` at these points:
 
 ## How to run
 
-From the repository root (`src/`):
+From the repository root:
 
 ```bash
 node .opencode/docs-check.js

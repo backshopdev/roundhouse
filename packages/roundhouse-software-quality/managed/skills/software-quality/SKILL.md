@@ -1,5 +1,5 @@
 ---
-name: quality-attributes
+name: software-quality
 description: Use when a task involves performance, reliability, scalability, observability, compatibility, privacy, localization, or maintainability requirements. Pushes vague goals toward observable and measurable requirements.
 ---
 

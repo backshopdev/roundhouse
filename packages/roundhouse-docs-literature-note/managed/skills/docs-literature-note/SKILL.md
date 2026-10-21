@@ -1,5 +1,5 @@
 ---
-name: literature-note
+name: docs-literature-note
 description: Use when authoring or reviewing literature notes, source summaries, retrieval status, citations, provenance, or principles derived from references.
 ---
 

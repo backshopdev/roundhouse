@@ -4,8 +4,8 @@
 /**
  * composer.test.js
  *
- * Asserts the SCEN-052..066 acceptance contracts from SPEC-20261019-02 for
- * the Phase 3 composer:
+ * Asserts the SCEN-052..066 and SCEN-074 acceptance contracts from
+ * SPEC-20261019-02 for the Phase 3 composer:
  *
  *   @integration SCEN-052..058, SCEN-064..066 — the bin via spawnSync
  *     against temporary consumers under os.tmpdir() (package.json,
@@ -605,6 +605,19 @@ test("SCEN-063: composition validation rejects every violation", () => {
       exactly: 1,
     },
     {
+      name: "a skill whose SKILL.md frontmatter name is not its directory ID",
+      // The model.js readFile injection seam rewrites the alpha fixture's
+      // frontmatter in memory — no new fixture file (the SCEN-034 provenance
+      // precedent, extended to injected content).
+      evaluate: () => model.run({
+        candidates: [fixtureCandidate("alpha")],
+        readFile: (absolutePath) =>
+          fs.readFileSync(absolutePath, "utf8").replace(/^name: fixture-alpha$/m, "name: wrong-name"),
+      }).failures,
+      expect: /frontmatter name "wrong-name" does not match its directory ID "fixture-alpha"/,
+      exactly: 1,
+    },
+    {
       name: "two packages owning the same managed path",
       evaluate: () => graph.validateGraph([...trio, fixtureModel("dup-managed-path")], template),
       expect: /duplicate managed path "\.opencode\/docs\/fixture-workflow\.md"/,
@@ -759,4 +772,50 @@ test("SCEN-066: a discovered candidate with an invalid roundhouse.json fails clo
     "the offending package is listed on stderr"
   );
   assertNothingWritten(consumerB);
+});
+
+// ─── SCEN-074: skill frontmatter identity fails closed (@integration) ───────
+
+test("SCEN-074: init and compose reject a frontmatter/directory mismatch", () => {
+  const mutateFrontmatter = (fixtureCopy) => {
+    const skillPath = path.join(fixtureCopy, "managed", "skills", "fixture-alpha", "SKILL.md");
+    const original = fs.readFileSync(skillPath, "utf8");
+    const mutated = original.replace(/^name: fixture-alpha$/m, "name: wrong-name");
+    assert.notEqual(mutated, original, "precondition: the frontmatter mutation applies");
+    fs.writeFileSync(skillPath, mutated, "utf8");
+  };
+
+  // Init half: a fresh consumer whose fixture copy carries the mismatching
+  // frontmatter (copy-and-mutate, the SCEN-066 precedent) fails init with
+  // the named identity error and writes nothing.
+  const initConsumer = buildConsumer("identity-init", { dependencies: ["core", "alpha"] });
+  mutateFrontmatter(path.join(initConsumer, "node_modules", "@roundhouse-fixture", "alpha"));
+  const initRun = runBin(["init"], initConsumer);
+  assert.equal(initRun.code, 1, "init exits 1 on the frontmatter/directory mismatch");
+  assert(
+    initRun.stderr.includes("@roundhouse-fixture/alpha")
+      && initRun.stderr.includes("managed/skills/fixture-alpha/SKILL.md")
+      && initRun.stderr.includes('"wrong-name"'),
+    `the identity error names the package, the skill directory, and the frontmatter value (stderr: ${initRun.stderr})`
+  );
+  assertNothingWritten(initConsumer);
+
+  // Compose half: the pinned sequence — initialize a VALID temp consumer
+  // first, then mutate the installed fixture copy's frontmatter, then
+  // compose. Composing without a manifest exits 1 for the wrong reason
+  // (the SCEN-065 no-manifest guard), so the init-first sequence avoids
+  // the false pass.
+  const composeConsumer = buildConsumer("identity-compose", { dependencies: ["core", "alpha"] });
+  assert.equal(runBin(["init"], composeConsumer).code, 0, "init establishes a valid consumer");
+  mutateFrontmatter(path.join(composeConsumer, "node_modules", "@roundhouse-fixture", "alpha"));
+  const before = snapshotTree(composeConsumer);
+  const composeRun = runBin(["compose"], composeConsumer);
+  assert.equal(composeRun.code, 1, "compose exits 1 on the frontmatter/directory mismatch");
+  assert(
+    composeRun.stderr.includes("@roundhouse-fixture/alpha")
+      && composeRun.stderr.includes("managed/skills/fixture-alpha/SKILL.md")
+      && composeRun.stderr.includes('"wrong-name"'),
+    `the identity error names the package, the skill directory, and the frontmatter value (stderr: ${composeRun.stderr})`
+  );
+  assert.deepEqual(snapshotTree(composeConsumer), before, "compose writes nothing");
 });

@@ -222,8 +222,9 @@ restating the base's content; the reader is expected to load the base
 alongside the specialization when both apply. Skill authors own the layering
 decision — whether a new skill should compose from an existing base, extend
 it, or stand alone — and the orchestrator does not enforce layering but this
-skill documents the pattern. For example, the planned `test-enablement` skill
-will specialize `design-for-testability` for legacy-code enablement scenarios,
+skill documents the pattern. For example, the installed
+`software-testability-legacy-enablement` skill specializes `software-testability`
+for legacy-code enablement scenarios,
 composing the base's general testability guidance with role-specific
 legacy-code heuristics rather than duplicating the base.
 
@@ -231,7 +232,7 @@ legacy-code heuristics rather than duplicating the base.
 
 The following example illustrates the layering pattern:
 
-- `design-for-testability` (base): foundational testability guidance — constructor injection, replaceable collaborators, pure functions, deterministic behavior, characterization tests, dependency breaking, sprout and wrap.
-- `test-enablement` (specialization): legacy-code enablement when current structure blocks normal testing — explicit ordering (modern techniques → legacy seams → escalate), Feathers-style seams as transitional scaffolding, warning signs for misuse.
+- `software-testability` (base): foundational testability guidance — constructor injection, replaceable collaborators, pure functions, deterministic behavior, characterization tests, dependency breaking, sprout and wrap.
+- `software-testability-legacy-enablement` (specialization): legacy-code enablement when current structure blocks normal testing — explicit ordering (modern techniques → legacy seams → escalate), Feathers-style seams as transitional scaffolding, warning signs for misuse.
 
-The specialized skill loads the base skill's content by reference, not by duplication. A reader who needs the foundational guidance loads `design-for-testability`; a reader who needs the legacy-code enablement specifics loads `test-enablement` which composes from the base.
+The specialized skill loads the base skill's content by reference, not by duplication. A reader who needs the foundational guidance loads `software-testability`; a reader who needs the legacy-code enablement specifics loads `software-testability-legacy-enablement` which composes from the base.

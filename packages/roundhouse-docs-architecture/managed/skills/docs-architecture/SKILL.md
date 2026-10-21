@@ -1,5 +1,5 @@
 ---
-name: architecture-document
+name: docs-architecture
 description: Use when authoring or reviewing an architecture document. Covers purpose, system context, components, contracts, data and control flow, runtime topology, cross-cutting concerns, and Mermaid diagrams.
 ---
 

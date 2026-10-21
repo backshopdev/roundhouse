@@ -1,5 +1,5 @@
 ---
-name: decision-record
+name: docs-decision-record
 description: Use when authoring or reviewing a decision record. Covers context, decision drivers, alternatives, decision, rationale, consequences, assumptions, reconsider triggers, and supersession links.
 ---
 

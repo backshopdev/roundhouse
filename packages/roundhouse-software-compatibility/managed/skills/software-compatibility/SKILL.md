@@ -1,5 +1,5 @@
 ---
-name: api-compatibility
+name: software-compatibility
 description: Use when a task involves API versioning, breaking changes, compatibility review, or contract diffing. Provides foundational API compatibility guidance.
 ---
 

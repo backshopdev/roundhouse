@@ -1,5 +1,5 @@
 ---
-name: react
+name: framework-react
 description: Use when a task involves React. Provides foundational guidance on React patterns, component design, state management, hooks, and testing approaches.
 ---
 

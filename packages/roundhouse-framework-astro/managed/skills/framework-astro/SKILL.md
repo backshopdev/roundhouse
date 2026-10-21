@@ -1,5 +1,5 @@
 ---
-name: astro
+name: framework-astro
 description: Use when a task involves Astro. Provides foundational guidance on Astro patterns, component islands, content collections, and build optimization.
 ---
 

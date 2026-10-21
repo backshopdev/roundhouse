@@ -1,5 +1,5 @@
 ---
-name: requirements-traceability
+name: docs-general-traceability
 description: Review lens for implementation plans. Assesses scenario-to-test mapping, traceability matrix completeness, and missing mappings.
 ---
 
