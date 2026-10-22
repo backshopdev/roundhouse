@@ -11,14 +11,14 @@
  * Invocation: `roundhouse <command>` with exactly one of init, compose,
  * verify. Any unknown command or unexpected argument — including no
  * arguments and option-like arguments — is a usage error: exit 2, usage
- * text on stderr, nothing written (SCEN-064), mirroring the fixture
- * generator's and sync script's strict argument parsing.
+ * text on stderr, nothing written (SCEN-064), with strict argument
+ * parsing.
  *
  * The command implementations (lib/commands.js) return
  * { code, messages } without exiting: every rejection, removal, creation,
- * and warning is routed to stderr; a success summary goes to stdout (the
- * generator precedent). Exit codes mirror the fixture generator: 0 success,
- * 1 failure, 2 usage error. The consumer root is the process's working
+ * and warning is routed to stderr; a success summary goes to stdout. Exit
+ * codes: 0 success, 1 failure, 2 usage error. The consumer root is the
+ * process's working
  * directory; the CLI accepts no options, wraps no package manager, and
  * performs no network access.
  *

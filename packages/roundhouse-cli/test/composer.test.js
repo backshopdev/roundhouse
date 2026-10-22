@@ -63,7 +63,7 @@ function makeTempDir(name) {
 }
 
 // Safety net: remove temp consumers even if a test throws past its own
-// cleanup (test-migration-baseline.js precedent).
+// cleanup.
 process.on("exit", () => {
   for (const dir of tempDirs) {
     try {

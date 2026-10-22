@@ -1,5 +1,7 @@
 # References Index
 
+This folder contains only literature notes and what was gleaned from them; migration-era artifacts were retired post-migration (PLAN-20261021-03).
+
 Literature considered while building this workflow. Links are relative per the index-link discipline (GP02). One `[project]` note per source; status flags retrieval confidence.
 
 - [AI Hero — A Complete Guide to AGENTS.md](./aihero-complete-guide-to-agents-md.md) — Synthesizes instruction-budget, progressive-disclosure, and context-staleness arguments for minimal always-loaded `AGENTS.md` files. — `[template]` — retrieved (full) — informs GP01, GP02, GP07 — 2026-08-29
