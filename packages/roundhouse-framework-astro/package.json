@@ -1,0 +1,13 @@
+{
+  "name": "@backshop/roundhouse-framework-astro",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Astro patterns: component islands, content collections, and build optimization.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

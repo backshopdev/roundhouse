@@ -25,7 +25,7 @@ Workflow harness. For a concise introduction, see [AGENTS.md](AGENTS.md).
 - Every review launches one or more independent `@reviewer` sessions in
   parallel, one session per meaningful perspective.
 - Every session loads mandatory `peer` plus at least one relevant domain skill:
-  `harness`, `literature-note`, or `opencode-configuration`.
+  `harness`, `docs-literature-note`, or `opencode-configuration`.
 - Inspect each session's entire supplied changed-file list. Add `security` to
   that session if any listed change affects permissions, secrets, auth, MCP,
   plugins, executable tools/commands, network access, external directories,
@@ -83,7 +83,8 @@ The document-author runs checks; there is no separate verifier. This is a docs
 and configuration repository: lint touched Markdown with
 `npx --yes markdownlint-cli2@0.23.2`, validate JSON/JSONC and OpenCode schema expectations,
 and check acceptance criteria, links/indexes, frontmatter, whitespace, secrets,
-root/template synchronization, and git status. Code lint/test/build is `N/A`.
+package/consumer composition (the composer's verify), and git status. Code
+lint/test/build is `N/A`.
 
 ## Index and Link Discipline
 
@@ -91,28 +92,47 @@ Every `index.md` uses relative links and links every sibling Markdown file plus
 each immediate child directory's `index.md`. It may link only to same-directory
 Markdown or an immediate child's `index.md`; no deep or absolute links.
 
-## Root/Template Synchronization
+## Root Composition
 
-Root `.opencode/` and `opencode.json` are deployed instances of
-`src/.opencode/` and `src/opencode.json`. The source of truth for agents,
-skills, workflow-docs, `docs-check.js`, and `opencode.json` is `src/`. Root
-`.opencode/` and root `opencode.json` are gitignored; never edit them directly.
+The workspace packages under `packages/` are the authoritative source. Each
+package carries its `roundhouse.json` envelope plus its `managed/` content
+(agents, skills, workflow-docs, `docs-check.js` — composed into the consumer's
+`.opencode/`), and the Core package additionally carries the `seed/`
+scaffolding and the `opencode-template.json` the rendered `opencode.json`
+derives from.
 
-After any change to `src/.opencode/` or `src/opencode.json`, sync to root:
+The root is a self-hosting consumer. After changing any package's content,
+recompose the root:
 
 ```bash
-npm run sync-roundhouse
+npm run sync-roundhouse -- --mode sync
 ```
 
-The sync script (`scripts/sync-roundhouse.js`) copies `src/.opencode/` over root
-`.opencode/` and `src/opencode.json` over root `opencode.json`, overwriting
-stale files. Root-only artifacts (`node_modules/`, `data/`, `package.json`,
-`.gitignore`) are preserved because they do not exist in `src/`. The script is
-idempotent and platform-independent.
+The wrapper (`scripts/sync-roundhouse.js`) composes the root from the packages
+via the composer library: init when no `.roundhouse/manifest.json` exists,
+compose thereafter — managed artifacts updated, stale managed files removed by
+recorded ownership, `opencode.json` regenerated, newly applicable seeds created
+only when missing, and the manifest refreshed. The root `.opencode/` is the
+composer's managed output (gitignored; never edited directly); the root
+`opencode.json` is the composed render and `.roundhouse/manifest.json` the
+composition record (both committed). `--mode verify` checks the root read-only.
 
-When a task changes both `src/` and root artifacts, change `src/` first, then
-sync. The document-author must verify synchronization as part of objective
-checks.
+What state each check sees at execution time: verify catches working-tree
+drift locally and also catches committed-artifact staleness in a developer's
+normal pre-commit flow — a meaningful local catch. In CI, though, the
+workflow composes before running the checks, so post-compose verify sees a
+freshly rendered, self-consistent tree and is vacuous there. CI therefore
+composes, then diffs the committed composed artifacts
+(`npm run check-render`: `git diff --exit-code -- opencode.json
+.roundhouse/manifest.json`) — valid in CI because the post-checkout tree is
+clean, so any diff isolates exactly the compose-induced changes; noisy on a
+dirty local tree, so the check is CI-invoked only and stays out of
+`check-all`.
+
+The seed files (`AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`, `docs/`,
+`ktlo/`, and the rest of the Core seed set) are consumer-owned once created:
+the composer creates them only when missing and never overwrites them — edit
+them directly.
 
 ## HITL Gates
 
@@ -155,7 +175,7 @@ approved/reviewed content scope and all normal work/review gates.
 ## Permission Model
 
 Agent authority is defined by the
-[autonomy model](src/.opencode/workflow-docs/autonomy/index.md). The autonomy
+[autonomy model](packages/roundhouse-core/managed/workflow-docs/autonomy/index.md). The autonomy
 model provides normative guidance; `opencode.json` provides technical
 enforcement. Both are authoritative; neither substitutes for the other.
 
@@ -175,9 +195,9 @@ Three authority types classify every action an agent can take:
 
 All actions must satisfy the authority equation: capability × scope × purpose ×
 delegation constraint. See the
-[autonomy principles](src/.opencode/workflow-docs/autonomy/principles.md) for
+[autonomy principles](packages/roundhouse-core/managed/workflow-docs/autonomy/principles.md) for
 the six fundamental invariants and the
-[authority types reference](src/.opencode/workflow-docs/autonomy/authority-types.md)
+[authority types reference](packages/roundhouse-core/managed/workflow-docs/autonomy/authority-types.md)
 for the complete classification.
 
 ### Friction reduction
@@ -222,8 +242,9 @@ command.
 
 For consuming repositories that add git write permissions, port the deny rules
 from the production root `opencode.json` (force-push, `--no-verify`, persistent
-`always` approval, and similar) before granting write authority. The template in
-`src/` owns managed configuration: `document-author` uses the supported
+`always` approval, and similar) before granting write authority. The workspace
+packages own the managed configuration the composer materializes:
+`document-author` uses the supported
 `npm run commit -- ...` command with `ask`; staging via `git add` is `allow`
 but bounded to approved task content; pushes to configured remotes are `ask`;
 direct Git writes are denied for `implementor`. Destructive-operation denials

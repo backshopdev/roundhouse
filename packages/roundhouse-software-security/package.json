@@ -1,0 +1,13 @@
+{
+  "name": "@backshop/roundhouse-software-security",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Security practice: threat modeling, auth and authz review, secrets handling, and the security review lens.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@backshop/roundhouse-docs-general",
+  "version": "0.0.0",
+  "private": true,
+  "description": "General documentation quality: docs-as-code discipline, metadata and index conventions, accuracy, and traceability.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

@@ -4,8 +4,7 @@ Implementation plans + architecture/implementation maps. One file per plan.
 
 | Title | Description | Status | Date |
 |-------|-------------|--------|------|
-| [Implement GitHub Packages full-template lifecycle v0.5.0](PLAN-20260903-01.md) | Implement v0.5.0 GitHub Packages distribution and the full-template lifecycle (`init`/`update`) for Roundhouse. | In progress | 2026-09-03 |
-| [Standardize index.md structure across the repo](PLAN-20260904-01.md) | Bring every `index.md` file in the repo under a small, consistent set of patterns. | Ready | 2026-09-04 |
+| [Cross-platform composition determinism — canonical-LF content ingestion](PLAN-20261023-01.md) | Fixes the CI-caught cross-platform composition drift (PR #4 `check-render`): the composer canonicalizes content to UTF-8/LF at ingestion — hashing, materialization, verify — plus the SPEC-20261019-02 amendment (SCEN-075), the suite sweep, the recomposed manifest, the changeset file, and the check-pack deferral. | Ready | 2026-10-23 |
 
 ## Templates and archive
 

@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/dup-seed",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Violation fixture (SCEN-063 row 7): offers seed/FIXTURE-SEED-ALPHA.md, duplicating alpha's seed path."
+}

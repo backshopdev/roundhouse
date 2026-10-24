@@ -1,197 +1,183 @@
-#!/usr/bin/env node
 "use strict";
 
-const fs = require("fs");
-const path = require("path");
+/**
+ * deploy-roundhouse.js — the composer adapter (PLAN-20261019-04 T-10).
+ *
+ * The legacy src/-tree deployment retired to git history; the composer
+ * library (packages/roundhouse-cli/lib) is the engine. The exported API is
+ * preserved as thin adapters:
+ *
+ *   ROOT_ONLY             The preserved root-only-artifact list (constant).
+ *   collectRelativePaths  Re-exported from the composer's safe-fs module
+ *                         (the ported primitive this module originally
+ *                         contributed).
+ *   copyMissing           The seed-create-if-missing primitive over the
+ *                         composer's safe-fs primitives — identical
+ *                         semantics to the legacy body (skip existing,
+ *                         never overwrite, escape/symlink rejection).
+ *   init                  The composer's init when the consumer carries no
+ *                         .roundhouse/manifest.json, compose otherwise
+ *                         (the sync-style dispatch); the discovered set is
+ *                         this repository's workspace members.
+ *   update                The composer's compose against the consumer.
+ *   deploy                The composer's compose, with the legacy
+ *                         consumer-root derivation (destinationJson's
+ *                         directory) and the preserved destination
+ *                         escape-rejection contract.
+ *
+ * The src/-based parameters (sourceDir, sourceJson) are inert
+ * compatibility surface: accepted, ignored — the effective content source
+ * is the local workspace package set. Errors throw (the legacy contract);
+ * the bin catches and reports. `dryRun` is honored at the wrapper level:
+ * the composer's pure pipeline (discovery, model, template, graph, render)
+ * computes the plan and the would-be writes are logged, with nothing
+ * created, overwritten, or removed.
+ *
+ * Runtime: Node 24, built-in modules only.
+ */
+
+const fs = require("node:fs");
+const path = require("node:path");
+
+const repoRoot = path.resolve(__dirname, "..");
+const cliLib = path.join(repoRoot, "packages", "roundhouse-cli", "lib");
+const commands = require(path.join(cliLib, "commands.js"));
+const discovery = require(path.join(cliLib, "discovery.js"));
+const safeFs = require(path.join(cliLib, "safe-fs.js"));
+const materialize = require(path.join(cliLib, "materialize.js"));
+const render = require(path.join(cliLib, "render.js"));
+const manifestLib = require(path.join(cliLib, "manifest.js"));
+const templateLib = require(path.join(cliLib, "template.js"));
+const graph = require(path.join(cliLib, "graph.js"));
+const modelLib = require(path.join(cliLib, "model.js"));
 
 const ROOT_ONLY = ["node_modules", "package.json", "package-lock.json", ".gitignore", "data"];
+const collectRelativePaths = safeFs.collectRelativePaths;
 
-function lstatIfPresent(file) {
-  try { return fs.lstatSync(file); } catch (error) {
-    if (error.code === "ENOENT") return null;
-    throw error;
-  }
+/**
+ * The discovered set is this repository's workspace members — the packages
+ * are the single authoritative source post-cutover.
+ */
+function discoverWorkspace() {
+  return discovery.discoverPackages(repoRoot);
 }
 
-function inside(root, candidate) {
-  const relative = path.relative(root, candidate);
-  return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+/**
+ * A file at the managed .opencode root is rejected before any mutation
+ * (the preserved type-conflict contract message). A junction at the root
+ * falls through to the composer's symlink rejection.
+ */
+function assertManagedRootType(consumerRoot) {
+  const managedRoot = path.join(consumerRoot, ".opencode");
+  const stat = safeFs.lstatIfPresent(managedRoot);
+  if (stat && stat.isFile()) throw new Error(`managed destination root must be a directory: ${managedRoot}`);
 }
 
-function assertSafePath(root, candidate, label) {
-  const absoluteRoot = path.resolve(root);
-  const absoluteCandidate = path.resolve(candidate);
-  if (!inside(absoluteRoot, absoluteCandidate)) throw new Error(`${label} escapes consumer cwd: ${candidate}`);
-  let current = absoluteRoot;
-  const relative = path.relative(absoluteRoot, absoluteCandidate);
-  for (const part of relative ? relative.split(path.sep) : []) {
-    current = path.join(current, part);
-    const stat = lstatIfPresent(current);
-    if (!stat) continue;
-    if (stat.isSymbolicLink()) throw new Error(`${label} uses a symlink or junction: ${current}`);
-    const real = fs.realpathSync(current);
-    if (!inside(fs.realpathSync(absoluteRoot), real)) throw new Error(`${label} escapes consumer cwd: ${current}`);
-  }
-}
-
-function assertSafeTree(root, label) {
-  const stat = lstatIfPresent(root);
-  if (!stat) return;
-  if (stat.isSymbolicLink()) throw new Error(`${label} uses a symlink or junction: ${root}`);
-  if (!stat.isDirectory()) return;
-  for (const entry of fs.readdirSync(root)) assertSafeTree(path.join(root, entry), label);
-}
-
-// Node does not expose a portable directory-relative, no-follow equivalent for
-// every operation used here (notably recursive removal and Windows junctions).
-// Keep the checks immediately adjacent to mutations; this closes ordinary
-// replacement mistakes, while the documented check-then-use race remains an
-// unavoidable limitation for an untrusted process concurrently changing cwd.
-function revalidateMutationPath(root, candidate, label, allowMissing = true) {
-  assertSafePath(root, candidate, label);
-  const stat = lstatIfPresent(candidate);
-  if (!stat && !allowMissing) throw new Error(`${label} changed before mutation: ${candidate}`);
-  if (stat?.isSymbolicLink()) throw new Error(`${label} uses a symlink or junction: ${candidate}`);
-  return stat;
-}
-
-function mkdirSafe(root, directory, label) {
-  const absolute = path.resolve(directory);
-  const relative = path.relative(path.resolve(root), absolute);
-  let current = path.resolve(root);
-  for (const part of relative ? relative.split(path.sep) : []) {
-    current = path.join(current, part);
-    const stat = revalidateMutationPath(root, current, label);
-    if (!stat) fs.mkdirSync(current);
-  }
-}
-
-function copyFileSafe(root, source, destination, label) {
-  const sourceStat = fs.lstatSync(source);
-  if (sourceStat.isSymbolicLink() || !sourceStat.isFile()) throw new Error(`source uses a symlink or junction: ${source}`);
-  revalidateMutationPath(root, path.dirname(destination), label, false);
-  revalidateMutationPath(root, destination, label);
-  fs.copyFileSync(source, destination);
-}
-
-function collectRelativePaths(dir, base) {
-  const result = new Set();
-  const stat = lstatIfPresent(dir);
-  if (!stat) return result;
-  if (stat.isSymbolicLink()) throw new Error(`source uses a symlink or junction: ${dir}`);
-  if (!stat.isDirectory()) throw new Error(`expected directory: ${dir}`);
-  for (const entry of fs.readdirSync(dir)) {
-    const entryPath = path.join(dir, entry);
-    const entryStat = fs.lstatSync(entryPath);
-    if (entryStat.isSymbolicLink()) throw new Error(`source uses a symlink or junction: ${entryPath}`);
-    const relative = path.relative(base, entryPath).split(path.sep).join("/");
-    result.add(relative);
-    if (entryStat.isDirectory()) for (const child of collectRelativePaths(entryPath, base)) result.add(child);
-  }
+function dispatchCompose(consumerRoot, command, log) {
+  const result = command({ consumerRoot, discoverPackages: discoverWorkspace });
+  for (const message of result.messages) log(message);
+  if (result.code !== 0) throw new Error(result.messages.join("\n") || "composition failed");
   return result;
 }
 
-function ensureType(destination, sourceStat, mode, log, dryRun = false, consumerRoot = path.dirname(destination)) {
-  const existing = lstatIfPresent(destination);
-  if (!existing) return true;
-  if (existing.isSymbolicLink()) throw new Error(`destination uses a symlink or junction: ${destination}`);
-  const compatible = sourceStat.isDirectory() ? existing.isDirectory() : existing.isFile();
-  if (compatible) return true;
-  if (mode === "init") {
-    log(`Skipped incompatible existing: ${destination}`);
-    return false;
-  }
-  if (!dryRun) { revalidateMutationPath(consumerRoot, destination, "destination", false); fs.rmSync(destination, { recursive: existing.isDirectory(), force: true }); }
-  return true;
+function init({ destinationDir, dryRun = false, log = console.log } = {}) {
+  const consumerRoot = path.resolve(destinationDir);
+  assertManagedRootType(consumerRoot);
+  if (dryRun) return dryRunPlan(consumerRoot, "init", log);
+  const manifestExists = safeFs.lstatIfPresent(path.join(consumerRoot, ".roundhouse", "manifest.json")) !== null;
+  return manifestExists
+    ? dispatchCompose(consumerRoot, commands.runCompose, log)
+    : dispatchCompose(consumerRoot, commands.runInit, log);
 }
 
-function copyTree(source, destination, mode, dryRun, log, consumerRoot) {
-  const sourceStat = fs.lstatSync(source);
-  assertSafePath(consumerRoot, destination, "destination");
-  const existing = lstatIfPresent(destination);
-  if (sourceStat.isDirectory()) {
+function update({ destinationDir, dryRun = false, log = console.log } = {}) {
+  const consumerRoot = path.resolve(destinationDir);
+  assertManagedRootType(consumerRoot);
+  if (dryRun) return dryRunPlan(consumerRoot, "update", log);
+  return dispatchCompose(consumerRoot, commands.runCompose, log);
+}
+
+function deploy({ destinationDir, destinationJson, dryRun = false, log = console.log } = {}) {
+  const consumerRoot = path.resolve(destinationJson ? path.dirname(destinationJson) : destinationDir);
+  // The preserved escape contract: an interpreted destination outside the
+  // consumer root is rejected before any mutation.
+  if (destinationDir) safeFs.assertSafePath(consumerRoot, destinationDir, "destination");
+  assertManagedRootType(consumerRoot);
+  if (dryRun) return dryRunPlan(consumerRoot, "update", log);
+  return dispatchCompose(consumerRoot, commands.runCompose, log);
+}
+
+/**
+ * The seed-create-if-missing primitive over the composer's safe-fs
+ * primitives — the legacy body's semantics preserved verbatim: an existing
+ * destination is skipped and logged (never overwritten), a symlinked
+ * source or destination is rejected, and every destination is asserted
+ * inside the consumer root.
+ */
+function copyMissing(source, destination, dryRun, log, consumerRoot = path.dirname(destination)) {
+  const stat = fs.lstatSync(source);
+  safeFs.assertSafePath(consumerRoot, destination, "destination");
+  const existing = safeFs.lstatIfPresent(destination);
+  if (!safeFs.ensureType(destination, stat, "init", log, dryRun, consumerRoot)) return;
+  if (stat.isDirectory()) {
     const currentSource = fs.lstatSync(source);
     if (!currentSource.isDirectory() || currentSource.isSymbolicLink()) throw new Error(`source changed to a symlink or junction: ${source}`);
-      if (!ensureType(destination, sourceStat, mode, log, dryRun, consumerRoot)) return;
-      if (!existing) { log(`${dryRun ? "Would create" : "Created"}: ${destination}`); if (!dryRun) mkdirSafe(consumerRoot, destination, "destination"); }
-    for (const entry of fs.readdirSync(source)) copyTree(path.join(source, entry), path.join(destination, entry), mode, dryRun, log, consumerRoot);
-  } else {
-    if (!ensureType(destination, sourceStat, mode, log, dryRun, consumerRoot)) return;
-    if (existing) { if (mode === "init") log(`Skipped existing: ${destination}`); else log(`${dryRun ? "Would overwrite" : "Overwrote"}: ${destination}`); }
-    else log(`${dryRun ? "Would create" : "Created"}: ${destination}`);
-    if (!dryRun) { mkdirSafe(consumerRoot, path.dirname(destination), "destination"); copyFileSafe(consumerRoot, source, destination, "destination"); }
-  }
-}
-
-function deploy({ sourceDir, destinationDir, sourceJson, destinationJson, dryRun = false, preserve = ROOT_ONLY, log = console.log }) {
-  const sourceStat = lstatIfPresent(sourceDir);
-  if (sourceStat?.isSymbolicLink()) throw new Error(`source uses a symlink or junction: ${sourceDir}`);
-  if (!sourceStat?.isDirectory()) throw new Error(`source directory not found: ${sourceDir}`);
-  if (!lstatIfPresent(sourceJson)?.isFile()) throw new Error(`source file not found: ${sourceJson}`);
-  assertSafeTree(sourceDir, "source");
-  const consumerRoot = path.resolve(path.dirname(destinationJson));
-  assertSafePath(consumerRoot, destinationDir, "destination");
-  const destinationStat = lstatIfPresent(destinationDir);
-  if (destinationStat?.isSymbolicLink()) throw new Error(`destination uses a symlink or junction: ${destinationDir}`);
-  if (destinationStat && !destinationStat.isDirectory()) throw new Error(`managed destination root must be a directory: ${destinationDir}`);
-  const sourcePaths = collectRelativePaths(sourceDir, sourceDir);
-  const destinationPaths = collectRelativePaths(destinationDir, destinationDir);
-  const preserved = new Set(preserve);
-  const stale = [...destinationPaths].filter((relative) => !preserved.has(relative.split("/")[0]) && !sourcePaths.has(relative)).sort((a, b) => b.split("/").length - a.split("/").length);
-  if (!destinationStat) { log(`${dryRun ? "Would create" : "Created"}: ${destinationDir}`); if (!dryRun) mkdirSafe(consumerRoot, destinationDir, "destination"); }
-  copyTree(sourceDir, destinationDir, "update", dryRun, log, consumerRoot);
-  log(`${dryRun ? "Would sync" : "Synced"}: ${sourceDir} -> ${destinationDir}`);
-  let removedCount = 0;
-  for (const relative of stale) {
-    const stalePath = path.join(destinationDir, relative);
-    assertSafePath(consumerRoot, stalePath, "stale destination");
-    if (!lstatIfPresent(stalePath)) continue;
-    removedCount++; log(`${dryRun ? "Would remove stale" : "Removed stale"}: ${relative}`);
-     if (!dryRun) { revalidateMutationPath(consumerRoot, stalePath, "stale destination", false); fs.rmSync(stalePath, { recursive: true, force: true }); }
-  }
-  log(removedCount === 0 ? "No stale files to remove." : `${dryRun ? "Would remove" : "Removed"} ${removedCount} stale entr${removedCount === 1 ? "y" : "ies"}.`);
-  assertSafePath(consumerRoot, destinationJson, "destination");
-  const jsonStat = fs.lstatSync(sourceJson);
-  if (!ensureType(destinationJson, jsonStat, "update", log, dryRun, consumerRoot)) throw new Error(`cannot deploy configuration: ${destinationJson}`);
-  log(`${dryRun ? "Would sync" : "Synced"}: ${sourceJson} -> ${destinationJson}`);
-  if (!dryRun) { mkdirSafe(consumerRoot, path.dirname(destinationJson), "destination"); copyFileSafe(consumerRoot, sourceJson, destinationJson, "destination"); }
-  return { staleCount: removedCount, sourceCount: sourcePaths.size };
-}
-
-function copyMissing(source, destination, dryRun, log, consumerRoot) {
-  const stat = fs.lstatSync(source);
-  assertSafePath(consumerRoot, destination, "destination");
-  const existing = lstatIfPresent(destination);
-  if (!ensureType(destination, stat, "init", log, dryRun, consumerRoot)) return;
-  if (stat.isDirectory()) {
-     const currentSource = fs.lstatSync(source);
-     if (!currentSource.isDirectory() || currentSource.isSymbolicLink()) throw new Error(`source changed to a symlink or junction: ${source}`);
-     if (!existing) { log(`${dryRun ? "Would create" : "Created"}: ${destination}`); if (!dryRun) mkdirSafe(consumerRoot, destination, "destination"); }
+    if (!existing) { log(`${dryRun ? "Would create" : "Created"}: ${destination}`); if (!dryRun) safeFs.mkdirSafe(consumerRoot, destination, "destination"); }
     for (const entry of fs.readdirSync(source)) copyMissing(path.join(source, entry), path.join(destination, entry), dryRun, log, consumerRoot);
   } else {
     if (existing) { log(`Skipped existing: ${destination}`); return; }
     log(`${dryRun ? "Would create" : "Created"}: ${destination}`);
-     if (!dryRun) { mkdirSafe(consumerRoot, path.dirname(destination), "destination"); copyFileSafe(consumerRoot, source, destination, "destination"); }
+    if (!dryRun) { safeFs.mkdirSafe(consumerRoot, path.dirname(destination), "destination"); safeFs.copyFileSafe(consumerRoot, source, destination, "destination"); }
   }
 }
 
-function init({ sourceDir, destinationDir, dryRun = false, log = console.log }) {
-  const sourceStat = lstatIfPresent(sourceDir);
-  if (sourceStat?.isSymbolicLink()) throw new Error(`source uses a symlink or junction: ${sourceDir}`);
-  if (!sourceStat?.isDirectory()) throw new Error(`source directory not found: ${sourceDir}`);
-  const root = path.resolve(destinationDir);
-  for (const entry of fs.readdirSync(sourceDir)) copyMissing(path.join(sourceDir, entry), path.join(destinationDir, entry), dryRun, log, root);
-}
+/**
+ * The wrapper-level dry-run: the composer's pure pipeline computes the
+ * composition and the plan is logged; nothing is written. The managed
+ * plan, the recorded-ownership stale plan (update), the rendered
+ * opencode.json, the manifest, and the seed plan are each reported.
+ */
+function dryRunPlan(consumerRoot, mode, log) {
+  const discoveryResult = discoverWorkspace();
+  if (discoveryResult.failures.length > 0) throw new Error(discoveryResult.failures.join("\n"));
+  const modelResult = modelLib.run({ candidates: discoveryResult.discovered });
+  if (modelResult.failures.length > 0) throw new Error(modelResult.failures.join("\n"));
+  const models = modelResult.models;
+  const cores = models.filter((candidate) => candidate.kind === "core");
+  if (cores.length !== 1) throw new Error("dry run requires exactly one core-kind package");
+  const templatePath = path.join(cores[0].root, "opencode-template.json");
+  const raw = fs.readFileSync(templatePath, "utf8");
+  const templateViolations = templateLib.validateTemplateSource(raw);
+  if (templateViolations.length > 0) throw new Error(templateViolations.join("\n"));
+  const template = JSON.parse(raw);
+  const graphViolations = graph.validateGraph(models, template);
+  if (graphViolations.length > 0) throw new Error(graphViolations.join("\n"));
 
-function update({ sourceDir, destinationDir, sourceJson, dryRun = false, log = console.log }) {
-  const sourceStat = lstatIfPresent(sourceDir);
-  if (sourceStat?.isSymbolicLink()) throw new Error(`source uses a symlink or junction: ${sourceDir}`);
-  if (!sourceStat?.isDirectory()) throw new Error(`source directory not found: ${sourceDir}`);
-  const managed = path.join(sourceDir, ".opencode");
-  deploy({ sourceDir: managed, destinationDir: path.join(destinationDir, ".opencode"), sourceJson, destinationJson: path.join(destinationDir, "opencode.json"), dryRun, preserve: [], log });
-  const root = path.resolve(destinationDir);
-  for (const entry of fs.readdirSync(sourceDir)) if (entry !== ".opencode" && entry !== "opencode.json") copyMissing(path.join(sourceDir, entry), path.join(destinationDir, entry), dryRun, log, root);
-  log("Seed files are never overwritten; managed .opencode/ and opencode.json are overwritten.");
+  for (const candidate of models) {
+    for (const file of candidate.managedFiles) {
+      const destination = path.join(consumerRoot, ...file.consumerPath.split("/"));
+      log(`${safeFs.lstatIfPresent(destination) ? "Would overwrite" : "Would create"}: ${file.consumerPath}`);
+    }
+  }
+  const manifestPath = path.join(consumerRoot, ".roundhouse", "manifest.json");
+  const manifestExists = safeFs.lstatIfPresent(manifestPath) !== null;
+  if (mode === "update") {
+    if (!manifestExists) throw new Error(`no .roundhouse/manifest.json found; run init to create it.`);
+    const recorded = materialize.collectRecordedManagedPaths(JSON.parse(fs.readFileSync(manifestPath, "utf8")));
+    const owned = materialize.collectOwnedManagedPaths(models);
+    for (const stalePath of materialize.computeStaleManaged(recorded, owned)) {
+      log(`Would remove stale: ${stalePath}`);
+    }
+  }
+  log(`Would write: opencode.json`);
+  log(`${manifestExists ? "Would refresh" : "Would create"} manifest: .roundhouse/manifest.json`);
+  for (const candidate of models) {
+    for (const seed of candidate.seedFiles) {
+      const destination = path.join(consumerRoot, ...seed.consumerPath.split("/"));
+      log(`${safeFs.lstatIfPresent(destination) ? "Skipped existing" : "Would create"}: ${seed.consumerPath}`);
+    }
+  }
+  return { code: 0, messages: [] };
 }
 
 module.exports = { ROOT_ONLY, collectRelativePaths, copyMissing, deploy, init, update };

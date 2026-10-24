@@ -1,0 +1,12 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": [
+    "cms-apostrophe"
+  ],
+  "bash": [],
+  "requires": [
+    "@backshop/roundhouse-core",
+    "@backshop/roundhouse-lang-javascript"
+  ]
+}
