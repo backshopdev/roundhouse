@@ -35,11 +35,24 @@ const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const { init, update, copyMissing } = require("../package/deploy-roundhouse");
+// The canonical-comparison form (PLAN-20261023-01 WP-03): materialized
+// files carry the sources' canonicalized content (UTF-8/LF), so the
+// source-versus-materialized assertions below compare canonicalized forms
+// — line-ending-only differences are not drift.
+const { canonicalize } = require("../packages/roundhouse-cli/lib/canonical.js");
 
 const root = path.resolve(__dirname, "..");
 const packagesDir = path.join(root, "packages");
 const coreSeedDir = path.join(packagesDir, "roundhouse-core", "seed");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+
+/**
+ * Canonical UTF-8 text of a file's or string's content — the comparison
+ * form matching the composer's materialization semantics.
+ */
+function canonicalText(content) {
+  return canonicalize(content).toString("utf8");
+}
 
 // Root workspace-shell shape (SCEN-046): the field set is the contract.
 assert.strictEqual(packageJson.name, "@backshopdev/roundhouse", "root manifest keeps its name");
@@ -146,10 +159,10 @@ try {
   for (const relative of managedPaths) {
     const source = packageSourceOf(relative);
     assert(source !== null, `sanity: a package owns managed/${relative}`);
-    assert.strictEqual(read(path.join(".opencode", relative), temp), fs.readFileSync(source, "utf8"), `init composes .opencode/${relative}`);
+    assert.strictEqual(canonicalText(read(path.join(".opencode", relative), temp)), canonicalText(fs.readFileSync(source)), `init composes .opencode/${relative} (canonical form)`);
   }
   for (const relative of files(coreSeedDir, coreSeedDir)) {
-    assert.strictEqual(read(relative, temp), fs.readFileSync(path.join(coreSeedDir, ...relative.split("/")), "utf8"), `init deploys the Core seed ${relative}`);
+    assert.strictEqual(canonicalText(read(relative, temp)), canonicalText(fs.readFileSync(path.join(coreSeedDir, ...relative.split("/")))), `init deploys the Core seed ${relative} (canonical form)`);
   }
   assert.notStrictEqual(read("README.md", temp), read("README.md", root), "init deploys the Core seed README, not the root package README");
   assert(!fs.existsSync(path.join(temp, "LICENSE")), "init never deploys root LICENSE metadata");
@@ -192,7 +205,7 @@ try {
   // Newly added seed files are created on update, while managed files continue to overwrite.
   fs.unlinkSync(path.join(temp, "BUILDING.md"));
   run(temp, "update");
-  assert.strictEqual(read("BUILDING.md", temp), fs.readFileSync(path.join(coreSeedDir, "BUILDING.md"), "utf8"), "update creates missing seed files from the Core seed set");
+  assert.strictEqual(canonicalText(read("BUILDING.md", temp)), canonicalText(fs.readFileSync(path.join(coreSeedDir, "BUILDING.md"))), "update creates missing seed files from the Core seed set (canonical form)");
 
   // Dry-run is non-mutating for both lifecycle paths.
   fs.unlinkSync(path.join(temp, "TESTING.md"));

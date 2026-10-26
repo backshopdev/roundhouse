@@ -3,31 +3,39 @@
 /**
  * materialize.js
  *
- * Managed/seed composition (the plan's T-11): copy managed content into
- * the consumer's `.opencode/` per the model's consumerPath mappings, create
- * missing seed files at the consumer root, and remove stale managed files
- * strictly by recorded ownership.
+ * Managed/seed composition (the plan's T-11): materialize managed content
+ * into the consumer's `.opencode/` per the model's consumerPath mappings —
+ * writing each source's canonicalized content (UTF-8/LF; CRLF normalized
+ * to LF at ingestion, PLAN-20261023-01), not a verbatim copy — create
+ * missing seed files at the consumer root (canonicalized likewise), and
+ * remove stale managed files strictly by recorded ownership.
  *
  * Semantics (SPEC-20261019-02, Command semantics; DEC-20261017-02,
  * Artifact classes):
- *   - Managed copy uses update semantics: existing managed files are
- *     overwritten; an existing entry of an incompatible type at a managed
- *     path is removed first (the ported ensureType, "update" mode), with
- *     the removal logged.
+ *   - Managed materialization uses update semantics: existing managed
+ *     files are overwritten with the source's canonicalized content; an
+ *     existing entry of an incompatible type at a managed path is removed
+ *     first (the ported ensureType, "update" mode), with the removal
+ *     logged.
  *   - Stale removal is strictly by recorded ownership: only paths recorded
  *     in the prior manifest that the recomputed composition no longer owns
  *     are removed; never-recorded files are never removed; every removal
  *     is logged.
  *   - Seeds are created only when missing and never overwritten (sync
  *     Mode 2 semantics): an existing seed instance is consumer-editable
- *     and stands.
+ *     and stands. Created seeds write the seed template's canonicalized
+ *     content — the canonical-LF rule covers them too (ruled at Gate 1,
+ *     2026-10-23).
  *   - Every write passes through the safe-fs primitives (path confinement
  *     is this module's family, shared with safe-fs.js): destinations are
  *     asserted inside the consumer root, symlinked destinations and
  *     sources are rejected, and checks sit immediately adjacent to
  *     mutations. The documented check-then-use race for an untrusted
  *     process concurrently mutating the tree remains an unavoidable
- *     limitation, as in the legacy module.
+ *     limitation, as in the legacy module. `copyFileSafe` itself keeps
+ *     its verbatim-copy contract for the legacy `copyMissing` adapter
+ *     (package/deploy-roundhouse.js); the composer's materialization
+ *     paths write canonical content instead (writeCanonicalFile below).
  *
  * Pure helpers (stale computation, recorded/owned path collection) are
  * separated from the I/O operations. Every operation requires a `log`
@@ -39,12 +47,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+const { canonicalize } = require("./canonical");
 const {
   lstatIfPresent,
   assertSafePath,
   revalidateMutationPath,
   mkdirSafe,
-  copyFileSafe,
   ensureType,
 } = require("./safe-fs");
 
@@ -154,11 +162,37 @@ function requireLog(log) {
 }
 
 /**
- * Copy every model's managed tree into the consumer's `.opencode/` using
- * the models' consumerPath mappings. Update semantics: existing managed
- * files are overwritten; incompatible existing types are removed first
- * (logged). Sources are the packages' managed trees at their discovered
- * roots.
+ * Read a materialization source's canonicalized content (UTF-8/LF),
+ * re-checking the source's type immediately before the write — the
+ * confinement discipline's source-side half, the same rejection
+ * `copyFileSafe` performed for the verbatim copy: a symlinked or non-file
+ * source is rejected, a vanished source fails closed.
+ */
+function readCanonicalSource(source) {
+  const stat = fs.lstatSync(source);
+  if (stat.isSymbolicLink() || !stat.isFile()) throw new Error(`source uses a symlink or junction: ${source}`);
+  return canonicalize(fs.readFileSync(source));
+}
+
+/**
+ * The canonical materialization write (PLAN-20261023-01 WP-01, T-03): the
+ * confinement sequence around a content write — the parent directory and
+ * the destination revalidated immediately before the mutation — writing
+ * the caller's canonical bytes. Destinations are LF on every platform.
+ */
+function writeCanonicalFile(root, destination, content, label) {
+  revalidateMutationPath(root, path.dirname(destination), label, false);
+  revalidateMutationPath(root, destination, label);
+  fs.writeFileSync(destination, content);
+}
+
+/**
+ * Materialize every model's managed tree into the consumer's `.opencode/`
+ * using the models' consumerPath mappings, writing each source's
+ * canonicalized content (UTF-8/LF — PLAN-20261023-01). Update semantics:
+ * existing managed files are overwritten; incompatible existing types are
+ * removed first (logged). Sources are the packages' managed trees at their
+ * discovered roots.
  */
 function copyManaged({ consumerRoot, models, log }) {
   requireLog(log);
@@ -177,7 +211,7 @@ function copyManaged({ consumerRoot, models, log }) {
       }
       repairAncestorDirectories(root, destination, "managed destination", log);
       mkdirSafe(root, path.dirname(destination), "managed destination");
-      copyFileSafe(root, source, destination, "managed destination");
+      writeCanonicalFile(root, destination, readCanonicalSource(source), "managed destination");
       log(`${existing && existing.isFile() ? "Updated" : "Created"} managed file: ${file.consumerPath} (${model.name})`);
     }
   }
@@ -205,7 +239,10 @@ function removeStaleManaged({ consumerRoot, stalePaths, log }) {
 /**
  * Create each model's offered seed files at the consumer root, only when
  * missing; an existing seed instance is never overwritten (logged as
- * skipped). Sources are the packages' seed trees at their discovered roots.
+ * skipped). Created seeds write the seed template's canonicalized content
+ * (UTF-8/LF — PLAN-20261023-01; the seed normalization ruled at Gate 1,
+ * 2026-10-23). Sources are the packages' seed trees at their discovered
+ * roots.
  */
 function createMissingSeeds({ consumerRoot, models, log }) {
   requireLog(log);
@@ -232,7 +269,7 @@ function createMissingSeeds({ consumerRoot, models, log }) {
         continue;
       }
       mkdirSafe(root, path.dirname(destination), "seed destination");
-      copyFileSafe(root, source, destination, "seed destination");
+      writeCanonicalFile(root, destination, readCanonicalSource(source), "seed destination");
       log(`Created seed: ${seed.consumerPath} (${model.name})`);
     }
   }

@@ -4,8 +4,8 @@
 /**
  * composer.test.js
  *
- * Asserts the SCEN-052..066 and SCEN-074 acceptance contracts from
- * SPEC-20261019-02 for the Phase 3 composer:
+ * Asserts the SCEN-052..066, SCEN-074, and SCEN-075 acceptance contracts
+ * from SPEC-20261019-02 for the Phase 3 composer:
  *
  *   @integration SCEN-052..058, SCEN-064..066 — the bin via spawnSync
  *     against temporary consumers under os.tmpdir() (package.json,
@@ -49,6 +49,7 @@ const templateLib = require(path.join(LIB, "template.js"));
 const graph = require(path.join(LIB, "graph.js"));
 const render = require(path.join(LIB, "render.js"));
 const model = require(path.join(LIB, "model.js"));
+const { canonicalize } = require(path.join(LIB, "canonical.js"));
 const { assertSafePath } = require(path.join(LIB, "safe-fs.js"));
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -135,6 +136,32 @@ function sha256Of(absolutePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex");
 }
 
+/**
+ * A file's canonical UTF-8 text (SCEN-075's comparison form): the
+ * canonicalized content, the form materialization and hashing consume
+ * (PLAN-20261023-01). Line-ending-only differences vanish under this form.
+ */
+function canonicalTextOf(absolutePath) {
+  return canonicalize(fs.readFileSync(absolutePath)).toString("utf8");
+}
+
+/**
+ * A fixture file's canonical text (the source side of the swept
+ * source-versus-materialized comparisons).
+ */
+function canonicalFixtureText(fixtureName, relativePath) {
+  return canonicalize(readFixtureFile(fixtureName, relativePath)).toString("utf8");
+}
+
+/**
+ * A file's SHA-256 over its canonicalized content — the manifest's hash
+ * semantics (SPEC-20261019-02 as amended): platform-independent, encoding
+ * of the content, not of the working tree.
+ */
+function canonicalSha256Of(absolutePath) {
+  return crypto.createHash("sha256").update(canonicalize(fs.readFileSync(absolutePath))).digest("hex");
+}
+
 function readConsumerJson(consumerRoot, relativePath) {
   return JSON.parse(fs.readFileSync(path.join(consumerRoot, ...relativePath.split("/")), "utf8"));
 }
@@ -193,14 +220,14 @@ test("SCEN-052: init composes a fresh consumer end to end", () => {
   assert.deepEqual(alpha.seeds, ["FIXTURE-SEED-ALPHA.md"], "alpha's offered seed recorded");
 
   assert.equal(
-    fs.readFileSync(path.join(consumer, ".opencode", "skills", "fixture-alpha", "SKILL.md"), "utf8"),
-    readFixtureFile("alpha", "managed/skills/fixture-alpha/SKILL.md"),
-    "the capability fixture's skill composed at the managed-path convention location"
+    canonicalTextOf(path.join(consumer, ".opencode", "skills", "fixture-alpha", "SKILL.md")),
+    canonicalFixtureText("alpha", "managed/skills/fixture-alpha/SKILL.md"),
+    "the capability fixture's skill composed at the managed-path convention location (canonical form)"
   );
   assert.equal(
-    fs.readFileSync(path.join(consumer, ".opencode", "docs", "fixture-workflow.md"), "utf8"),
-    readFixtureFile("core", "managed/docs/fixture-workflow.md"),
-    "the core fixture's non-skill managed content composed"
+    canonicalTextOf(path.join(consumer, ".opencode", "docs", "fixture-workflow.md")),
+    canonicalFixtureText("core", "managed/docs/fixture-workflow.md"),
+    "the core fixture's non-skill managed content composed (canonical form)"
   );
 
   const rendered = readConsumerJson(consumer, "opencode.json");
@@ -226,14 +253,14 @@ test("SCEN-052: init composes a fresh consumer end to end", () => {
   );
 
   assert.equal(
-    fs.readFileSync(path.join(consumer, "FIXTURE-SEED.md"), "utf8"),
-    readFixtureFile("core", "seed/FIXTURE-SEED.md"),
-    "the core fixture's seed created at its consumer-rooted path"
+    canonicalTextOf(path.join(consumer, "FIXTURE-SEED.md")),
+    canonicalFixtureText("core", "seed/FIXTURE-SEED.md"),
+    "the core fixture's seed created at its consumer-rooted path (canonical form)"
   );
   assert.equal(
-    fs.readFileSync(path.join(consumer, "FIXTURE-SEED-ALPHA.md"), "utf8"),
-    readFixtureFile("alpha", "seed/FIXTURE-SEED-ALPHA.md"),
-    "the alpha fixture's seed created at its consumer-rooted path"
+    canonicalTextOf(path.join(consumer, "FIXTURE-SEED-ALPHA.md")),
+    canonicalFixtureText("alpha", "seed/FIXTURE-SEED-ALPHA.md"),
+    "the alpha fixture's seed created at its consumer-rooted path (canonical form)"
   );
 });
 
@@ -252,9 +279,9 @@ test("SCEN-053: compose recomputes, updates managed artifacts, and regenerates",
   assert.equal(run.code, 0, `compose exits 0 (stderr: ${run.stderr})`);
 
   assert.equal(
-    fs.readFileSync(path.join(consumer, ".opencode", "skills", "fixture-alpha", "SKILL.md"), "utf8"),
-    fs.readFileSync(skillSource, "utf8"),
-    "the changed managed file is updated to match the package source"
+    canonicalTextOf(path.join(consumer, ".opencode", "skills", "fixture-alpha", "SKILL.md")),
+    canonicalTextOf(skillSource),
+    "the changed managed file is updated to match the package source (canonical form)"
   );
   const manifestAfter = readConsumerJson(consumer, ".roundhouse/manifest.json");
   const beforeHash = manifestBefore.packages.find((pkg) => pkg.name === "@roundhouse-fixture/alpha").managed
@@ -262,7 +289,7 @@ test("SCEN-053: compose recomputes, updates managed artifacts, and regenerates",
   const afterHash = manifestAfter.packages.find((pkg) => pkg.name === "@roundhouse-fixture/alpha").managed
     .find((entry) => entry.path === ".opencode/skills/fixture-alpha/SKILL.md").sha256;
   assert.notEqual(afterHash, beforeHash, "the manifest is refreshed with the new source hash");
-  assert.equal(afterHash, sha256Of(skillSource), "the recorded hash equals the mutated source's hash");
+  assert.equal(afterHash, canonicalSha256Of(skillSource), "the recorded hash equals the mutated source's canonicalized content's hash (the manifest's hash semantics)");
   assert.equal(
     manifestAfter.composed["opencode.json"].sha256,
     sha256Of(path.join(consumer, "opencode.json")),
@@ -323,9 +350,9 @@ test("SCEN-055: compose creates newly applicable seeds only when missing", () =>
   assert.equal(run.code, 0, `compose exits 0 (stderr: ${run.stderr})`);
   assert.equal(fs.readFileSync(editedSeed, "utf8"), "CONSUMER-EDITED\n", "the existing seed instance is byte-identical before and after — never overwritten");
   assert.equal(
-    fs.readFileSync(absentSeed, "utf8"),
-    readFixtureFile("core", "seed/FIXTURE-SEED.md"),
-    "the absent seed is created from the offering package's seed template"
+    canonicalTextOf(absentSeed),
+    canonicalFixtureText("core", "seed/FIXTURE-SEED.md"),
+    "the absent seed is created from the offering package's seed template (canonical form)"
   );
   assert(run.stderr.includes("Seed already present, skipped: FIXTURE-SEED-ALPHA.md"), "the preserved seed is reported");
   assert(run.stderr.includes("Created seed: FIXTURE-SEED.md"), "the created seed is reported");
@@ -818,4 +845,39 @@ test("SCEN-074: init and compose reject a frontmatter/directory mismatch", () =>
     `the identity error names the package, the skill directory, and the frontmatter value (stderr: ${composeRun.stderr})`
   );
   assert.deepEqual(snapshotTree(composeConsumer), before, "compose writes nothing");
+});
+
+// ─── SCEN-075: canonical-LF materialization (@integration) ──────────────────
+
+test("SCEN-075: a CRLF-encoded source materializes to canonical LF output", () => {
+  const consumer = buildConsumer("scen075", { dependencies: ["core", "alpha"] });
+
+  // Copy-and-mutate in temp space (checkout-independent — never a
+  // checked-in CRLF file): force the fixture copy's skill source to CRLF
+  // line endings regardless of the encoding the checkout produced.
+  const skillSource = path.join(consumer, "node_modules", "@roundhouse-fixture", "alpha", "managed", "skills", "fixture-alpha", "SKILL.md");
+  const original = fs.readFileSync(skillSource).toString("utf8");
+  fs.writeFileSync(skillSource, original.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n"), "utf8");
+  const crlfSource = fs.readFileSync(skillSource);
+  assert(crlfSource.includes(0x0d), "precondition: the mutated source is CRLF-encoded");
+  assert.notEqual(sha256Of(skillSource), canonicalSha256Of(skillSource), "precondition: the raw source hash differs from the canonicalized hash (the scenario is non-vacuous)");
+
+  const run = runBin(["init"], consumer);
+  assert.equal(run.code, 0, `init exits 0 (stderr: ${run.stderr})`);
+
+  const consumerSkillPath = path.join(consumer, ".opencode", "skills", "fixture-alpha", "SKILL.md");
+  const materialized = fs.readFileSync(consumerSkillPath);
+  assert(!materialized.includes(0x0d), "the materialized managed file contains no CR bytes");
+  assert(
+    materialized.equals(canonicalize(original)),
+    "the materialized file is the source's canonical content (content-identical modulo line endings)"
+  );
+  const manifest = readConsumerJson(consumer, ".roundhouse/manifest.json");
+  const recorded = manifest.packages.find((pkg) => pkg.name === "@roundhouse-fixture/alpha").managed
+    .find((entry) => entry.path === ".opencode/skills/fixture-alpha/SKILL.md").sha256;
+  assert.equal(
+    recorded,
+    canonicalSha256Of(skillSource),
+    "the manifest's recorded hash equals the canonicalized content's hash, independent of the source's line-ending encoding"
+  );
 });

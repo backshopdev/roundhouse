@@ -25,8 +25,9 @@
  * compose-induced changes. It is noisy on a dirty local tree — a
  * developer's uncommitted work on these files would fail the check
  * spuriously — so the check is CI-invoked only and is deliberately
- * excluded from `check-all` (whose five checks run locally and in CI
- * alike).
+ * excluded from `check-all` (whose four checks run locally and in CI
+ * alike; check-pack's deferral from that aggregate is PLAN-20261023-01
+ * T-15).
  *
  * Runtime: Node 24, built-in modules only.
  */

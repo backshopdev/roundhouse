@@ -59,6 +59,11 @@ const path = require("path");
 const os = require("os");
 const { execSync } = require("child_process");
 const { deploy, copyMissing } = require("../package/deploy-roundhouse");
+// The canonical-comparison form (PLAN-20261023-01 WP-03): materialized
+// files carry the sources' canonicalized content (UTF-8/LF), so the
+// source-versus-materialized assertions below compare canonicalized forms
+// — line-ending-only differences are not drift.
+const { canonicalize } = require("../packages/roundhouse-cli/lib/canonical.js");
 
 const repoRoot = path.resolve(__dirname, "..");
 const packagesDir = path.join(repoRoot, "packages");
@@ -161,13 +166,22 @@ function collectFilesRecursive(dir, base) {
   return result;
 }
 
-function filesAreEqual(fileA, fileB) {
+/**
+ * Canonical-form file equality (PLAN-20261023-01 WP-03): two files are
+ * equal when their canonicalized contents (UTF-8/LF) are byte-equal —
+ * the comparison form matching the composer's materialization and verify
+ * semantics. Materialized files are LF on every platform while package
+ * sources may be CRLF in a given working tree. (The former verbatim
+ * `filesAreEqual` helper retired with the sweep: every source-versus-
+ * materialized comparison is canonicalization-aware now; the within-run
+ * restore assertions compare Buffers directly.)
+ */
+function canonicalFilesEqual(fileA, fileB) {
   if (!fs.existsSync(fileA) || !fs.existsSync(fileB)) return false;
   const statA = fs.statSync(fileA);
   const statB = fs.statSync(fileB);
-  if (statA.isDirectory() && statB.isDirectory()) return true;
   if (statA.isFile() && statB.isFile()) {
-    return fs.readFileSync(fileA).equals(fs.readFileSync(fileB));
+    return canonicalize(fs.readFileSync(fileA)).equals(canonicalize(fs.readFileSync(fileB)));
   }
   return false;
 }
@@ -423,12 +437,12 @@ try {
 assert(fs.existsSync(buildingPath), "Sync created consumer BUILDING.md from the Core seed set");
 assert(fs.existsSync(testingPath), "Sync created consumer TESTING.md from the Core seed set");
 assert(
-  fs.readFileSync(buildingPath, "utf-8") === fs.readFileSync(seedBuildingPath, "utf-8"),
-  "consumer BUILDING.md content matches the Core seed template"
+  canonicalFilesEqual(buildingPath, seedBuildingPath),
+  "consumer BUILDING.md content matches the Core seed template (canonical form)"
 );
 assert(
-  fs.readFileSync(testingPath, "utf-8") === fs.readFileSync(seedTestingPath, "utf-8"),
-  "consumer TESTING.md content matches the Core seed template"
+  canonicalFilesEqual(testingPath, seedTestingPath),
+  "consumer TESTING.md content matches the Core seed template (canonical form)"
 );
 
 // ─── Test 13: Seeds are never overwritten ───────────────────────────────────
@@ -496,7 +510,9 @@ assert(fs.existsSync(path.join(test15Dir, ".opencode")), "test15: .opencode/ was
 assert(fs.existsSync(path.join(test15Dir, "opencode.json")), "test15: opencode.json was created");
 assert(fs.existsSync(path.join(test15Dir, ".roundhouse", "manifest.json")), "test15: .roundhouse/manifest.json was created");
 
-// The composed managed set matches the packages' managed trees byte-for-byte.
+// The composed managed set matches the packages' managed trees in
+// canonical form (PLAN-20261023-01: materialized files carry the sources'
+// canonicalized content, UTF-8/LF).
 const test15OpenCode = path.join(test15Dir, ".opencode");
 const test15ManagedFiles = collectFilesRecursive(test15OpenCode, test15OpenCode);
 let test15ManagedMatch = true;
@@ -508,36 +524,36 @@ for (const rel of expectedManaged) {
     const candidate = path.join(packagesDir, entry.name, "managed", ...rel.split("/"));
     if (fs.existsSync(candidate)) { sourceFile = candidate; break; }
   }
-  if (!sourceFile || !filesAreEqual(sourceFile, path.join(test15OpenCode, ...rel.split("/")))) {
-    assert(false, `test15: .opencode/${rel} does not match its package source byte-for-byte`);
+  if (!sourceFile || !canonicalFilesEqual(sourceFile, path.join(test15OpenCode, ...rel.split("/")))) {
+    assert(false, `test15: .opencode/${rel} does not match its package source (canonical form)`);
     test15ManagedMatch = false;
   }
 }
 if (test15ManagedMatch) {
-  assert(true, `test15: all ${expectedManaged.size} composed managed files match their package sources byte-for-byte`);
+  assert(true, `test15: all ${expectedManaged.size} composed managed files match their package sources (canonical form)`);
 }
 
-// The Core seed set exists with the seed templates' content.
+// The Core seed set exists with the seed templates' content (canonical form).
 const test15SeedFiles = expectedSeedPaths;
 let test15SeedMatch = true;
 for (const rel of test15SeedFiles()) {
   const seedTemplate = path.join(coreSeedDir, ...rel.split("/"));
   const consumerSeed = path.join(test15Dir, ...rel.split("/"));
-  if (!filesAreEqual(seedTemplate, consumerSeed)) {
-    assert(false, `test15: seed file ${rel} does not match the Core seed template`);
+  if (!canonicalFilesEqual(seedTemplate, consumerSeed)) {
+    assert(false, `test15: seed file ${rel} does not match the Core seed template (canonical form)`);
     test15SeedMatch = false;
   }
 }
 if (test15SeedMatch) {
-  assert(true, `test15: all ${test15SeedFiles().length} Core seed files match their templates byte-for-byte`);
+  assert(true, `test15: all ${test15SeedFiles().length} Core seed files match their templates (canonical form)`);
 }
 
 // Spot-check a few well-known seed paths to make the assertion explicit.
 const test15SeedSpotChecks = ["BUILDING.md", "AGENTS.md", "docs/index.md", "ktlo/template.md", "scratch/README.md"];
 for (const rel of test15SeedSpotChecks) {
   assert(
-    filesAreEqual(path.join(coreSeedDir, ...rel.split("/")), path.join(test15Dir, ...rel.split("/"))),
-    `test15: seed file ${rel} matches the Core seed template byte-for-byte`
+    canonicalFilesEqual(path.join(coreSeedDir, ...rel.split("/")), path.join(test15Dir, ...rel.split("/"))),
+    `test15: seed file ${rel} matches the Core seed template (canonical form)`
   );
 }
 
@@ -573,8 +589,8 @@ try {
 }
 
 assert(
-  filesAreEqual(packageOrchestratorPath, test16OrchestratorPath),
-  "test16: .opencode/agents/orchestrator.md replaced with the package source"
+  canonicalFilesEqual(packageOrchestratorPath, test16OrchestratorPath),
+  "test16: .opencode/agents/orchestrator.md replaced with the package source (canonical form)"
 );
 assert(
   fs.readFileSync(test16OpenCodeJsonPath).equals(originalTest16Json),
@@ -836,8 +852,8 @@ for (const [relative, sentinel] of sentinels27) {
   );
 }
 assert(
-  fs.readFileSync(controlManaged27).equals(controlSource27),
-  "Control: managed file was overwritten back to the package source (sync ran)"
+  canonicalize(fs.readFileSync(controlManaged27)).equals(canonicalize(controlSource27)),
+  "Control: managed file was overwritten back to the package source's canonical content (sync ran)"
 );
 // Restore the seed files from their Core seed templates for state cleanliness.
 for (const relative of seedFiles27) {

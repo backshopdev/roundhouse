@@ -31,7 +31,8 @@
  * owned content needing no declaration (SPEC-20261019-02, vocabulary).
  *
  * I/O (the package.json version read, tree inventories via the ported
- * collectRelativePaths, source hashing) is separated from the pure
+ * collectRelativePaths, source hashing over canonicalized content —
+ * UTF-8/LF, PLAN-20261023-01) is separated from the pure
  * mapping/check logic and injectable via run(options), per the generator's
  * testability seams. Assembly failures are collected per candidate so one
  * broken package does not mask another; any failure fails the set closed.
@@ -45,6 +46,7 @@ const crypto = require("node:crypto");
 
 const { collectRelativePaths } = require("./safe-fs");
 const { readJsonIfExists } = require("./discovery");
+const { canonicalize } = require("./canonical");
 
 // The managed-path convention's entry shape. graph.js carries the same
 // convention constant (to exclude skill entries from the managed-path
@@ -163,7 +165,8 @@ function extractFrontmatterName(content) {
  * primitive inventories directories as well as files (legacy semantics:
  * the legacy deploy compared full path sets); the model carries files
  * only — the manifest schema records files with hashes and the
- * materializer copies files. A directory entry conveys no content; an
+ * materializer writes files (canonicalized content, PLAN-20261023-01). A
+ * directory entry conveys no content; an
  * empty directory in a package tree therefore contributes nothing (and an
  * emptied directory in the consumer may linger after stale removal, which
  * removes recorded files, not directories).
@@ -240,7 +243,14 @@ function run(options = {}) {
   const deps = {
     readJsonIfExists: options.readJsonIfExists ?? readJsonIfExists,
     collectRelativePaths: options.collectRelativePaths ?? collectRelativePaths,
-    readFile: options.readFile ?? ((absolutePath) => fs.readFileSync(absolutePath)),
+    // The default read canonicalizes (PLAN-20261023-01 WP-01, T-02): the
+    // managed-source hash and the frontmatter-identity check consume
+    // canonical content (UTF-8/LF), so the manifest's recorded hashes are
+    // platform-independent — they encode the content, not the working
+    // tree's line-ending encoding. The injected seam stays (in-process
+    // tests supply their own reader); the frontmatter regex is
+    // CRLF-tolerant, so the canonical read changes nothing for it.
+    readFile: options.readFile ?? ((absolutePath) => canonicalize(fs.readFileSync(absolutePath))),
   };
   const models = [];
   const failures = [];

@@ -26,18 +26,22 @@
  *   }
  *
  * The managed entries record every managed file the package owns (skill
- * entries included) with the SHA-256 of the package's source file at
- * compose time; the composed entry records the rendered file's and the
- * template's hashes as of the last compose. The recorded hashes make the
- * manifest self-sufficient for drift detection without package sources
- * present; the authoritative verify comparison remains consumer-file-
- * versus-source byte-equality.
+ * entries included) with the SHA-256 of the package source file's
+ * canonicalized content (UTF-8, LF — PLAN-20261023-01) at compose time;
+ * the composed entry records the rendered file's and the template's hashes
+ * as of the last compose. The recorded hashes make the manifest
+ * self-sufficient for drift detection without package sources present; the
+ * authoritative verify comparison remains consumer-file-versus-source
+ * canonicalized-content equality (line-ending-only differences are not
+ * drift; the rendered `opencode.json`'s check stays raw byte-equality
+ * against the canonical re-render).
  *
  * Serialization canon: UTF-8 without BOM; LF line endings; two-space
  * indentation; the member orders above; a single trailing newline.
  * `validateManifest` checks structure and types (not sort order — sorting
  * is canonicalization, not integrity; compose refreshes the manifest
- * wholesale and verify's authority is byte-equality against sources).
+ * wholesale and verify's authority is canonicalized-content equality
+ * against sources).
  *
  * Pure: models arrive assembled (with hashes); file I/O lives in
  * commands.js. Runtime: Node 24, built-in modules only.

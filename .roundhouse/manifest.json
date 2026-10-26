@@ -12,7 +12,7 @@
       "managed": [
         {
           "path": ".opencode/skills/backshopdev-planning/SKILL.md",
-          "sha256": "3cf9f2430237bba120dd0ced6ec9a078360396a6b793e436e7e9e295541a9bff"
+          "sha256": "4cf90b9c21caf1069e68e835db22159360336d23030c6b5982cdfd5037a24808"
         }
       ],
       "seeds": []
@@ -35,7 +35,7 @@
       "managed": [
         {
           "path": ".opencode/skills/cms-apostrophe/SKILL.md",
-          "sha256": "30e3afb72171f987d7922d7412e95eeaa6df140f49de92765f5be86e33bfdc32"
+          "sha256": "358f87bea00fb48732a569354b8fbfe3c06f92e9c4fe7ea80451afe4506b517f"
         }
       ],
       "seeds": []
@@ -64,75 +64,75 @@
       "managed": [
         {
           "path": ".opencode/agents/document-author.md",
-          "sha256": "59d1498cac9a5bc13ee5274270703f6345da3f09173c92144ae4747d146d8a3b"
+          "sha256": "960522905b0718c311b71ba91a740901c43192a3b5bb828ce16db5b89a4fb484"
         },
         {
           "path": ".opencode/agents/implementor.md",
-          "sha256": "5fe6e8c1ef0a02a5432bb3406e635bbbf5d9e0cf5281d4700402fd19e0c846b7"
+          "sha256": "248b909600ce0c0de578971c5fe6943525260838d8a8a96d130ef021f238bf2d"
         },
         {
           "path": ".opencode/agents/orchestrator.md",
-          "sha256": "dce698328970ff14fe6766706c7639e91d713be981ad14dd5ff8bbf81009b7b8"
+          "sha256": "c72ba44a90874698f6bf6c6760564c1ce0c38adfddf171b77b85824453f95e69"
         },
         {
           "path": ".opencode/agents/reviewer.md",
-          "sha256": "02d6ea117889f3148e0d89fc6b9d2943cc5bb6a79f466ad058bbafe3a52fa768"
+          "sha256": "2da74194fe0e30837b83ffae63843d2ce65c64cd7375a4f4a2abfb010ca8f192"
         },
         {
           "path": ".opencode/docs-check.js",
-          "sha256": "c45e2b6abedd81ca5b6e3fd5a61f39c98a39cc2a0b334961eaed69b021d6847a"
+          "sha256": "9b0fef9473e15a1fb4293e3d5fdb742cb9b1353c1fcb4d8ec69692d5205ed0c2"
         },
         {
           "path": ".opencode/skills/architectural-coherence/SKILL.md",
-          "sha256": "d538e05b66bed130c85d7e3782a7ab6f21b4d34f5a1c49eb6901dfa0e0c6cf2b"
+          "sha256": "4c5503d9ed8fbeac479ff9bda1cb4f78c9ccd304c3c40be59fb95337b2f8235e"
         },
         {
           "path": ".opencode/skills/behavioral-completeness/SKILL.md",
-          "sha256": "b6fd623d17567d5e9612a2a4f2f4467357d747e1fc53a5e8b1822a6e13cdda04"
+          "sha256": "cf1f261058a0dd53e9f7e1fe13e24331efd256681c372c11b6bca538437d1767"
         },
         {
           "path": ".opencode/skills/commit-convention/SKILL.md",
-          "sha256": "ad59de3113735ed8ba0d1be83860b375fb9d2cbf64e527b1d81a38261e100b99"
+          "sha256": "0ecca11db4884281987fa316ca904fda5fc36104b67770ace1fda9bcd700271b"
         },
         {
           "path": ".opencode/skills/contract-completeness/SKILL.md",
-          "sha256": "957508e3c82a3ccd5596e5fa7b6364a408bbd1e079418e4d0680e358fe75e5e0"
+          "sha256": "3f567581bca447d0a2dfe6b2685cf63d36be2d0943ed4add7b6b4a2e52b8f62d"
         },
         {
           "path": ".opencode/skills/decision-quality/SKILL.md",
-          "sha256": "5a47ab6f1d82159b1d3d0a4e967f1bf094a754d8dba1483947655952d971460b"
+          "sha256": "f0ba2119a5272804fd310015ae578e3bfd24e6ee7ee2f7325c87d5dc946fa578"
         },
         {
           "path": ".opencode/skills/docs-check/SKILL.md",
-          "sha256": "15e6e46ae6b9860da44f798f7f465508a9613fd69eee8e61e470683191fb5347"
+          "sha256": "49c2af5351601e632f8e462a5a45c43c123df7b5e3bff002de85398b5fba5fac"
         },
         {
           "path": ".opencode/skills/git-commit/SKILL.md",
-          "sha256": "24d7a545439dca42620533264ef08af15725d81fe753779ad526619395a5e762"
+          "sha256": "00ddb9ee2249e835abb34a799ec812b4d92ff86525ce7493dd60068f0117db42"
         },
         {
           "path": ".opencode/skills/harness/SKILL.md",
-          "sha256": "e9a60a4022ae05aea6b7890442ccbc34df92adeb0d65ea2e2b9908f62361beb4"
+          "sha256": "ef2fd3f8da60e820a18583166837de4ce01be47ead513b26dcff8626cdf55071"
         },
         {
           "path": ".opencode/skills/investigation/SKILL.md",
-          "sha256": "2605588d2f74abeb5e17854825e7c5bb7c3171cbdc116e58bcae09aa00d1a043"
+          "sha256": "26c43631d6e2b77fc24af8ec7aa1f52bf1c5af4690eb1e73c71222f2637b369b"
         },
         {
           "path": ".opencode/skills/opencode-configuration/SKILL.md",
-          "sha256": "716e37dc1d0b58c4be7c19e71f9703041c8e1960071de79db78ad98bb60bb2a3"
+          "sha256": "4da7759bcc85ff0b5b09683b1e7a37602f60c54f39eac230f41ca9111951827b"
         },
         {
           "path": ".opencode/skills/peer/SKILL.md",
-          "sha256": "4acdab9c63b52b07503c78e3924cac8ad3f7d8c54a6ba2ff96d9ae85a759de9b"
+          "sha256": "aad4deeaa5cfe1c56e05f43654ca61d0b2ef69a26dec5fa8a051b997b394ea8e"
         },
         {
           "path": ".opencode/skills/review-findings/SKILL.md",
-          "sha256": "6855b2751644cd536397be2ae831bab3acfc8cf7294f00f4bfcbeb9660896460"
+          "sha256": "fc759bcae99b2e7285fb0ff01d25474b1092381fb1d7a3b27d249de964bac1ac"
         },
         {
           "path": ".opencode/skills/security/SKILL.md",
-          "sha256": "9509002d3ba88e339cc6292ae5a7792470361733862dd831db54fa1a1a27f5b4"
+          "sha256": "f90bc1a156a42102f8d15406033e315f0664945914b2bb1c035a47704217b732"
         },
         {
           "path": ".opencode/skills/socratic-interview/SKILL.md",
@@ -144,23 +144,23 @@
         },
         {
           "path": ".opencode/workflow-docs/autonomy/authority-types.md",
-          "sha256": "f553c93b09ce8750283163848c5474fb8a5a1220ed3fe405b9d9519c08d163d7"
+          "sha256": "cde80fc135a90f0c6a8f0a2da6c4701636eb0999d6bc67acaf8c731901e03302"
         },
         {
           "path": ".opencode/workflow-docs/autonomy/escalation-protocol.md",
-          "sha256": "bb573d7ba70dc251a541c8a6cf2da72768842cb288cb186e5fa1d64b652409cf"
+          "sha256": "68c7433df3cbbcef16b08f5b3e492c81e16c7a215ac2d3d142fee8285b3d52b1"
         },
         {
           "path": ".opencode/workflow-docs/autonomy/index.md",
-          "sha256": "10a1dc236cfc216abf5dd5117fce33b3f5778d61e7e9fc8a9d3676e8f5ac862c"
+          "sha256": "cd7b4ae082f392b0d08b87b2b230a743839d05c9be81d1c934971fc8bca8bb2d"
         },
         {
           "path": ".opencode/workflow-docs/autonomy/principles.md",
-          "sha256": "955494fc8bdb54ce7cbc441d98b0b28e7f725ce97f31bce569d2dc7419106403"
+          "sha256": "f84074377b85848cdff7d45c96539c15a8778c0ecaadfa8601ca37f5794594e4"
         },
         {
           "path": ".opencode/workflow-docs/autonomy/session-lifetime.md",
-          "sha256": "cb5820969fa40245dcae475b0fd32847f7c3d9639f3c9cd0ab594c575cd3f754"
+          "sha256": "fcabd62f349b37197b1719fb1cf62aee022c4bf9186b58e4f789a41b5153254d"
         }
       ],
       "seeds": [
@@ -204,7 +204,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-architecture/SKILL.md",
-          "sha256": "d94690ddc9d686e935c87e260090e293f20fbf0323917b86b4d21a0258710279"
+          "sha256": "919a83b969d7663fb7ea9743d2fcb8061072aeb60fc6e11c39c7fab2ce9e9cf4"
         }
       ],
       "seeds": []
@@ -219,7 +219,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-decision-record/SKILL.md",
-          "sha256": "5b1f2ab504d770821d553de757caeaa4a6e3a4a65368cd9e5da0fa937b9469d6"
+          "sha256": "a91c6c046b1ee542e1ccf350091e75b7e22aed10991cd6696c78ba6196c7da0c"
         }
       ],
       "seeds": []
@@ -236,15 +236,15 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-general-accuracy/SKILL.md",
-          "sha256": "0f26c0a764f7a90356bc4dddc0cc6c1e977572c86c9f06935eb6b50f022e14e9"
+          "sha256": "919c3e47c8465db60aa1ca577e66bc0df38b4310afdbff5baed7ed97603f9864"
         },
         {
           "path": ".opencode/skills/docs-general-traceability/SKILL.md",
-          "sha256": "f932fbb0d46fed5c5e6147861aa5493920d9d92502dab10c183aa0db0dd8b79d"
+          "sha256": "6333ac5cc82975ce4380feacfb65b5c50b37bcae6a8062ee6130b5fbd97c487c"
         },
         {
           "path": ".opencode/skills/docs-general/SKILL.md",
-          "sha256": "f5bcb9074605f5a60437cca0487b0b6ee48337d4e1550f6d9f141f68d36b560c"
+          "sha256": "24382d0cb11a828d508b28b5c5dab7c1672a821e66cd3d7cfa3ff0e7f3e10f22"
         }
       ],
       "seeds": []
@@ -259,7 +259,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-implementation-map/SKILL.md",
-          "sha256": "569db70d01603dbcbd76c13f5c82900167e2041968bc88860936f14103e67081"
+          "sha256": "84b9f21711f4a0b400786c3ca8715efbba78b14989beafbae25d4ba901b42ec4"
         }
       ],
       "seeds": []
@@ -274,7 +274,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-implementation-plan/SKILL.md",
-          "sha256": "b5e50c11c620786cd0f7c4732dc43ec31bdb994197f8c03ba3a4512bace82634"
+          "sha256": "857bcf2a285353dc7da53933eadaa32cf1d1e806183ee383de0019ed33ed854b"
         }
       ],
       "seeds": []
@@ -289,7 +289,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-literature-note/SKILL.md",
-          "sha256": "84bff5905b292df384ae734d761ead3ec7cbb461f85fbdaa2474a9b83b2ba3d2"
+          "sha256": "39229bc7ab1b061fbf8b048dea78f4a72b262b2480d5e0d0918d9e7b9c987447"
         }
       ],
       "seeds": []
@@ -304,7 +304,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-publish/SKILL.md",
-          "sha256": "535ae6a3adc56bcbc2ff70bf49a9e561c79dcf9a415da262e970d04bf09fe658"
+          "sha256": "e3e49e6ec59a5b7b40f9734a179335798575943f9aab805da6a6429017add2d3"
         }
       ],
       "seeds": []
@@ -334,7 +334,7 @@
       "managed": [
         {
           "path": ".opencode/skills/docs-spec/SKILL.md",
-          "sha256": "7126ff73ad754f0293e3f376f5fe134a1e4c84688b05059c1de50952976f6765"
+          "sha256": "2f6f794fc14068c1456a14dbce1820de3b3eb32188aa6bcb22aea63c3a4e9d90"
         }
       ],
       "seeds": []
@@ -349,7 +349,7 @@
       "managed": [
         {
           "path": ".opencode/skills/format-html-semantic/SKILL.md",
-          "sha256": "7abb8c465d05ca9dcef6d4cc8127726c4ae34b08c6ac2d0bc4bdbeb8bdb4ba6c"
+          "sha256": "78ac42d2ead7f690a43736c80c78f0d4ba9b2d6d4ff47ec596b3170cdb128f2c"
         }
       ],
       "seeds": []
@@ -364,7 +364,7 @@
       "managed": [
         {
           "path": ".opencode/skills/format-json-schema/SKILL.md",
-          "sha256": "24744f3234bf9706fc1d38ae99cd78fd1825a1d6b72e1c00be4880f6fae50bfe"
+          "sha256": "9028bc320f457627e4521232114182bdbc08de57e8d780196639d72b3ce362f0"
         }
       ],
       "seeds": []
@@ -379,7 +379,7 @@
       "managed": [
         {
           "path": ".opencode/skills/framework-astro/SKILL.md",
-          "sha256": "e9c5ac5812f108a456530370e3c867293a5bd1eac75022ffabaf1e03e78ec0df"
+          "sha256": "1c15e85e3c63b16285fe4ffb1e06ecfc6d6b0611884d3bd6dcd06e0de48b503b"
         }
       ],
       "seeds": []
@@ -394,7 +394,7 @@
       "managed": [
         {
           "path": ".opencode/skills/framework-react/SKILL.md",
-          "sha256": "47cbe6b3080eb941d0858894b7e99c9503da62e13189d853bc2cc25a151c0375"
+          "sha256": "279a2babff2b74353472a9c7cbc828a93b7a233cf93daf955ad416d0039d029c"
         }
       ],
       "seeds": []
@@ -459,7 +459,7 @@
       "managed": [
         {
           "path": ".opencode/skills/protocol-openapi/SKILL.md",
-          "sha256": "ad0c957308317619627579d8c8807992d81d8bdffccac597f6c1515e5770b649"
+          "sha256": "4bd57b225e2a490197256014c28cb833a466343fd3be6a9d18bb3ca203f6ddc3"
         }
       ],
       "seeds": []
@@ -494,7 +494,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-architecture/SKILL.md",
-          "sha256": "6c2d7377a0115420816ca407888d96e26b6e492a44d11564339d50a52139c978"
+          "sha256": "93f1b53659dec79f0ece511a2ccf0dc39bd69a98da6c85f5d3244fc3549c7ee2"
         }
       ],
       "seeds": []
@@ -509,7 +509,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-compatibility/SKILL.md",
-          "sha256": "9de986fdcf2a66449a2ae5899c42dbce4d53d270540aed5b9a27bfee2e943087"
+          "sha256": "94783057ec153eb016e0c4ed5ef7fa415290adda3e71acdc9eec34d30e5a8968"
         }
       ],
       "seeds": []
@@ -524,7 +524,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-contracts/SKILL.md",
-          "sha256": "58712e3ecb264be6467d4dccadc3bfd949682ca0a828f1ea4a0e61a1e35a61e6"
+          "sha256": "b283ee16010a35e4e8faccff41fa0f0b682f5b0edca5bcc66567cca32a5943d9"
         }
       ],
       "seeds": []
@@ -539,7 +539,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-design/SKILL.md",
-          "sha256": "f9fd6666729669f39a09cfae0f047c57cf3e6c4e3dd3819043b7376446226e97"
+          "sha256": "08b65b0d05339a71e8f5959e624db9e8bbbd9d37db493bfa3b7865d3407ffca4"
         }
       ],
       "seeds": []
@@ -554,7 +554,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-discoverability-seo/SKILL.md",
-          "sha256": "0b1b7d1400d365b77e4c5d1e3cf00a5660cb01b6601fc7ac725fda06d9299555"
+          "sha256": "8f479aa9524bc246dabc7cab4b86c18279992c8203873792a3be8d7560dd1b15"
         }
       ],
       "seeds": []
@@ -604,7 +604,7 @@
       "managed": [
         {
           "path": ".opencode/skills/software-quality/SKILL.md",
-          "sha256": "4a09f1188670699c1304f40fa2bd565b09767417e338b1cc6f06ba7a7872c19d"
+          "sha256": "1344f7a60d3ad9f13c31ea4a41276e9c6f85bc6ad72e1960b1c800ceb6c9fbe2"
         }
       ],
       "seeds": []
@@ -635,11 +635,11 @@
       "managed": [
         {
           "path": ".opencode/skills/software-testability-legacy-enablement/SKILL.md",
-          "sha256": "81d0a31250e85472581b689064701c809eeb6394e57a93945c992eb73ceac249"
+          "sha256": "733b52b84e1fbde3036a0bb76c81d3b0c4ab65bd4de9139256dd23f0c3cc7bee"
         },
         {
           "path": ".opencode/skills/software-testability/SKILL.md",
-          "sha256": "c94fd78b16506584af08c45ae89ce01bec9c45fb76137ff4281fa3ae5c601d06"
+          "sha256": "f647ac495d748065f347425fa7075fd09423adb388d19b1b468466d7d591d215"
         }
       ],
       "seeds": []

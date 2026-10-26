@@ -10,6 +10,12 @@
  * codes and routes messages to stderr. Exit codes: 0 success, 1 failure;
  * exit 2 (usage error) arises at the bin's argv layer, not here.
  *
+ * Canonical content (PLAN-20261023-01): every content path — the managed
+ * hashes (via model.js's canonical read), the managed/seed writes (via
+ * materialize.js), the template hash, and verify check 5's comparison —
+ * consumes the one canonicalization function (lib/canonical.js): UTF-8/LF,
+ * CRLF normalized at ingestion. Check 4 stays raw byte-equality by design.
+ *
  * Pipeline (all validation precedes any write — fail-closed composition):
  *   discovery (triage: vocabulary) -> model assembly (bidirectional skill
  *   content) -> template validation (exactly one core) -> graph validation
@@ -61,6 +67,7 @@ const render = require("./render");
 const manifest = require("./manifest");
 const materialize = require("./materialize");
 const vocabulary = require("./vocabulary");
+const { canonicalize } = require("./canonical");
 const { lstatIfPresent, assertSafePath, revalidateMutationPath, mkdirSafe } = require("./safe-fs");
 
 // ─── Pure helpers ───────────────────────────────────────────────────────────
@@ -156,6 +163,12 @@ function computeComposition(consumerRoot, deps, messages) {
       messages.push(`Error: core package ${core.name} has no readable opencode-template.json at the pinned location: ${error.message}`);
       return { ok: false };
     }
+    // The template read canonicalizes (PLAN-20261023-01 WP-01, T-04): the
+    // composed entry's templateSha256 is computed over canonical content
+    // (UTF-8/LF), making it structurally platform-independent rather than
+    // stable by the template's working-tree encoding. Parse and validate
+    // from the canonical text; the validation contract is unchanged.
+    raw = canonicalize(raw);
     templateSha256 = sha256(raw);
     const violations = deps.validateTemplateSource(raw.toString("utf8"));
     if (violations.length > 0) {
@@ -376,7 +389,10 @@ function runVerify(options = {}) {
           findings.push(`managed source missing: ${file.path} (${candidate.name})`);
           continue;
         }
-        if (Buffer.compare(fs.readFileSync(consumerAbsolute), fs.readFileSync(sourceAbsolute)) !== 0) {
+        // Both comparison sides canonicalize (PLAN-20261023-01 WP-01,
+        // T-05): line-ending-only differences are not drift; real content
+        // drift still is. Check 4 above stays raw byte-equality by design.
+        if (Buffer.compare(canonicalize(fs.readFileSync(consumerAbsolute)), canonicalize(fs.readFileSync(sourceAbsolute))) !== 0) {
           findings.push(`managed file differs from its source: ${file.consumerPath} (owned by ${candidate.name})`);
         }
       }
