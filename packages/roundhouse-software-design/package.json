@@ -1,0 +1,13 @@
+{
+  "name": "@backshop/roundhouse-software-design",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Software design practice: SOLID principles, deep modules, information hiding, and local reasoning.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

@@ -2,70 +2,72 @@
 "use strict";
 
 /**
- * sync-roundhouse.js
+ * sync-roundhouse.js — the composer adapter (PLAN-20261019-04 T-09).
  *
- * Mirrors the package's consumer-side `update()` behavior for the source
- * repo's development environment:
+ * The legacy src/-tree deployment retired to git history; the composer
+ * library (packages/roundhouse-cli/lib) is the engine. The observable CLI
+ * surface is preserved:
  *
- *   Mode 1 (replace): src/.opencode/ → root .opencode/ and
- *                      src/opencode.json → root/opencode.json. Always
- *                      overwrites; stale files in .opencode/ are removed.
- *   Mode 2 (create-if-missing): for every other file in src/, copy to root
- *                      if the destination doesn't exist. Files already at
- *                      root are left untouched — once present, they're
- *                      consumer-owned.
+ *   --mode sync    The self-hosting composition: the composer's init when
+ *                  the consumer carries no .roundhouse/manifest.json,
+ *                  compose otherwise. The discovered set is this
+ *                  repository's workspace members (the packages are the
+ *                  single authoritative source); managed artifacts are
+ *                  updated, stale managed files are removed by recorded
+ *                  ownership, opencode.json is regenerated, newly
+ *                  applicable seeds are created only when missing, and the
+ *                  manifest is created or refreshed.
+ *   --mode verify  The composer's verify against the consumer, read-only.
  *
- * Usage:
- *   node scripts/sync-roundhouse.js --mode <sync|verify> [--src <path>] [--consumer <path>]
+ *   --src <path>       Accepted and ignored (inert compatibility surface:
+ *                      the src/-based source parameter post-cutover; the
+ *                      effective source is the workspace package set).
+ *   --consumer <path>  Override the consumer root (default: the repo root).
+ *                      Temp-consumer isolation for the test suites.
  *
- * Modes:
- *   sync    Deploy src/.opencode/ and src/opencode.json to root, seed any
- *           missing src/ files to root, then run integrity verification.
- *   verify  Read-only: run integrity verification only. Exits non-zero when
- *           either mode has drift, listing the missing files.
- *
- * Path overrides (used by tests to operate in an isolated temp directory):
- *   --src <path>      Override source root (default: <consumerRoot>/src)
- *   --consumer <path> Override destination root (default: this script's
- *                     parent directory's parent, i.e. the repo root)
+ * Strict argument parsing: any unknown flag or positional argument is a
+ * usage error (exit 2, usage text on stderr). Exit codes 0/1/2 are relayed
+ * from the composer. Every composer message (creation, removal, finding,
+ * warning) is listed on stderr; a one-line summary goes to stdout on
+ * success. Runtime: Node 24, built-in modules only.
  */
 
-const fs = require("fs");
-const path = require("path");
-const { ROOT_ONLY, collectRelativePaths, copyMissing, deploy } = require("../package/deploy-roundhouse");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const repoRoot = path.resolve(__dirname, "..");
+const commands = require(path.join(repoRoot, "packages", "roundhouse-cli", "lib", "commands.js"));
+const discovery = require(path.join(repoRoot, "packages", "roundhouse-cli", "lib", "discovery.js"));
 
 const USAGE = `Usage: node scripts/sync-roundhouse.js --mode <sync|verify> [--src <path>] [--consumer <path>]
 
 Modes:
-  sync    Deploy src/.opencode/ and src/opencode.json to root, seed any
-          missing src/ files to root, then run integrity verification.
-  verify  Read-only: run integrity verification only. Exits non-zero when
-          either mode has drift, listing the missing files.
+  sync    Run the self-hosting composition against the consumer root:
+          the composer's init when no .roundhouse/manifest.json exists,
+          compose otherwise. The discovered set is this repository's
+          workspace members.
+  verify  Read-only: run the composer's verify against the consumer root.
 
 Options:
-  --src <path>       Override source root (default: <consumerRoot>/src)
-  --consumer <path>  Override destination root (default: this script's
-                     parent directory's parent, i.e. the repo root)
+  --src <path>       Accepted and ignored (inert compatibility surface; the
+                     effective source is the workspace package set).
+  --consumer <path>  Override the consumer root (default: the repo root).
 
 Examples:
   node scripts/sync-roundhouse.js --mode sync
   node scripts/sync-roundhouse.js --mode verify
 `;
 
-const defaultConsumerRoot = path.resolve(__dirname, "..");
-
 function parseArgs() {
   const args = process.argv.slice(2);
-  const flags = {
-    mode: undefined,
-    src: undefined,
-    consumer: undefined,
-  };
+  const flags = { mode: undefined, src: undefined, consumer: undefined };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--mode") {
       if (!args[i + 1] || args[i + 1].startsWith("--")) usageError("Error: --mode requires a value (sync or verify).");
       flags.mode = args[++i];
     } else if (args[i] === "--src") {
+      // Inert compatibility surface: accepted, validated as a flag with a
+      // value, then ignored — the src/-based source retired with the tree.
       if (!args[i + 1] || args[i + 1].startsWith("--")) usageError("Error: --src requires a path argument.");
       flags.src = args[++i];
     } else if (args[i] === "--consumer") {
@@ -91,82 +93,39 @@ function usageError(message) {
   process.exit(2);
 }
 
-function fail(message) {
-  console.error(message);
-  process.exit(1);
-}
-
-function verifyOpenCodeJson(srcOpenCodeJson, destOpenCodeJson) {
-  if (!fs.existsSync(srcOpenCodeJson)) fail(`Error: source file not found: ${srcOpenCodeJson}`);
-  if (!fs.existsSync(destOpenCodeJson)) fail("Integrity verification FAILED:\n  Missing: root opencode.json does not exist");
-  if (fs.readFileSync(srcOpenCodeJson, "utf8") !== fs.readFileSync(destOpenCodeJson, "utf8")) {
-    fail("Integrity verification FAILED:\n  root opencode.json does not match src/opencode.json");
-  }
-  console.log("Integrity verification passed: root opencode.json matches src/opencode.json.");
-}
-
-function verifyIntegrity(srcRoot, consumerRoot, srcDir, destDir) {
-  const source = collectRelativePaths(srcDir, srcDir);
-  const destination = collectRelativePaths(destDir, destDir);
-  const preserved = new Set(ROOT_ONLY);
-  const synced = new Set([...destination].filter((relative) => !preserved.has(relative.split("/")[0])));
-  const missing = [...source].filter((relative) => !synced.has(relative));
-  const extra = [...synced].filter((relative) => !source.has(relative));
-  if (missing.length || extra.length) {
-    let message = "Integrity verification FAILED:";
-    if (missing.length) message += `\n  Missing in root .opencode/ (${missing.length}):\n${missing.map((item) => `    - ${item}`).join("\n")}`;
-    if (extra.length) message += `\n  Extra in root .opencode/ (${extra.length}):\n${extra.map((item) => `    - ${item}`).join("\n")}`;
-    fail(message);
-  }
-  console.log(`Integrity verification passed: ${source.size} src entr${source.size === 1 ? "y" : "ies"} match root .opencode/.`);
-
-  // Mode 2 drift: any non-.opencode file under src/ that's missing at the consumer root.
-  const seedExcluded = new Set([".opencode", "opencode.json"]);
-  const seedEntries = [...collectRelativePaths(srcRoot, srcRoot)].filter(
-    (relative) => !seedExcluded.has(relative.split("/")[0])
-  );
-  const missingSeed = seedEntries.filter(
-    (relative) => !fs.existsSync(path.join(consumerRoot, relative.split("/").join(path.sep)))
-  );
-  if (missingSeed.length) {
-    fail(`Integrity verification FAILED:\n  Mode 2 drift — files in src/ missing from root (${missingSeed.length}):\n${missingSeed.map((item) => `    - ${item}`).join("\n")}`);
-  }
-  console.log("Mode 2 integrity verification passed: no seed files missing from root.");
+/**
+ * The discovered set is this repository's workspace members — the packages
+ * are the single authoritative source post-cutover, regardless of which
+ * consumer root the composition writes into (the --consumer override keeps
+ * its temp-consumer isolation meaning).
+ */
+function discoverWorkspace() {
+  return discovery.discoverPackages(repoRoot);
 }
 
 function main() {
   const flags = parseArgs();
-
-  const consumerRoot = flags.consumer ? path.resolve(flags.consumer) : defaultConsumerRoot;
-  const srcRoot = flags.src ? path.resolve(flags.src) : path.join(consumerRoot, "src");
-
-  if (flags.src && !fs.existsSync(srcRoot)) {
-    fail(`Error: --src path not found: ${srcRoot}`);
-  }
-
-  const srcDir = path.join(srcRoot, ".opencode");
-  const destDir = path.join(consumerRoot, ".opencode");
-  const srcOpenCodeJson = path.join(srcRoot, "opencode.json");
-  const destOpenCodeJson = path.join(consumerRoot, "opencode.json");
-
-  if (!fs.existsSync(srcDir)) fail(`Error: source directory not found: ${srcDir}`);
-
+  const consumerRoot = flags.consumer ? path.resolve(flags.consumer) : repoRoot;
+  let result;
+  let summary;
   if (flags.mode === "verify") {
-    verifyIntegrity(srcRoot, consumerRoot, srcDir, destDir);
-    verifyOpenCodeJson(srcOpenCodeJson, destOpenCodeJson);
-    return;
+    result = commands.runVerify({ consumerRoot, discoverPackages: discoverWorkspace });
+    summary = `Sync (--mode verify): no findings.`;
+  } else {
+    const manifestExists = fs.existsSync(path.join(consumerRoot, ".roundhouse", "manifest.json"));
+    const run = manifestExists ? commands.runCompose : commands.runInit;
+    result = run({ consumerRoot, discoverPackages: discoverWorkspace });
+    summary = manifestExists
+      ? `Sync (--mode sync): composed ${consumerRoot}.`
+      : `Sync (--mode sync): initialized ${consumerRoot}.`;
   }
-
-  // flags.mode === "sync"
-  deploy({ sourceDir: srcDir, destinationDir: destDir, sourceJson: srcOpenCodeJson, destinationJson: destOpenCodeJson });
-  console.log("Root .opencode/ and opencode.json are now up to date with src/.");
-  for (const entry of fs.readdirSync(srcRoot)) {
-    if (entry === ".opencode" || entry === "opencode.json") continue;
-    copyMissing(path.join(srcRoot, entry), path.join(consumerRoot, entry), false, console.log, consumerRoot);
+  for (const message of result.messages) {
+    console.error(message);
   }
-  console.log("Seed files are never overwritten; managed .opencode/ and opencode.json are overwritten.");
-  verifyIntegrity(srcRoot, consumerRoot, srcDir, destDir);
-  verifyOpenCodeJson(srcOpenCodeJson, destOpenCodeJson);
+  if (result.code === 0) {
+    console.log(summary);
+  }
+  process.exit(result.code);
 }
 
 main();

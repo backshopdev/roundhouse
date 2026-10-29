@@ -50,7 +50,7 @@
 ## Customizing the Workflow
 
 - Modify `AGENTS.md` for project-specific agent descriptions.
-- Update `opencode.json` for your model configurations.
+- The root `opencode.json` is a composed artifact, never edited directly: model/configuration edits belong in the owning package's `opencode-template.json` or package content, followed by recomposition.
 - Replace `docs/` content with your project documentation.
 
 ## How to Populate This File

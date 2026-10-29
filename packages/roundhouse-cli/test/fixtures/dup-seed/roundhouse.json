@@ -1,0 +1,7 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": ["fixture-dupseed"],
+  "bash": [],
+  "requires": ["@roundhouse-fixture/core"]
+}

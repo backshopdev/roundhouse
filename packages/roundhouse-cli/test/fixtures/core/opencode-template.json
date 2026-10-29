@@ -1,0 +1,105 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "orchestrator",
+  "agent": {
+    "build": { "disable": true },
+    "plan": { "disable": true },
+    "general": { "disable": true },
+    "explore": { "disable": true },
+    "orchestrator": {
+      "mode": "primary",
+      "steps": 200,
+      "permission": {
+        "*": "deny",
+        "read": {
+          "*": "allow",
+          "*.env": "deny",
+          "*.env.*": "deny"
+        },
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "question": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "task": {
+          "*": "deny",
+          "document-author": "allow",
+          "implementor": "allow",
+          "reviewer": "allow"
+        },
+        "skill": { "*": "deny" }
+      }
+    },
+    "document-author": {
+      "mode": "subagent",
+      "temperature": 0.3,
+      "permission": {
+        "*": "deny",
+        "read": {
+          "*": "allow",
+          "*.env": "deny",
+          "*.env.*": "deny"
+        },
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "bash": {
+          "*": "ask",
+          "node fixture-tool --check": "allow",
+          "fixture-locked": "deny"
+        },
+        "webfetch": "ask",
+        "websearch": "allow",
+        "task": "deny",
+        "skill": { "*": "deny" }
+      }
+    },
+    "implementor": {
+      "mode": "subagent",
+      "temperature": 0.2,
+      "permission": {
+        "*": "deny",
+        "read": {
+          "*": "allow",
+          "*.env": "deny",
+          "*.env.*": "deny"
+        },
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "bash": {
+          "*": "ask",
+          "node fixture-tool --build": "allow"
+        },
+        "webfetch": "ask",
+        "websearch": "allow",
+        "task": "deny",
+        "skill": { "*": "deny" }
+      }
+    },
+    "reviewer": {
+      "mode": "subagent",
+      "temperature": 0.1,
+      "permission": {
+        "*": "deny",
+        "read": {
+          "*": "allow",
+          "*.env": "deny",
+          "*.env.*": "deny"
+        },
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "deny",
+        "bash": { "*": "deny" },
+        "task": "deny",
+        "webfetch": "ask",
+        "websearch": "allow",
+        "skill": { "*": "deny" }
+      }
+    }
+  }
+}

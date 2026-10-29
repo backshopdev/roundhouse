@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/dup-skill",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Violation fixture (SCEN-063 row 1): declares fixture-alpha, duplicating alpha's skill ID across two packages."
+}

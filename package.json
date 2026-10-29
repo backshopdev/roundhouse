@@ -1,28 +1,23 @@
 {
   "name": "@backshopdev/roundhouse",
-  "version": "0.6.0",
-  "description": "Operational harness for human-agent collaboration workflow",
-  "bin": {
-    "roundhouse": "package/roundhouse.js"
-  },
-  "files": [
-    "package/",
-    "src/",
-    "README.md",
-    "LICENSE"
-  ],
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
+  "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
     "commit": "node scripts/commit.js",
     "sync-roundhouse": "node scripts/sync-roundhouse.js",
     "test-sync": "node scripts/test-sync.js",
     "test-package": "node scripts/test-package.js",
-    "test-commit": "node scripts/test-commit.js"
+    "test-commit": "node scripts/test-commit.js",
+    "check-contracts": "node scripts/check-contracts.js",
+    "check-deps": "node scripts/check-deps.js",
+    "check-matrix": "node packages/roundhouse-cli/test/composition-matrix.test.js",
+    "check-drift": "node scripts/sync-roundhouse.js --mode verify",
+    "check-pack": "node scripts/check-pack.js",
+    "check-render": "node scripts/check-render.js",
+    "check-all": "node scripts/check-all.js"
   },
-  "license": "MIT",
-  "engines": {
-    "node": ">= 24.0.0"
-  }
+  "devDependencies": {
+    "@changesets/cli": "3.0.3"
+  },
+  "engines": { "node": ">= 24.0.0" }
 }

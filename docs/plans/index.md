@@ -4,8 +4,7 @@ Implementation plans + architecture/implementation maps. One file per plan.
 
 | Title | Description | Status | Date |
 |-------|-------------|--------|------|
-| [Implement GitHub Packages full-template lifecycle v0.5.0](PLAN-20260903-01.md) | Implement v0.5.0 GitHub Packages distribution and the full-template lifecycle (`init`/`update`) for Roundhouse. | In progress | 2026-09-03 |
-| [Standardize index.md structure across the repo](PLAN-20260904-01.md) | Bring every `index.md` file in the repo under a small, consistent set of patterns. | Ready | 2026-09-04 |
+| [Stray .opencode/node_modules cleanup and the incident KTLO item](PLAN-20261026-01.md) | Documents the unused OpenCode plugin-dependency tree as a KTLO item, deletes it from the working tree (its managed siblings retained; gitignored, zero git content), and verifies composition health plus the human restart close; docs-only one-commit close. | Ready | 2026-10-26 |
 
 ## Templates and archive
 

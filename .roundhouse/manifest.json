@@ -1,0 +1,669 @@
+{
+  "schemaVersion": 1,
+  "composer": "@backshop/roundhouse-cli@0.0.0",
+  "packages": [
+    {
+      "name": "@backshop/roundhouse-backshopdev-planning",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "backshopdev-planning"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/backshopdev-planning/SKILL.md",
+          "sha256": "4cf90b9c21caf1069e68e835db22159360336d23030c6b5982cdfd5037a24808"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-cli",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [],
+      "managed": [],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-cms-apostrophe",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "cms-apostrophe"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/cms-apostrophe/SKILL.md",
+          "sha256": "358f87bea00fb48732a569354b8fbfe3c06f92e9c4fe7ea80451afe4506b517f"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-core",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "architectural-coherence",
+        "behavioral-completeness",
+        "commit-convention",
+        "contract-completeness",
+        "decision-quality",
+        "docs-check",
+        "git-commit",
+        "harness",
+        "investigation",
+        "opencode-configuration",
+        "peer",
+        "review-findings",
+        "security",
+        "socratic-interview",
+        "task-planning"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/agents/document-author.md",
+          "sha256": "960522905b0718c311b71ba91a740901c43192a3b5bb828ce16db5b89a4fb484"
+        },
+        {
+          "path": ".opencode/agents/implementor.md",
+          "sha256": "248b909600ce0c0de578971c5fe6943525260838d8a8a96d130ef021f238bf2d"
+        },
+        {
+          "path": ".opencode/agents/orchestrator.md",
+          "sha256": "c72ba44a90874698f6bf6c6760564c1ce0c38adfddf171b77b85824453f95e69"
+        },
+        {
+          "path": ".opencode/agents/reviewer.md",
+          "sha256": "2da74194fe0e30837b83ffae63843d2ce65c64cd7375a4f4a2abfb010ca8f192"
+        },
+        {
+          "path": ".opencode/docs-check.js",
+          "sha256": "9b0fef9473e15a1fb4293e3d5fdb742cb9b1353c1fcb4d8ec69692d5205ed0c2"
+        },
+        {
+          "path": ".opencode/skills/architectural-coherence/SKILL.md",
+          "sha256": "4c5503d9ed8fbeac479ff9bda1cb4f78c9ccd304c3c40be59fb95337b2f8235e"
+        },
+        {
+          "path": ".opencode/skills/behavioral-completeness/SKILL.md",
+          "sha256": "cf1f261058a0dd53e9f7e1fe13e24331efd256681c372c11b6bca538437d1767"
+        },
+        {
+          "path": ".opencode/skills/commit-convention/SKILL.md",
+          "sha256": "0ecca11db4884281987fa316ca904fda5fc36104b67770ace1fda9bcd700271b"
+        },
+        {
+          "path": ".opencode/skills/contract-completeness/SKILL.md",
+          "sha256": "3f567581bca447d0a2dfe6b2685cf63d36be2d0943ed4add7b6b4a2e52b8f62d"
+        },
+        {
+          "path": ".opencode/skills/decision-quality/SKILL.md",
+          "sha256": "f0ba2119a5272804fd310015ae578e3bfd24e6ee7ee2f7325c87d5dc946fa578"
+        },
+        {
+          "path": ".opencode/skills/docs-check/SKILL.md",
+          "sha256": "49c2af5351601e632f8e462a5a45c43c123df7b5e3bff002de85398b5fba5fac"
+        },
+        {
+          "path": ".opencode/skills/git-commit/SKILL.md",
+          "sha256": "00ddb9ee2249e835abb34a799ec812b4d92ff86525ce7493dd60068f0117db42"
+        },
+        {
+          "path": ".opencode/skills/harness/SKILL.md",
+          "sha256": "ef2fd3f8da60e820a18583166837de4ce01be47ead513b26dcff8626cdf55071"
+        },
+        {
+          "path": ".opencode/skills/investigation/SKILL.md",
+          "sha256": "26c43631d6e2b77fc24af8ec7aa1f52bf1c5af4690eb1e73c71222f2637b369b"
+        },
+        {
+          "path": ".opencode/skills/opencode-configuration/SKILL.md",
+          "sha256": "4da7759bcc85ff0b5b09683b1e7a37602f60c54f39eac230f41ca9111951827b"
+        },
+        {
+          "path": ".opencode/skills/peer/SKILL.md",
+          "sha256": "aad4deeaa5cfe1c56e05f43654ca61d0b2ef69a26dec5fa8a051b997b394ea8e"
+        },
+        {
+          "path": ".opencode/skills/review-findings/SKILL.md",
+          "sha256": "fc759bcae99b2e7285fb0ff01d25474b1092381fb1d7a3b27d249de964bac1ac"
+        },
+        {
+          "path": ".opencode/skills/security/SKILL.md",
+          "sha256": "f90bc1a156a42102f8d15406033e315f0664945914b2bb1c035a47704217b732"
+        },
+        {
+          "path": ".opencode/skills/socratic-interview/SKILL.md",
+          "sha256": "1a17cd5df15b0803a3228fa8de4a6a1ffef39b40e96aefc68ee2a9b9d530a599"
+        },
+        {
+          "path": ".opencode/skills/task-planning/SKILL.md",
+          "sha256": "475ad690605ef0908b5052cb9815e2308dd4201d8a2f6d08290324861220a1be"
+        },
+        {
+          "path": ".opencode/workflow-docs/autonomy/authority-types.md",
+          "sha256": "cde80fc135a90f0c6a8f0a2da6c4701636eb0999d6bc67acaf8c731901e03302"
+        },
+        {
+          "path": ".opencode/workflow-docs/autonomy/escalation-protocol.md",
+          "sha256": "68c7433df3cbbcef16b08f5b3e492c81e16c7a215ac2d3d142fee8285b3d52b1"
+        },
+        {
+          "path": ".opencode/workflow-docs/autonomy/index.md",
+          "sha256": "cd7b4ae082f392b0d08b87b2b230a743839d05c9be81d1c934971fc8bca8bb2d"
+        },
+        {
+          "path": ".opencode/workflow-docs/autonomy/principles.md",
+          "sha256": "f84074377b85848cdff7d45c96539c15a8778c0ecaadfa8601ca37f5794594e4"
+        },
+        {
+          "path": ".opencode/workflow-docs/autonomy/session-lifetime.md",
+          "sha256": "fcabd62f349b37197b1719fb1cf62aee022c4bf9186b58e4f789a41b5153254d"
+        }
+      ],
+      "seeds": [
+        "AGENTIC_WORKFLOW.md",
+        "AGENTS.md",
+        "BUILDING.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "TESTING.md",
+        "docs/architecture/index.md",
+        "docs/architecture/template.md",
+        "docs/contracts/index.md",
+        "docs/contracts/template.md",
+        "docs/decisions/archive/index.md",
+        "docs/decisions/archive/template.md",
+        "docs/decisions/index.md",
+        "docs/decisions/template.md",
+        "docs/implementation-maps/index.md",
+        "docs/implementation-maps/template.md",
+        "docs/index.md",
+        "docs/plans/archive/index.md",
+        "docs/plans/archive/template.md",
+        "docs/plans/index.md",
+        "docs/plans/template.md",
+        "docs/specs/archive/index.md",
+        "docs/specs/archive/template.md",
+        "docs/specs/index.md",
+        "docs/specs/template.md",
+        "ktlo/index.md",
+        "ktlo/template.md",
+        "scratch/README.md"
+      ]
+    },
+    {
+      "name": "@backshop/roundhouse-docs-architecture",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-architecture"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-architecture/SKILL.md",
+          "sha256": "919a83b969d7663fb7ea9743d2fcb8061072aeb60fc6e11c39c7fab2ce9e9cf4"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-decision-record",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-decision-record"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-decision-record/SKILL.md",
+          "sha256": "a91c6c046b1ee542e1ccf350091e75b7e22aed10991cd6696c78ba6196c7da0c"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-general",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-general",
+        "docs-general-accuracy",
+        "docs-general-traceability"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-general-accuracy/SKILL.md",
+          "sha256": "919c3e47c8465db60aa1ca577e66bc0df38b4310afdbff5baed7ed97603f9864"
+        },
+        {
+          "path": ".opencode/skills/docs-general-traceability/SKILL.md",
+          "sha256": "6333ac5cc82975ce4380feacfb65b5c50b37bcae6a8062ee6130b5fbd97c487c"
+        },
+        {
+          "path": ".opencode/skills/docs-general/SKILL.md",
+          "sha256": "24382d0cb11a828d508b28b5c5dab7c1672a821e66cd3d7cfa3ff0e7f3e10f22"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-implementation-map",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-implementation-map"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-implementation-map/SKILL.md",
+          "sha256": "84b9f21711f4a0b400786c3ca8715efbba78b14989beafbae25d4ba901b42ec4"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-implementation-plan",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-implementation-plan"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-implementation-plan/SKILL.md",
+          "sha256": "857bcf2a285353dc7da53933eadaa32cf1d1e806183ee383de0019ed33ed854b"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-literature-note",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-literature-note"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-literature-note/SKILL.md",
+          "sha256": "39229bc7ab1b061fbf8b048dea78f4a72b262b2480d5e0d0918d9e7b9c987447"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-publish",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-publish"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-publish/SKILL.md",
+          "sha256": "e3e49e6ec59a5b7b40f9734a179335798575943f9aab805da6a6429017add2d3"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-software-contracts",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-software-contracts"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-software-contracts/SKILL.md",
+          "sha256": "164815ff6b1042e05710db6d978cc86ba8e12353a4328f2022f599e61e36d977"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-docs-spec",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "docs-spec"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/docs-spec/SKILL.md",
+          "sha256": "2f6f794fc14068c1456a14dbce1820de3b3eb32188aa6bcb22aea63c3a4e9d90"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-format-html",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "format-html-semantic"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/format-html-semantic/SKILL.md",
+          "sha256": "78ac42d2ead7f690a43736c80c78f0d4ba9b2d6d4ff47ec596b3170cdb128f2c"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-format-json-schema",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "format-json-schema"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/format-json-schema/SKILL.md",
+          "sha256": "9028bc320f457627e4521232114182bdbc08de57e8d780196639d72b3ce362f0"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-framework-astro",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "framework-astro"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/framework-astro/SKILL.md",
+          "sha256": "1c15e85e3c63b16285fe4ffb1e06ecfc6d6b0611884d3bd6dcd06e0de48b503b"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-framework-react",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "framework-react"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/framework-react/SKILL.md",
+          "sha256": "279a2babff2b74353472a9c7cbc828a93b7a233cf93daf955ad416d0039d029c"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-lang-css",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "lang-css",
+        "lang-css-sass"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/lang-css-sass/SKILL.md",
+          "sha256": "80695b55bee8c34db679d187517c05d7bd5e2e0826168365202e1bbd524ec841"
+        },
+        {
+          "path": ".opencode/skills/lang-css/SKILL.md",
+          "sha256": "250ddcaa65904b012bffbe7f712e1adf77305fecb131c9f0d12e563cf2d63dc2"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-lang-gherkin",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "lang-gherkin"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/lang-gherkin/SKILL.md",
+          "sha256": "ef1b6ed89c03812cc348f801239393bb76eaf993e4402ecc03fb3d7676752fd8"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-lang-javascript",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "lang-javascript"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/lang-javascript/SKILL.md",
+          "sha256": "2671f6baab6e8e8783b366efac11ce3f4b70f8b96b357b96850ce8c610d3463c"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-protocol-openapi",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "protocol-openapi"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/protocol-openapi/SKILL.md",
+          "sha256": "4bd57b225e2a490197256014c28cb833a466343fd3be6a9d18bb3ca203f6ddc3"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-accessibility",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-accessibility",
+        "software-accessibility-web"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-accessibility-web/SKILL.md",
+          "sha256": "aca3d398b12fd3ca34faf127a6816631e3bfaabde55a1dddb725bb75eac7af95"
+        },
+        {
+          "path": ".opencode/skills/software-accessibility/SKILL.md",
+          "sha256": "4b71e23b48676f48153589091b526f36b78006cee74ef4ca28fc237d573112c3"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-architecture",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-architecture"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-architecture/SKILL.md",
+          "sha256": "93f1b53659dec79f0ece511a2ccf0dc39bd69a98da6c85f5d3244fc3549c7ee2"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-compatibility",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-compatibility"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-compatibility/SKILL.md",
+          "sha256": "94783057ec153eb016e0c4ed5ef7fa415290adda3e71acdc9eec34d30e5a8968"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-contracts",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-contracts"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-contracts/SKILL.md",
+          "sha256": "b283ee16010a35e4e8faccff41fa0f0b682f5b0edca5bcc66567cca32a5943d9"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-design",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-design"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-design/SKILL.md",
+          "sha256": "08b65b0d05339a71e8f5959e624db9e8bbbd9d37db493bfa3b7865d3407ffca4"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-discoverability",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-discoverability-seo"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-discoverability-seo/SKILL.md",
+          "sha256": "8f479aa9524bc246dabc7cab4b86c18279992c8203873792a3be8d7560dd1b15"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-performance",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-performance",
+        "software-performance-web"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-performance-web/SKILL.md",
+          "sha256": "5bc2eada8757d37a2305cde5283e24a167ee0e04e4d0b8248424f41e4c1d4568"
+        },
+        {
+          "path": ".opencode/skills/software-performance/SKILL.md",
+          "sha256": "807d07c2532b17ed7a001955bb7661b442aa4e73aa44435a1049e16184836b20"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-privacy",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-privacy"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-privacy/SKILL.md",
+          "sha256": "3169583fbe50f852dbed86ad424f9b450d1b0559634313c5afdd88fa48403e24"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-quality",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-quality"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-quality/SKILL.md",
+          "sha256": "1344f7a60d3ad9f13c31ea4a41276e9c6f85bc6ad72e1960b1c800ceb6c9fbe2"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-security",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-security"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-security/SKILL.md",
+          "sha256": "13c2943f5762982d66086294e018fe594ab4309a338ab8f8e0094770a4d60e37"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-testability",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-testability",
+        "software-testability-legacy-enablement"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-testability-legacy-enablement/SKILL.md",
+          "sha256": "733b52b84e1fbde3036a0bb76c81d3b0c4ab65bd4de9139256dd23f0c3cc7bee"
+        },
+        {
+          "path": ".opencode/skills/software-testability/SKILL.md",
+          "sha256": "f647ac495d748065f347425fa7075fd09423adb388d19b1b468466d7d591d215"
+        }
+      ],
+      "seeds": []
+    },
+    {
+      "name": "@backshop/roundhouse-software-testing",
+      "version": "0.0.0",
+      "contractVersion": 1,
+      "skills": [
+        "software-testing-gherkin"
+      ],
+      "managed": [
+        {
+          "path": ".opencode/skills/software-testing-gherkin/SKILL.md",
+          "sha256": "d6e809849c1b4fb94e81b01e6fa430ab955aeeb5f3155d7b9e5fa429f3b94f15"
+        }
+      ],
+      "seeds": []
+    }
+  ],
+  "composed": {
+    "opencode.json": {
+      "sha256": "0553be1a498c9a1cc5b2459618d2886fddcf299f7bc681ec15f9b506201db96b",
+      "templateSha256": "4e85a887bf3fa19a914f6067a4889af865078d3f795a1f2719ace7d9cc3aa215"
+    }
+  }
+}
