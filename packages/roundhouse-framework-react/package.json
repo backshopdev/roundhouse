@@ -1,7 +1,6 @@
 {
   "name": "@backshop/roundhouse-framework-react",
   "version": "0.0.0",
-  "private": true,
   "description": "React patterns: component design, state management, hooks, and testing approaches.",
   "files": [
     "roundhouse.json",

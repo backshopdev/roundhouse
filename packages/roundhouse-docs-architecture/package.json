@@ -1,7 +1,6 @@
 {
   "name": "@backshop/roundhouse-docs-architecture",
   "version": "0.0.0",
-  "private": true,
   "description": "Authoring and reviewing architecture documents: context, components, contracts, flows, and diagrams.",
   "files": [
     "roundhouse.json",

@@ -5,7 +5,9 @@
  * composer.test.js
  *
  * Asserts the SCEN-052..066, SCEN-074, and SCEN-075 acceptance contracts
- * from SPEC-20261019-02 for the Phase 3 composer:
+ * from SPEC-20261019-02 for the Phase 3 composer — as amended by
+ * PLAN-20261112-01, SCEN-057/058's declaration-graph reach (the transitive
+ * discovery walk):
  *
  *   @integration SCEN-052..058, SCEN-064..066 — the bin via spawnSync
  *     against temporary consumers under os.tmpdir() (package.json,
@@ -431,6 +433,121 @@ test("SCEN-058: an undeclared node_modules package is never discovered", () => {
     { "*": "deny", "fixture-core": "allow" },
     "the rendered skill map excludes the undeclared package's skill"
   );
+});
+
+// ─── SCEN-057 (amended): declaration-graph reach (@integration) ─────────────
+
+test("SCEN-057 amended: a declared package's own dependencies are discovered transitively", () => {
+  const consumer = buildConsumer("scen057-transitive", { dependencies: ["core"] });
+  // Copy-and-mutate in temp space (the SCEN-066 precedent): the installed
+  // core copy declares the alpha fixture as its npm production dependency —
+  // the hard-dependency shape (the CLI declares Core; the consumer declares
+  // only the CLI). npm would have installed alpha alongside, so the copy
+  // joins node_modules.
+  const coreCopy = path.join(consumer, "node_modules", "@roundhouse-fixture", "core");
+  const packagePath = path.join(coreCopy, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  packageJson.dependencies = { "@roundhouse-fixture/alpha": "0.0.0" };
+  fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`, "utf8");
+  fs.cpSync(path.join(FIXTURES, "alpha"), path.join(consumer, "node_modules", "@roundhouse-fixture", "alpha"), { recursive: true });
+
+  const run = runBin(["init"], consumer);
+  assert.equal(run.code, 0, `init exits 0 (stderr: ${run.stderr})`);
+  const manifest = readConsumerJson(consumer, ".roundhouse/manifest.json");
+  assert.deepEqual(
+    manifest.packages.map((pkg) => pkg.name),
+    ["@roundhouse-fixture/alpha", "@roundhouse-fixture/core"],
+    "the declared package's production dependency is discovered transitively and composed"
+  );
+  assert(
+    fs.existsSync(path.join(consumer, ".opencode", "skills", "fixture-alpha", "SKILL.md")),
+    "the transitively discovered package's skill composes"
+  );
+});
+
+test("SCEN-057 amended: a declaration-graph dependency cycle terminates", () => {
+  const consumer = buildConsumer("scen057-cycle", { dependencies: ["core"] });
+  // The installed core copy and the alpha copy declare each other — an npm
+  // dependency cycle (legal in npm's graph, unlike a roundhouse requires
+  // cycle). The walk must terminate on the name-level enqueue-once set and
+  // discover both packages.
+  const coreCopy = path.join(consumer, "node_modules", "@roundhouse-fixture", "core");
+  const corePackagePath = path.join(coreCopy, "package.json");
+  const corePackageJson = JSON.parse(fs.readFileSync(corePackagePath, "utf8"));
+  corePackageJson.dependencies = { "@roundhouse-fixture/alpha": "0.0.0" };
+  fs.writeFileSync(corePackagePath, `${JSON.stringify(corePackageJson, null, 2)}\n`, "utf8");
+  const alphaTarget = path.join(consumer, "node_modules", "@roundhouse-fixture", "alpha");
+  fs.cpSync(path.join(FIXTURES, "alpha"), alphaTarget, { recursive: true });
+  const alphaPackagePath = path.join(alphaTarget, "package.json");
+  const alphaPackageJson = JSON.parse(fs.readFileSync(alphaPackagePath, "utf8"));
+  alphaPackageJson.dependencies = { "@roundhouse-fixture/core": "0.0.0" };
+  fs.writeFileSync(alphaPackagePath, `${JSON.stringify(alphaPackageJson, null, 2)}\n`, "utf8");
+
+  const run = runBin(["init"], consumer);
+  assert.equal(run.code, 0, `init exits 0 (stderr: ${run.stderr})`);
+  const manifest = readConsumerJson(consumer, ".roundhouse/manifest.json");
+  assert.deepEqual(
+    manifest.packages.map((pkg) => pkg.name),
+    ["@roundhouse-fixture/alpha", "@roundhouse-fixture/core"],
+    "the cycle terminates and both packages are discovered exactly once"
+  );
+});
+
+test("SCEN-057 amended: an unresolvable transitive dependency name warns, never fails", () => {
+  const consumer = buildConsumer("scen057-unresolved", { dependencies: ["core"] });
+  const coreCopy = path.join(consumer, "node_modules", "@roundhouse-fixture", "core");
+  const packagePath = path.join(coreCopy, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  packageJson.dependencies = { "@roundhouse-fixture/absent": "0.0.0" };
+  fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`, "utf8");
+
+  const run = runBin(["init"], consumer);
+  assert.equal(run.code, 0, `init exits 0 — the unresolvable transitive name is a warning (stderr: ${run.stderr})`);
+  assert(
+    run.stderr.includes("@roundhouse-fixture/absent"),
+    "the unresolvable transitive name is listed on stderr"
+  );
+  const manifest = readConsumerJson(consumer, ".roundhouse/manifest.json");
+  assert.deepEqual(
+    manifest.packages.map((pkg) => pkg.name),
+    ["@roundhouse-fixture/core"],
+    "the resolvable packages still compose"
+  );
+});
+
+// ─── SCEN-058 (amended): unreachably co-located stays undiscovered (@integration) ──
+
+test("SCEN-058 amended: a package reachable only through an undeclared package stays undiscovered", () => {
+  const consumer = buildConsumer("scen058-unreach", { dependencies: ["core"] });
+  // gamma is a temp-only undeclared package (copy-and-rename manifest) whose
+  // npm dependency is beta. gamma itself is never declared, so the walk never
+  // resolves it — beta, though co-located in node_modules and gamma's
+  // dependency, is reachable through no declaration-graph path and stays
+  // undiscovered (the amended SCEN-058 form: reachability through the
+  // consumer's declaration graph, not mere co-location, admits a package).
+  const scopeDir = path.join(consumer, "node_modules", "@roundhouse-fixture");
+  fs.mkdirSync(path.join(scopeDir, "gamma"), { recursive: true });
+  fs.writeFileSync(
+    path.join(scopeDir, "gamma", "package.json"),
+    `${JSON.stringify({
+      name: "@roundhouse-fixture/gamma",
+      version: "0.0.0",
+      private: true,
+      dependencies: { "@roundhouse-fixture/beta": "0.0.0" },
+    }, null, 2)}\n`,
+    "utf8"
+  );
+  fs.cpSync(path.join(FIXTURES, "beta"), path.join(scopeDir, "beta"), { recursive: true });
+
+  const run = runBin(["init"], consumer);
+  assert.equal(run.code, 0, `init exits 0 (stderr: ${run.stderr})`);
+  const manifest = readConsumerJson(consumer, ".roundhouse/manifest.json");
+  assert.deepEqual(
+    manifest.packages.map((pkg) => pkg.name),
+    ["@roundhouse-fixture/core"],
+    "the unreachably co-located package is not discovered and contributes nothing"
+  );
+  assert(!fs.existsSync(path.join(consumer, ".opencode", "skills", "fixture-beta")), "the unreachable package's skill is not composed");
 });
 
 // ─── SCEN-059: workspace members are the discovered set (@integration) ──────

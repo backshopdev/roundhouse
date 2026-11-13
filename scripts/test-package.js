@@ -73,8 +73,9 @@ assert.deepStrictEqual(
     "check-pack": "node scripts/check-pack.js",
     "check-render": "node scripts/check-render.js",
     "check-all": "node scripts/check-all.js",
+    "docs-check": "node .opencode/docs-check.js",
   },
-  "root scripts: the five lifecycle scripts verbatim plus the seven check scripts (six checks + check-all)"
+  "root scripts: the five lifecycle scripts verbatim plus the seven check scripts (six checks + check-all) plus the docs-check alias (PLAN-20261112-01 T-14)"
 );
 assert.deepStrictEqual(packageJson.engines, { "node": ">= 24.0.0" }, "root engines stays verbatim");
 for (const droppedField of ["version", "description", "bin", "files", "publishConfig", "license"]) {

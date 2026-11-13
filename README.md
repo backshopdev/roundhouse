@@ -31,7 +31,29 @@ npx roundhouse verify    # report every drift class; writes nothing
 
 ## Packaging
 
-Packaging and distribution details will be documented here once the npm publishing tooling is in place.
+Roundhouse is distributed as npm packages under the `@backshop` scope — source material you install, then compose into your project with the composer. The base workflow is one command:
+
+```bash
+npm install @backshop/roundhouse-cli
+```
+
+The CLI declares Core (`@backshop/roundhouse-core`) as a hard dependency, so a single install lands the complete base — and the composer's discovery walks declared packages' dependencies, so Core's content composes even though your manifest names only the CLI. The 31 capability packages are à-la-carte add-ons, each individually installable:
+
+```bash
+npm install @backshop/roundhouse-lang-javascript
+```
+
+Consumer-authored custom content under `.opencode/` is a first-class third path alongside the packages: the composer never removes content it does not own, so your own agents, skills, and configuration survive every recompose.
+
+After installing, compose:
+
+```bash
+npx roundhouse init      # first composition of a fresh consumer
+```
+
+What you commit: your dependency declarations (`package.json`) and the composition record (`.roundhouse/manifest.json` and `opencode.json`) — never `node_modules/` and never the materialized `.opencode/`. Teammates run the same install and compose. Versions are managed with Changesets (independent per package, maintained by the maintainer's manual publish flow).
+
+Note: the packages become installable at the first publish — the maintainer's separate manual act. Until then, the repository-based path above (clone/workspace + compose) is the supported way to adopt the workflow.
 
 ## Adopting the Template
 

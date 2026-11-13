@@ -1,7 +1,6 @@
 {
   "name": "@backshop/roundhouse-docs-publish",
   "version": "0.0.0",
-  "private": true,
   "description": "Publishing repository documentation to external surfaces with source traceability.",
   "files": [
     "roundhouse.json",

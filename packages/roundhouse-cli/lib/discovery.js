@@ -7,8 +7,19 @@
  * semantics; DEC-20261017-02, Package discovery): resolve the consumer
  * root's declared `dependencies` and `devDependencies` to package roots
  * (targeted `node_modules/<name>` resolution, walking npm's resolution
- * upward only for declared names), expand the root's `workspaces` globs to
- * member directories, and triage each candidate:
+ * upward only for declaration-graph names), then walk the declaration
+ * graph: each resolved candidate that is a readable package contributes
+ * its own production `dependencies` names to the same resolution —
+ * dependencies only, since `npm install <pkg>` installs a dependency's
+ * `dependencies` and never its `devDependencies`, so the walked graph
+ * matches npm's real install graph. The walk is ungated: it traverses the
+ * consumer's full npm production graph, probing each resolved candidate
+ * (deliberate breadth; functionally harmless in this family — the CLI's
+ * only dependency is Core, and content packages declare none).
+ * Termination is by a name-level enqueue-once set (a finite name set
+ * terminates the worklist); the realpath dedupe below continues to handle
+ * distinct names resolving to the same candidate root. Expand the root's
+ * `workspaces` globs to member directories, and triage each candidate:
  *
  *   - no `roundhouse.json`        -> not a Roundhouse extension, skipped
  *                                    without error
@@ -18,9 +29,16 @@
  * A candidate that carries a `roundhouse.json` declares itself a Roundhouse
  * extension and must therefore be a readable package (parseable
  * `package.json` with a usable `name`); anything less fails closed.
- * `node_modules` is never enumerated beyond resolving declared names, and
- * the workspace walk never descends into `node_modules` or `.git`
- * (SCEN-058, SCEN-059).
+ * `node_modules` is never enumerated beyond resolving declaration-graph
+ * names, and the workspace walk never descends into `node_modules` or
+ * `.git` (SCEN-058, SCEN-059).
+ *
+ * The walk's fail-closed boundary: the consumer's own manifest and any
+ * candidate carrying `roundhouse.json` fail closed as before; third-party
+ * manifest defects encountered by the walk — a malformed or unparseable
+ * `package.json`, an invalid name — warn and are skipped (the
+ * unresolvable-name precedent), and an unresolvable transitive name
+ * warns, never fails.
  *
  * Vocabulary validation (including the per-envelope dependency rules) is
  * delegated to `vocabulary.js` — the triage rule's "valid" means
@@ -277,7 +295,9 @@ function triageCandidate(candidate, deps) {
  * { discovered, skipped, warnings, failures }:
  *   - discovered: [{ name, root, envelope }] sorted byte-wise by name
  *   - skipped:    [{ root, reason }] (no roundhouse.json)
- *   - warnings:   [string] (declared-but-uninstalled dependency names)
+ *   - warnings:   [string] (declared-but-uninstalled dependency names,
+ *                 unresolvable transitive names, and third-party manifest
+ *                 defects met by the declaration-graph walk)
  *   - failures:   [string] (fail-closed; non-empty means the discovered
  *                 set is unusable and the caller must abort)
  *
@@ -313,25 +333,70 @@ function discoverPackages(consumerRoot, options = {}) {
     return { discovered: [], skipped, warnings, failures };
   }
 
-  // 2. Declared dependencies resolve to candidate roots (targeted, never a scan).
+  // 2. Declared dependencies resolve to candidate roots (targeted, never a
+  //    scan), and the declaration graph walks: each resolved candidate that
+  //    is a readable package contributes its own production `dependencies`
+  //    names to the same resolution. Termination: the enqueue-once name set
+  //    (a finite name set terminates the worklist); distinct names
+  //    resolving to the same candidate root are deduped by realpath below.
+  //    Boundary: declared names keep their fail-closed dispositions;
+  //    third-party manifest defects (malformed/unparseable manifests,
+  //    invalid names) and unresolvable transitive names warn and are
+  //    skipped — never a failure.
   const candidateRoots = [];
-  for (const name of collectDeclaredNames(manifest, failures)) {
+  const seenNames = new Set();
+  const queue = [];
+  const enqueue = (name, declared) => {
+    if (seenNames.has(name)) return;
+    seenNames.add(name);
+    queue.push({ name, declared });
+  };
+  for (const name of collectDeclaredNames(manifest, failures)) enqueue(name, true);
+  for (let index = 0; index < queue.length; index++) {
+    const { name, declared } = queue[index];
+    const label = declared ? "declared" : "transitive";
     if (!isValidPackageName(name)) {
-      failures.push(`Error: invalid declared dependency name: ${JSON.stringify(name)}`);
+      if (declared) {
+        failures.push(`Error: invalid declared dependency name: ${JSON.stringify(name)}`);
+      } else {
+        warnings.push(`Warning: invalid transitive dependency name, skipped: ${JSON.stringify(name)}`);
+      }
       continue;
     }
     let resolved;
     try {
       resolved = deps.resolveDeclaredName(root, name);
     } catch (error) {
-      failures.push(`Error: cannot resolve declared dependency ${name}: ${error.message}`);
+      if (declared) {
+        failures.push(`Error: cannot resolve declared dependency ${name}: ${error.message}`);
+      } else {
+        warnings.push(`Warning: cannot resolve transitive dependency ${name}: ${error.message}`);
+      }
       continue;
     }
     if (resolved === null) {
-      warnings.push(`Warning: declared dependency is not installed, skipped: ${name}`);
+      warnings.push(`Warning: ${label} dependency is not installed, skipped: ${name}`);
       continue;
     }
     candidateRoots.push(resolved);
+    // The resolved candidate contributes its own production dependencies to
+    // the walk — read its manifest when it is a readable package.
+    let candidateManifest;
+    try {
+      candidateManifest = deps.readJsonIfExists(path.join(resolved, "package.json"));
+    } catch (error) {
+      warnings.push(`Warning: cannot read ${resolved} package.json, dependency walk skipped there: ${error.message}`);
+      continue;
+    }
+    if (!candidateManifest.present) continue;
+    if (candidateManifest.parseError) {
+      warnings.push(`Warning: ${resolved}: package.json is not parseable JSON, dependency walk skipped there: ${candidateManifest.parseError}`);
+      continue;
+    }
+    const candidateDependencies = candidateManifest.value && candidateManifest.value.dependencies;
+    if (!isPlainObject(candidateDependencies)) continue;
+    const transitiveNames = Object.keys(candidateDependencies).sort(comparePaths);
+    for (const transitiveName of transitiveNames) enqueue(transitiveName, false);
   }
 
   // 3. Workspace globs expand to member candidate roots.

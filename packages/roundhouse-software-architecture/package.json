@@ -1,7 +1,6 @@
 {
   "name": "@backshop/roundhouse-software-architecture",
   "version": "0.0.0",
-  "private": true,
   "description": "Software architecture practice: boundaries, dependency direction, layering, and modularity.",
   "files": [
     "roundhouse.json",

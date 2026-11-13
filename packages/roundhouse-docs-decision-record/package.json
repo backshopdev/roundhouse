@@ -1,7 +1,6 @@
 {
   "name": "@backshop/roundhouse-docs-decision-record",
   "version": "0.0.0",
-  "private": true,
   "description": "Authoring and reviewing decision records: drivers, alternatives, rationale, and reconsider triggers.",
   "files": [
     "roundhouse.json",

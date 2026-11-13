@@ -1,7 +1,6 @@
 {
   "name": "@backshop/roundhouse-format-html",
   "version": "0.0.0",
-  "private": true,
   "description": "HTML structure: semantic document outline, ARIA usage, and element semantics.",
   "files": [
     "roundhouse.json",

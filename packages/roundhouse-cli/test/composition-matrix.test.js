@@ -9,7 +9,9 @@
  * compose twice, verify), each asserting the DR-03 invariant mapping's six
  * rows, plus the two negative dependency installations (framework-react
  * alone; cms-apostrophe alone) asserted to fail init with the
- * dependency-rule rejection.
+ * dependency-rule rejection — and SCEN-076 (PLAN-20261112-01): the
+ * one-command base, a consumer declaring only the CLI whose hard-dep Core
+ * composes through the declaration-graph walk.
  *
  * Harness (the composer-suite precedent): temp consumers under os.tmpdir();
  * the selected workspace packages declared in the consumer's package.json
@@ -318,6 +320,53 @@ test("installation 7: the full current capability set (all 33 members)", () => {
   fs.mkdirSync(path.dirname(capturePath), { recursive: true });
   fs.copyFileSync(path.join(consumerDir, "opencode.json"), capturePath);
   assert(fs.existsSync(capturePath), "the full-set render is captured for the pre-migration comparison");
+});
+
+// ─── SCEN-076: the one-command base composes (@integration) ─────────────────
+
+test("SCEN-076: a consumer declaring only the CLI composes its hard-dep Core (the one-command base)", () => {
+  const consumerDir = makeTempDir("scen076");
+  fs.writeFileSync(
+    path.join(consumerDir, "package.json"),
+    `${JSON.stringify({
+      name: "matrix-scen076",
+      version: "0.0.0",
+      private: true,
+      dependencies: { "@backshop/roundhouse-cli": "0.0.0" },
+    }, null, 2)}\n`,
+    "utf8"
+  );
+  // npm-like node_modules: the declared CLI plus its hard-dep Core —
+  // installed by npm as the CLI's dependency, never named by the consumer's
+  // manifest. Core's content composes only because discovery walks the
+  // declaration graph (the transitive walk; the direct-only composer left
+  // this consumer an empty scaffold).
+  const scopeDir = path.join(consumerDir, "node_modules", "@backshop");
+  fs.mkdirSync(scopeDir, { recursive: true });
+  fs.symlinkSync(path.join(packagesDir, "roundhouse-cli"), path.join(scopeDir, "roundhouse-cli"), "junction");
+  fs.symlinkSync(path.join(packagesDir, "roundhouse-core"), path.join(scopeDir, "roundhouse-core"), "junction");
+
+  const init = runBin(["init"], consumerDir);
+  assert.equal(init.code, 0, `init exits 0 (stderr: ${init.stderr})`);
+  const manifest = JSON.parse(fs.readFileSync(path.join(consumerDir, ".roundhouse", "manifest.json"), "utf8"));
+  assert.deepEqual(
+    manifest.packages.map((pkg) => pkg.name),
+    ["@backshop/roundhouse-cli", "@backshop/roundhouse-core"],
+    "the declared CLI and its hard-dep Core are both discovered, sorted by name"
+  );
+  const cli = manifest.packages.find((pkg) => pkg.name === "@backshop/roundhouse-cli");
+  assert.deepEqual(cli.managed, [], "the CLI contributes no managed content (the tool/data separation invariant)");
+
+  // Core's content composes: every Core-declared skill is materialized and
+  // allowed in the rendered map.
+  const coreEnvelope = JSON.parse(fs.readFileSync(path.join(packagesDir, "roundhouse-core", "roundhouse.json"), "utf8"));
+  assert(coreEnvelope.skills.length > 0, "precondition: Core declares skills");
+  const rendered = JSON.parse(fs.readFileSync(path.join(consumerDir, "opencode.json"), "utf8"));
+  const map = rendered.agent.orchestrator.permission.skill;
+  for (const skill of coreEnvelope.skills) {
+    assert(fs.existsSync(path.join(consumerDir, ".opencode", "skills", skill, "SKILL.md")), `Core's skill ${skill} is materialized`);
+    assert.equal(map[skill], "allow", `Core's skill ${skill} is allowed in the rendered map`);
+  }
 });
 
 // ─── The negative dependency installations ──────────────────────────────────
