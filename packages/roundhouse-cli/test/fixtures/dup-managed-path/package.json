@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/dup-managed-path",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Violation fixture (SCEN-063 row 5): owns managed/docs/fixture-workflow.md, duplicating core's non-skill managed path."
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@backshop/roundhouse-docs-spec",
+  "version": "0.0.0",
+  "description": "Authoring and reviewing specifications: scope, terminology, contracts, and Gherkin scenarios with stable IDs.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

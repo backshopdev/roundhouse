@@ -1,0 +1,12 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": [
+    "software-testability",
+    "software-testability-legacy-enablement"
+  ],
+  "bash": [],
+  "requires": [
+    "@backshop/roundhouse-core"
+  ]
+}

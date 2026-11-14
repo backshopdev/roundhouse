@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/cms-phantom",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Violation fixture (SCEN-063 row 12): CMS package whose requires omits its applicable language package."
+}

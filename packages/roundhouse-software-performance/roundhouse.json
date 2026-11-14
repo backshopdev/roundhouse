@@ -1,0 +1,12 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": [
+    "software-performance",
+    "software-performance-web"
+  ],
+  "bash": [],
+  "requires": [
+    "@backshop/roundhouse-core"
+  ]
+}

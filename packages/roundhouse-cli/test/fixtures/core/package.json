@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Valid core fixture: valid template, skill and non-skill managed ownership, and a seed offer (happy-path set)."
+}

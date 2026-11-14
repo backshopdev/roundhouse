@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/agent-path",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Violation fixture (SCEN-063 row 6): non-core package declaring a managed path under .opencode/agents/."
+}

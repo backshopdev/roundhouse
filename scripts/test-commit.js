@@ -30,13 +30,28 @@
  *   harness uses, additional cases run `npm run commit -- ...` via
  *   child_process.spawnSync with shell:true. The two-mode difference:
  *     - npm-mode-a: every argument (subject, body, dry-run-output path)
- *       travels through the shell to npm and then to commit.js.
+ *       travels through the shell to npm and then to commit.js. SINGLE-LINE
+ *       inline args only: newline-containing inline args through the shell
+ *       are the KTLO-20261019-01 defect class (cmd.exe splits the command
+ *       line into multiple statements, the --dry-run/--dry-run-output flags
+ *       are lost, and commit.js performs a REAL commit; the trailing body
+ *       lines execute as standalone shell commands). That usage is the
+ *       house commit procedure's forbidden form, so no npm-mode-a case
+ *       carries a multi-line body; multi-line-through-npm coverage lives
+ *       in npm-mode-b's --message-file file transport. Direct mode-a
+ *       retains inline multi-line coverage safely (args array, no shell).
  *     - npm-mode-b: only the `--message-file` path travels through the
  *       shell; the message-file content itself is read from disk as a
  *       Buffer (unchanged by any shell layer).
- *   All cases use --dry-run, so the repository is never mutated. Each case
- *   reports PASS/FAIL honestly: a PASS means the shell layer did not corrupt
- *   the approved bytes, a FAIL is evidence of transport truncation/mangling.
+ *   All retained cases use --dry-run, so the repository is never mutated
+ *   by them; and a startup guard (KTLO-20261019-01) skips the
+ *   shell-transport subtests entirely whenever the repo index is non-empty
+ *   or its state is indeterminate, so no test run can commit a staged
+ *   index even if a future transport defect defeats the flags. Each case
+ *   reports PASS/FAIL/SKIP honestly: a PASS means the shell layer did not
+ *   corrupt the approved bytes, a FAIL is evidence of transport
+ *   truncation/mangling, a SKIP means the guard withheld the
+ *   shell-transport subtests.
  *
  * Usage:
  *   node scripts/test-commit.js
@@ -64,6 +79,7 @@ process.on("beforeExit", cleanupTemp);
 
 let passCount = 0;
 let failCount = 0;
+let skipCount = 0;
 
 function report(name, pass, detail) {
   if (pass) {
@@ -87,7 +103,11 @@ function run(args) {
 // invoked through a shell. On Windows, shell:true routes the command through
 // cmd.exe; on POSIX, through /bin/sh. The agent's bash tool is itself a shell,
 // so this call mirrors that path. Using --dry-run ensures no commit is
-// written. The npm CLI itself parses argv in addition to the shell layer.
+// written for every RETAINED case — with the caveat that the transport
+// itself could defeat the flags (the KTLO-20261019-01 defect class), which
+// is why the startup guard skips these shell-transport subtests whenever
+// the repo index is non-empty or indeterminate. The npm CLI itself parses
+// argv in addition to the shell layer.
 //
 // We construct the command line manually with shell-safe quoting rather than
 // relying on Node's automatic array-args quoting. Node's spawnSync shell-mode
@@ -99,9 +119,13 @@ function run(args) {
 function shellQuote(s) {
   // Wrap in double quotes; escape internal double quotes, backslashes, and
   // shell metacharacters that are special even inside double quotes on the
-  // relevant platforms (`$`, backtick). This is sufficient for the test
-  // inputs (subjects/bodies/paths) which do not contain newlines or other
-  // unprintable characters.
+  // relevant platforms (`$`, backtick). Newlines are NOT handled — the shell
+  // splits a newline-containing command line into multiple statements (the
+  // KTLO-20261019-01 defect class), so the no-newline assumption is now
+  // ENFORCED by the case set rather than merely documented: every
+  // npm-transport case's inline args are single-line, and the multi-line
+  // long-body case omits npm-mode-a and runs npm-mode-b's file transport
+  // instead.
   return `"${s.replace(/(["\\$`])/g, "\\$1")}"`;
 }
 
@@ -184,6 +208,10 @@ function testModeB(c) {
 // from the original JS string via Buffer.from(..., "utf8"), then compared
 // against the bytes that `commit.js` actually wrote.
 function testNpmModeA(c) {
+  if (guardHoldsShellTransport()) {
+    skipShellTransport("npm-mode-a", c);
+    return;
+  }
   const out = path.join(tempRoot, `npm-a-${c.name}.txt`);
   const res = runNpm(["--subject", c.subject, "--body", c.body, "--dry-run", "--dry-run-output", out]);
   if (res.status !== 0) {
@@ -207,6 +235,10 @@ function testNpmModeA(c) {
 // file CONTENT is read by the script via fs.readFileSync (Buffer), so the
 // shell layer cannot corrupt the approved bytes.
 function testNpmModeB(c) {
+  if (guardHoldsShellTransport()) {
+    skipShellTransport("npm-mode-b", c);
+    return;
+  }
   const src = path.join(tempRoot, `npm-b-${c.name}-src.txt`);
   const out = path.join(tempRoot, `npm-b-${c.name}.txt`);
   const message = `${c.subject}\n\n${c.body}\n`;
@@ -313,6 +345,45 @@ function guard(name, args) {
   report(`guard ${name}`, res.status !== 0, detail);
 }
 
+// ─── Startup guard (KTLO-20261019-01) ────────────────────────────────────────
+// The repo index must never be committable by a test run: inspect it
+// READ-ONLY at suite startup (the suite's first git invocation — direct
+// spawnSync, args array, no shell, following the run() helper's pattern).
+// Staged entries exist iff any porcelain line's index column (first
+// character) is neither a space (unstaged-only), `?` (untracked), nor `!`
+// (ignored). On staged entries OR a guard error (spawn failure, non-zero
+// git exit — index state indeterminate), the shell-transport (runNpm)
+// subtests are SKIPPED — the fail-safe direction; the direct-mode subtests
+// (mode-a, mode-b, CRLF, F1, and the four guard tests) still run in every
+// state: they are not shell-transport, and scripts/commit.js's argument
+// validation protects them (they intentionally omit --dry-run).
+const GUARD_STATE = detectIndexGuardState();
+
+function detectIndexGuardState() {
+  const result = spawnSync("git", ["status", "--porcelain"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  if (result.error || result.status === null || result.status !== 0) {
+    return "indeterminate";
+  }
+  const lines = (result.stdout || "").split("\n").filter(Boolean);
+  const staged = lines.some((line) => {
+    const indexColumn = line.charAt(0);
+    return indexColumn !== " " && indexColumn !== "?" && indexColumn !== "!";
+  });
+  return staged ? "non-empty" : "clean";
+}
+
+function guardHoldsShellTransport() {
+  return GUARD_STATE !== "clean";
+}
+
+function skipShellTransport(transport, c) {
+  skipCount++;
+  console.log(`SKIP ${transport} ${c.name} (guard: index state ${GUARD_STATE})`);
+}
+
 // ─── Main ────────────────────────────────────────────────────────────────────
 const CASES = [
   { name: "ascii-baseline", subject: "docs(x): baseline", body: "Plain ASCII body." },
@@ -326,19 +397,29 @@ const CASES = [
     body: "Zoë said “hi” → Håkon — José ’em all.",
   },
   {
-    // Multi-line body carrying both non-ASCII and footer lines. Exercises
-    // newline preservation across the shell transport for mode-a and across
-    // the Buffer pass-through for mode-b.
+    // Multi-line body carrying both non-ASCII and footer lines. Direct
+    // mode-a covers inline multi-line safely (args array, no shell) and
+    // mode-b/npm-mode-b cover the Buffer pass-through and the
+    // --message-file file transport. npm-mode-a is OMITTED for this case
+    // (omitNpmModeA below): inline multi-line args through the shell are
+    // the KTLO-20261019-01 defect class — cmd.exe splits the argv, the
+    // --dry-run flags are lost, and commit.js performs a REAL commit
+    // (demonstrated 2026-10-19 and 2026-10-21). Multi-line-through-npm
+    // coverage lives in this case's npm-mode-b file transport.
     name: "long-body-with-footers",
+    omitNpmModeA: true,
     subject: "docs(x): long body — em-dash",
     body: "Body line one — em-dash → arrow.\n\nBody line two: “smart quotes” and names Zoë, Håkon, José.\n\nRefs: #123\nreview-skills: peer, harness\nagents: document-author\nmodels: document-author=opencode-go\\minimax-m3",
   },
 ];
 
+if (GUARD_STATE !== "clean") {
+  console.log(`Guard note (KTLO-20261019-01): repo index state is ${GUARD_STATE}; the shell-transport (runNpm) subtests are skipped so no test run can commit whatever the index holds. Direct-mode subtests still run.`);
+}
 for (const c of CASES) {
   testModeA(c);
   testModeB(c);
-  testNpmModeA(c);
+  if (!c.omitNpmModeA) testNpmModeA(c);
   testNpmModeB(c);
 }
 testModeBCrlf();
@@ -356,7 +437,21 @@ guard("dry-run-output-without-dry-run", [
   path.join(tempRoot, "guard-out.txt"),
 ]);
 
+// The counts line is the suite's FINAL line of output: the trailing status
+// wording is merged into it. Skips are neither pass nor fail (excluded from
+// the pass arithmetic); the guard suffix appears only when skips occurred;
+// exit 1 only on failures.
 const total = passCount + failCount;
-console.log(`\n${passCount}/${total} checks passed, ${failCount} failed`);
-if (failCount > 0) process.exit(1);
-console.log("All commit byte-clean tests passed.");
+let summary = `\n${passCount}/${total} checks passed, ${failCount} failed, ${skipCount} skipped`;
+if (skipCount > 0) summary += ` (guard: index state ${GUARD_STATE})`;
+if (failCount > 0) {
+  summary += " — commit byte-clean tests FAILED.";
+  console.log(summary);
+  process.exit(1);
+}
+if (skipCount > 0) {
+  summary += " — commit byte-clean tests passed with skips; npm-transport coverage was not exercised this run.";
+} else {
+  summary += " — all commit byte-clean tests passed.";
+}
+console.log(summary);

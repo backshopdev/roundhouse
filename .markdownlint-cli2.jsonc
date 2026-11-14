@@ -11,7 +11,8 @@
   "ignores": [
     "**/node_modules/**",
     "**/scratch/**",
-    "**/*.generated.md"
+    "**/*.generated.md",
+    "**/.changeset/**"  // changeset files: frontmatter + release-notes prose, machine-consumed; MD041 does not model them
   ],
 
   "config": {

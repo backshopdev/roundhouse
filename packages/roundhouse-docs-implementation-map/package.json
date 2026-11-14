@@ -1,0 +1,12 @@
+{
+  "name": "@backshop/roundhouse-docs-implementation-map",
+  "version": "0.0.0",
+  "description": "Authoring and reviewing implementation maps: capability-to-code navigation, key files, and hazards.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

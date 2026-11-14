@@ -1,0 +1,7 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": ["lang-gherkin"],
+  "bash": [],
+  "requires": ["@backshop/roundhouse-core"]
+}

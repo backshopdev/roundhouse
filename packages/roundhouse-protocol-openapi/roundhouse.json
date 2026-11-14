@@ -1,0 +1,11 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": [
+    "protocol-openapi"
+  ],
+  "bash": [],
+  "requires": [
+    "@backshop/roundhouse-core"
+  ]
+}

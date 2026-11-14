@@ -1,0 +1,6 @@
+{
+  "name": "@roundhouse-fixture/alpha",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Valid capability fixture: skill, bash contribution, and seed offer; requires the core fixture (happy-path set)."
+}

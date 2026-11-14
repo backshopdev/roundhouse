@@ -1,0 +1,12 @@
+{
+  "name": "@backshop/roundhouse-lang-javascript",
+  "version": "0.0.0",
+  "description": "JavaScript and TypeScript: language patterns, async, error handling, type system usage, and testing.",
+  "files": [
+    "roundhouse.json",
+    "managed"
+  ],
+  "engines": {
+    "node": ">= 24.0.0"
+  }
+}

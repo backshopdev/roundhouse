@@ -1,0 +1,7 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": [],
+  "bash": [],
+  "requires": ["@roundhouse-fixture/core", "@roundhouse-fixture/cycle-a"]
+}

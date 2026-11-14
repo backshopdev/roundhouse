@@ -1,0 +1,12 @@
+{
+  "kind": "capability",
+  "contractVersion": 1,
+  "skills": [
+    "framework-react"
+  ],
+  "bash": [],
+  "requires": [
+    "@backshop/roundhouse-core",
+    "@backshop/roundhouse-lang-javascript"
+  ]
+}

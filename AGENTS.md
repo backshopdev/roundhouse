@@ -41,53 +41,44 @@ files by default.
 | Changing OpenCode configuration | `opencode-configuration` skill | Apply configuration-specific guidance and validation |
 | Conducting a review | `peer` skill (+ domain skill) | Apply the peer review lens and domain expertise |
 | Changes affect permissions, secrets, or auth | `security` skill | Apply the security review threat model |
-| Decomposing work into a plan | `planning-structure` skill | Apply planning structure requirements and acceptance criteria |
-| Working with testability, constructor injection, or characterization tests | `design-for-testability` skill | Load foundational testability guidance |
-| Enabling tests on legacy code where current structure blocks normal testing | `test-enablement` skill | Load legacy-code enablement techniques (Feathers-style seams) |
+| Decomposing work into a plan | `backshopdev-planning` skill | Apply planning structure requirements and acceptance criteria |
+| Working with testability, constructor injection, or characterization tests | `software-testability` skill | Load foundational testability guidance |
+| Enabling tests on legacy code where current structure blocks normal testing | `software-testability-legacy-enablement` skill | Load legacy-code enablement techniques (Feathers-style seams) |
 | Material uncertainty could change plan or spec assumptions | `investigation` skill | Apply the read-only investigation procedure for material uncertainty |
 | Executing a commit, amend, or push | `git-commit` skill | Apply the canonical commit/amend/push procedure and exact-command contracts |
 | Consolidating reviewer output into the final report | `review-findings` skill | Format consolidated review output using the mandatory template |
-| Understanding authority and autonomy | [`src/.opencode/workflow-docs/autonomy/index.md`](src/.opencode/workflow-docs/autonomy/index.md) | Learn the autonomy model, authority types, escalation protocol, and session lifetime rules |
+| Understanding authority and autonomy | [`packages/roundhouse-core/managed/workflow-docs/autonomy/index.md`](packages/roundhouse-core/managed/workflow-docs/autonomy/index.md) | Learn the autonomy model, authority types, escalation protocol, and session lifetime rules |
 
-## OpenCode Synchronization
+## Root Composition
 
-Root `.opencode/` and `opencode.json` are deployed instances of `src/.opencode/`
-and `src/opencode.json`. They are gitignored and never edited directly.
+The workspace packages under `packages/` are the authoritative source. Each
+package carries its `roundhouse.json` envelope plus its `managed/` content
+(the harness content composed into the consumer's `.opencode/`), and the Core
+package additionally carries the `seed/` scaffolding and the
+`opencode-template.json` the rendered `opencode.json` derives from.
 
-The sync runs in two modes that mirror the package's consumer-side `update()`
-command:
-
-- **Managed (Mode 1)**: `src/.opencode/` (and children) and `src/opencode.json`
-  are always overwritten. Stale files in `.opencode/` are removed. The package
-  is the source of truth here; consumer customization is not supported.
-- **Seed (Mode 2)**: every other file under `src/` is copied to root only if
-  the destination does not already exist. Once a seed file is present at root,
-  it belongs to the consumer and is left alone on subsequent syncs. Typical
-  seed files include `BUILDING.md`, `TESTING.md`, and `scratch/README.md`.
-
-All changes to source files must be made in `src/` first, then synced to root:
+The root is a self-hosting consumer. After changing any package's content,
+recompose the root:
 
 ```bash
 npm run sync-roundhouse -- --mode sync
 ```
 
-Note: the double-dash (`--`) is required to pass script flags through `npm run`, and the script now requires `--mode` explicitly.
+The wrapper composes the root from the packages via the composer library
+(init when no `.roundhouse/manifest.json` exists, compose thereafter). The
+root `.opencode/` is the composer's managed output (gitignored, never edited
+directly); the root `opencode.json` is the composed render and
+`.roundhouse/manifest.json` is the composition record (both committed).
+`--mode verify` checks the root read-only.
 
-The sync copies `src/.opencode/` over root `.opencode/` (overwriting stale
-files) and copies any missing seed files from `src/` to root. Root-only
-artifacts (`node_modules/`, `data/`, `package.json`, `package-lock.json`, `.gitignore`)
-are preserved because the sync script's preserve list protects them; they
-don't normally exist in `src/`.
-
-`--mode verify` (read-only) exits non-zero when either mode has drift,
-listing the missing files. Run `npm run test-sync` to execute the automated
-test suite for the sync script. It verifies sync correctness, root-only
-artifact preservation, stale file removal, Mode 1 and Mode 2 seed-file
-behavior, and `--mode verify` integrity checks (including discrepancy detection).
+The seed files (`AGENTS.md`, `AGENTIC_WORKFLOW.md`, `README.md`, `BUILDING.md`,
+`TESTING.md`, `docs/`, `ktlo/`, `scratch/README.md`) are consumer-owned once
+created: the composer creates them only when missing and never overwrites
+them — edit them directly.
 
 ## Authority and Autonomy
 
-Agent authority is governed by the [autonomy model](src/.opencode/workflow-docs/autonomy/index.md).
+Agent authority is governed by the [autonomy model](packages/roundhouse-core/managed/workflow-docs/autonomy/index.md).
 Authority = capability × scope × purpose × delegation constraint; all four
 must be satisfied simultaneously. Technical enforcement lives in
 `opencode.json`; normative guidance lives in the autonomy model. See
